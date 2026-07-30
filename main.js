@@ -11273,7 +11273,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     for (const doc of docs) {
       const isDraft = !!doc.isDraft;
       const baseName = this.sanitizeFilename(
-        doc._syncFilename || doc._syncTitle || doc._id || "untitled"
+        filenameField ? doc._syncFilename || "untitled" : doc._syncTitle || doc._syncFilename || doc._id || "untitled"
       );
       const frontmatter = {
         sanity_id: doc._id,

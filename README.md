@@ -58,7 +58,7 @@ The schema field that holds the document body. It should store the raw Markdown 
 
 ### Filename field
 
-The Sanity field used to generate each Obsidian filename (and, by extension, the URL slug). GROQ paths are allowed, e.g. `slug.current`. If left blank, the plugin falls back to `slug.current`, then the **Title field**, then the document's `sanity_id` as a last resort. The `sanity_id` is only ever used for the filename when no better source exists.
+The Sanity field used to generate each Obsidian filename (and, by extension, the URL slug). GROQ paths are allowed, e.g. `slug.current`. If left blank, the plugin falls back to the **Title field**, then `slug.current`, then the document's `sanity_id` as a last resort. The `sanity_id` is only ever used for the filename when no better source exists.
 
 ### Pull folder (Advanced)
 

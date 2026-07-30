@@ -58,7 +58,7 @@ cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidia
 
 ### Filename field（文件名字段）
 
-用于生成每篇 Obsidian 笔记文件名的 Sanity 字段（也就是访问路由 slug）。支持 GROQ 路径，例如 `slug.current`。留空时，插件会依次回退到 `slug.current`、再回退到**标题字段**、最后以文档的 `sanity_id` 兜底。只有当没有任何更合适的来源时，`sanity_id` 才会被用作文件名。
+用于生成每篇 Obsidian 笔记文件名的 Sanity 字段（也就是访问路由 slug）。支持 GROQ 路径，例如 `slug.current`。留空时，插件会依次回退到**标题字段**、再回退到 `slug.current`、最后以文档的 `sanity_id` 兜底。只有当没有任何更合适的来源时，`sanity_id` 才会被用作文件名。
 
 ### Pull folder（高级）
 

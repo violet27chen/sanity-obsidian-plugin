@@ -428,9 +428,12 @@ export default class SanityPublishPlugin extends Plugin {
 		let updated = 0;
 		for (const doc of docs) {
 			const isDraft = !!doc.isDraft;
-			// 文件名来源回退：Filename field > slug.current > Title field > sanity_id
+			// 文件名来源回退：Filename field > Title field > slug.current > sanity_id
+			// 填了 Filename field 时它优先；未填时才回退 Title → slug.current(_syncFilename) → sanity_id
 			const baseName = this.sanitizeFilename(
-				doc._syncFilename || doc._syncTitle || doc._id || "untitled"
+				filenameField
+					? doc._syncFilename || "untitled"
+					: doc._syncTitle || doc._syncFilename || doc._id || "untitled"
 			);
 			const frontmatter: any = {
 				sanity_id: doc._id,
