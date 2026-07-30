@@ -1,9 +1,9 @@
 {
 	"id": "obsidian-sanity",
 	"name": "Sanity Publish",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"minAppVersion": "0.15.0",
-	"description": "Publish and pull Obsidian documents to/from your Sanity studio (CORS-fixed fork with bidirectional sync).",
+	"description": "Publish and pull Obsidian documents to/from your Sanity studio (bidirectional sync).",
 	"author": "Obsidian",
 	"authorUrl": "https://www.drewis.cool",
 	"isDesktopOnly": false

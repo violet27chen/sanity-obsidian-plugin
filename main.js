@@ -10906,6 +10906,7 @@ var src_default = new Mime_default(standard_default, other_default)._freeze();
 var import_obsidian2 = require("obsidian");
 var httpRegex = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
 var API_VERSION = "2023-05-03";
+var QUERY_API_VERSION = "v2021-06-07";
 async function sanityMutate(mutations, settings) {
   const url = `https://${settings.projectId}.api.sanity.io/v${API_VERSION}/data/mutate/${settings.dataset}?returnIds=true&returnDocuments=true&visibility=sync`;
   const res = await (0, import_obsidian2.requestUrl)({
@@ -11069,7 +11070,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     );
   }
   async pullFromSanity() {
-    var _a, _b;
+    var _a, _b, _c;
     const { projectId: projectId2, dataset: dataset2, apiToken } = this.settings;
     if (!projectId2 || !apiToken) {
       new import_obsidian2.Notice(
@@ -11081,24 +11082,25 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     const type = this.settings.sanityTypeName || "post";
     const titleField = this.settings.sanityTitleField || "title";
     const bodyField = this.settings.sanityBodyField || "body";
-    const query = `*[_type == $type]{  _id,  "title": ${titleField},  "body": ${bodyField},  "slug": slug.current,  "isDraft": _id in path("drafts.**")}`;
+    const safeType = String(type).replace(/[^a-zA-Z0-9_]/g, "");
+    const safeTitle = String(titleField).replace(/[^a-zA-Z0-9_]/g, "");
+    const safeBody = String(bodyField).replace(/[^a-zA-Z0-9_]/g, "");
+    const query = `*[_type == "${safeType}"]{  _id,  "title": ${safeTitle},  "body": ${safeBody},  "slug": slug.current,  "isDraft": _id in path("drafts.**")}`;
     let docs = [];
     try {
-      const url = `https://${projectId2}.api.sanity.io/v${API_VERSION}/data/query/${dataset2}?query=${encodeURIComponent(query)}&$type=${encodeURIComponent(type)}`;
+      const url = `https://${projectId2}.api.sanity.io/${QUERY_API_VERSION}/data/query/${dataset2}?query=${encodeURIComponent(query)}`;
       const res = await (0, import_obsidian2.requestUrl)({
         url,
         method: "GET",
         headers: { Authorization: `Bearer ${apiToken}` }
       });
-      if (res.status >= 400) {
-        console.error("Sanity query failed", res.status, res.text);
-        new import_obsidian2.Notice("Failed to query Sanity (HTTP " + res.status + ")");
-        return;
-      }
       docs = ((_a = res.json) == null ? void 0 : _a.result) || [];
     } catch (e2) {
-      console.error(e2);
-      new import_obsidian2.Notice("Failed to query Sanity.");
+      const detail = ((_b = e2 == null ? void 0 : e2.response) == null ? void 0 : _b.text) || (e2 == null ? void 0 : e2.text) || (e2 == null ? void 0 : e2.message) || e2;
+      console.error("Sanity pull failed:", e2 == null ? void 0 : e2.status, detail);
+      new import_obsidian2.Notice(
+        "Failed to pull from Sanity (HTTP " + ((e2 == null ? void 0 : e2.status) || "?") + "). See developer console for details."
+      );
       return;
     }
     if (!docs.length) {
@@ -11107,7 +11109,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     }
     const existingById = /* @__PURE__ */ new Map();
     for (const f3 of this.app.vault.getMarkdownFiles()) {
-      const fm = (_b = this.app.metadataCache.getFileCache(f3)) == null ? void 0 : _b.frontmatter;
+      const fm = (_c = this.app.metadataCache.getFileCache(f3)) == null ? void 0 : _c.frontmatter;
       if (fm && fm.sanity_id)
         existingById.set(fm.sanity_id, f3);
     }

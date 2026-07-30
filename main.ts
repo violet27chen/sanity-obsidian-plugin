@@ -25,6 +25,9 @@ const httpRegex =
 
 // Sanity API 版本，与原有 client 保持一致
 const API_VERSION = "2023-05-03";
+// 查询接口使用与 admin-worker 一致的版本（v2021-06-07），类型内联进 GROQ，
+// 不使用 $param —— 否则在部分环境下会触发 Sanity 返回 HTTP 400。
+const QUERY_API_VERSION = "v2021-06-07";
 
 /**
  * 用 Obsidian 的 requestUrl 直连 Sanity，绕过浏览器的 CORS 限制
@@ -252,12 +255,16 @@ export default class SanityPublishPlugin extends Plugin {
 		const titleField = this.settings.sanityTitleField || "title";
 		const bodyField = this.settings.sanityBodyField || "body";
 
-		// 拉取全部 post（含草稿）：用 isDraft 标记区分正式 / 草稿
+		// 拉取全部 post（含草稿）：用 isDraft 标记区分正式 / 草稿。
+		// 类型/字段名内联进 GROQ（并做标识符清洗），不使用 $param，避免请求 400。
+		const safeType = String(type).replace(/[^a-zA-Z0-9_]/g, "");
+		const safeTitle = String(titleField).replace(/[^a-zA-Z0-9_]/g, "");
+		const safeBody = String(bodyField).replace(/[^a-zA-Z0-9_]/g, "");
 		const query =
-			`*[_type == $type]{` +
+			`*[_type == "${safeType}"]{` +
 			`  _id,` +
-			`  "title": ${titleField},` +
-			`  "body": ${bodyField},` +
+			`  "title": ${safeTitle},` +
+			`  "body": ${safeBody},` +
 			`  "slug": slug.current,` +
 			`  "isDraft": _id in path("drafts.**")` +
 			`}`;
@@ -265,23 +272,22 @@ export default class SanityPublishPlugin extends Plugin {
 		let docs: any[] = [];
 		try {
 			const url =
-				`https://${projectId}.api.sanity.io/v${API_VERSION}/data/query/` +
-				`${dataset}?query=${encodeURIComponent(query)}` +
-				`&$type=${encodeURIComponent(type)}`;
+				`https://${projectId}.api.sanity.io/${QUERY_API_VERSION}/data/query/` +
+				`${dataset}?query=${encodeURIComponent(query)}`;
 			const res = await requestUrl({
 				url,
 				method: "GET",
 				headers: { Authorization: `Bearer ${apiToken}` },
 			});
-			if (res.status >= 400) {
-				console.error("Sanity query failed", res.status, res.text);
-				new Notice("Failed to query Sanity (HTTP " + res.status + ")");
-				return;
-			}
 			docs = res.json?.result || [];
-		} catch (e) {
-			console.error(e);
-			new Notice("Failed to query Sanity.");
+		} catch (e: any) {
+			const detail = e?.response?.text || e?.text || e?.message || e;
+			console.error("Sanity pull failed:", e?.status, detail);
+			new Notice(
+				"Failed to pull from Sanity (HTTP " +
+					(e?.status || "?") +
+					"). See developer console for details."
+			);
 			return;
 		}
 
