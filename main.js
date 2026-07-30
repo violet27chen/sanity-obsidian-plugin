@@ -9650,6 +9650,7 @@ function joinSyncRows(rows) {
 var DEFAULT_SETTINGS = {
   apiToken: "",
   projectId: "",
+  sanityApiBaseUrl: "",
   dataset: "production",
   sanityTypeName: "post",
   sanityBodyField: "body",
@@ -9739,6 +9740,14 @@ var SanitySettingTab = class extends import_obsidian.PluginSettingTab {
     ).addText(
       (text) => text.setPlaceholder("e.g. Sanity").setValue(this.plugin.settings.pullFolder || "").onChange(async (value) => {
         this.plugin.settings.pullFolder = value || "";
+        await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("Custom API base URL (optional)").setDesc(
+      "Reverse-proxy URL used to reach the Sanity API when `api.sanity.io` is unreachable (e.g. in mainland China). Leave blank to use the default host. Enter e.g. `https://sanity-api.your-domain.com` \u2014 the path after the host is preserved, so query / mutate / upload all go through the proxy."
+    ).addText(
+      (text) => text.setPlaceholder("https://sanity-api.your-domain.com").setValue(this.plugin.settings.sanityApiBaseUrl || "").onChange(async (value) => {
+        this.plugin.settings.sanityApiBaseUrl = value.trim();
         await this.plugin.saveSettings();
       })
     );
@@ -10963,8 +10972,13 @@ var import_obsidian2 = require("obsidian");
 var httpRegex = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
 var API_VERSION = "2023-05-03";
 var QUERY_API_VERSION = "v2021-06-07";
+function apiBaseFor(settings) {
+  var _a;
+  const custom = (_a = settings.sanityApiBaseUrl) == null ? void 0 : _a.trim().replace(/\/+$/, "");
+  return custom || `https://${settings.projectId}.api.sanity.io`;
+}
 async function sanityMutate(mutations, settings) {
-  const url = `https://${settings.projectId}.api.sanity.io/v${API_VERSION}/data/mutate/${settings.dataset}?returnIds=true&returnDocuments=true&visibility=sync`;
+  const url = `${apiBaseFor(settings)}/v${API_VERSION}/data/mutate/${settings.dataset}?returnIds=true&returnDocuments=true&visibility=sync`;
   const res = await (0, import_obsidian2.requestUrl)({
     url,
     method: "POST",
@@ -11242,7 +11256,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     const query = `*[_type == "${safeType}"]{ ${parts.join(", ")} }`;
     let docs = [];
     try {
-      const url = `https://${projectId2}.api.sanity.io/${QUERY_API_VERSION}/data/query/${dataset2}?query=${encodeURIComponent(query)}`;
+      const url = `${apiBaseFor(this.settings)}/${QUERY_API_VERSION}/data/query/${dataset2}?query=${encodeURIComponent(query)}`;
       const res = await (0, import_obsidian2.requestUrl)({
         url,
         method: "GET",
@@ -11256,7 +11270,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       let msg;
       if (!status) {
         msg = `\u62C9\u53D6\u5931\u8D25\uFF1A\u65E0\u6CD5\u8FDE\u63A5\u5230 Sanity\uFF08\u7F51\u7EDC\u9519\u8BEF\uFF09\u3002
-\u8BF7\u68C0\u67E5\uFF1A\u2460\u624B\u673A\u7F51\u7EDC\u80FD\u5426\u8BBF\u95EE ${projectId2}.api.sanity.io\uFF1B\u2461\u662F\u5426\u9700\u8981 VPN/\u4EE3\u7406\uFF1B\u2462\u63D2\u4EF6\u8BBE\u7F6E\u91CC\u7684 Project ID / Token \u662F\u5426\u5DF2\u586B\u5199\u3002`;
+\u8BF7\u68C0\u67E5\uFF1A\u2460\u624B\u673A\u7F51\u7EDC\u80FD\u5426\u8BBF\u95EE ${apiBaseFor(this.settings)}\uFF1B\u2461\u662F\u5426\u9700\u8981 VPN/\u4EE3\u7406\uFF1B\u2462\u63D2\u4EF6\u8BBE\u7F6E\u91CC\u7684 Project ID / Token / \u81EA\u5B9A\u4E49 API \u57DF\u540D \u662F\u5426\u5DF2\u586B\u5199\u3002`;
       } else {
         msg = `\u62C9\u53D6\u5931\u8D25\uFF08HTTP ${status}\uFF09\uFF1A${detail}`;
       }
@@ -11352,7 +11366,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     const fileType = src_default.getType(file.path);
     const isImage = fileType == null ? void 0 : fileType.includes("image");
     const fileName = file.path.split("/").pop() || "file";
-    const url = `https://${this.settings.projectId}.api.sanity.io/v${API_VERSION}/assets/${isImage ? "images" : "files"}/${this.settings.dataset}?filename=${encodeURIComponent(fileName)}`;
+    const url = `${apiBaseFor(this.settings)}/v${API_VERSION}/assets/${isImage ? "images" : "files"}/${this.settings.dataset}?filename=${encodeURIComponent(fileName)}`;
     const res = await (0, import_obsidian2.requestUrl)({
       url,
       method: "POST",

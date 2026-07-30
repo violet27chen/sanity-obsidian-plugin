@@ -64,6 +64,10 @@ The Sanity field used to generate each Obsidian filename (and, by extension, the
 
 Where notes pulled from Sanity are saved. Leave blank to save at the vault root.
 
+### Custom API base URL (optional)
+
+By default the plugin talks to `https://<projectId>.api.sanity.io`. In some networks (e.g. mainland China) that host is unreachable, while the Sanity CDN (`cdn.sanity.io`) stays reachable. Enter a reverse-proxy URL here — e.g. `https://sanity-api.your-domain.com` — and the plugin will route **all** API calls (query, mutate, upload) through it. The path after the host is preserved, so nothing else changes. Leave blank to use the default host.
+
 ### Additional fields to sync (Advanced)
 
 Any other Sanity fields you want to keep in sync. The settings UI shows **10 field rows** — for each row, type the Sanity field on the left (GROQ paths allowed, e.g. `slug.current`) and the frontmatter key on the right (leave the right side blank to reuse the Sanity field name). Fill as many rows as you need; blank rows are ignored.

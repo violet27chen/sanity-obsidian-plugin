@@ -30,6 +30,7 @@ function joinSyncRows(rows: { sanity: string; fm: string }[]): string {
 export interface SanityPluginSettings {
 	apiToken: string | undefined;
 	projectId: string | undefined;
+	sanityApiBaseUrl?: string;
 	dataset: string;
 	sanityTypeName: string;
 	sanityTitleField?: string;
@@ -43,6 +44,7 @@ export interface SanityPluginSettings {
 export const DEFAULT_SETTINGS: SanityPluginSettings = {
 	apiToken: "",
 	projectId: "",
+	sanityApiBaseUrl: "",
 	dataset: "production",
 	sanityTypeName: "post",
 	sanityBodyField: "body",
@@ -203,6 +205,22 @@ export class SanitySettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.pullFolder || "")
 					.onChange(async (value) => {
 						this.plugin.settings.pullFolder = value || "";
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Custom API base URL (optional)")
+			.setDesc(
+				"Reverse-proxy URL used to reach the Sanity API when `api.sanity.io` is unreachable (e.g. in mainland China). " +
+					"Leave blank to use the default host. Enter e.g. `https://sanity-api.your-domain.com` — the path after the host is preserved, so query / mutate / upload all go through the proxy."
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("https://sanity-api.your-domain.com")
+					.setValue(this.plugin.settings.sanityApiBaseUrl || "")
+					.onChange(async (value) => {
+						this.plugin.settings.sanityApiBaseUrl = value.trim();
 						await this.plugin.saveSettings();
 					})
 			);

@@ -29,6 +29,17 @@ const API_VERSION = "2023-05-03";
 const QUERY_API_VERSION = "v2021-06-07";
 
 /**
+ * 返回 Sanity API 的基础 URL。
+ * 若设置了自定义 API 域名（如反向代理），优先使用它；
+ * 否则回退到默认的 `https://<projectId>.api.sanity.io`。
+ * 该设置用于绕过部分网络环境下 api.sanity.io 不可达的问题（如中国大陆）。
+ */
+function apiBaseFor(settings: SanityPluginSettings): string {
+	const custom = settings.sanityApiBaseUrl?.trim().replace(/\/+$/, "");
+	return custom || `https://${settings.projectId}.api.sanity.io`;
+}
+
+/**
  * 用 Obsidian 的 requestUrl 直连 Sanity，绕过浏览器的 CORS 限制
  * （Obsidian webview 来源 app://obsidian.md 不被 Sanity CORS 接受）。
  */
@@ -37,7 +48,7 @@ async function sanityMutate(
 	settings: SanityPluginSettings
 ): Promise<any> {
 	const url =
-		`https://${settings.projectId}.api.sanity.io/v${API_VERSION}/data/mutate/` +
+		`${apiBaseFor(settings)}/v${API_VERSION}/data/mutate/` +
 		`${settings.dataset}?returnIds=true&returnDocuments=true&visibility=sync`;
 	const res = await requestUrl({
 		url,
@@ -389,7 +400,7 @@ export default class SanityPublishPlugin extends Plugin {
 		let docs: any[] = [];
 		try {
 			const url =
-				`https://${projectId}.api.sanity.io/${QUERY_API_VERSION}/data/query/` +
+				`${apiBaseFor(this.settings)}/${QUERY_API_VERSION}/data/query/` +
 				`${dataset}?query=${encodeURIComponent(query)}`;
 			const res = await requestUrl({
 				url,
@@ -406,7 +417,7 @@ export default class SanityPublishPlugin extends Plugin {
 				// 请求未返回 HTTP 状态码 = 网络层异常（DNS / 超时 / 被墙 / 无网络）
 				msg =
 					"拉取失败：无法连接到 Sanity（网络错误）。\n" +
-					`请检查：①手机网络能否访问 ${projectId}.api.sanity.io；②是否需要 VPN/代理；③插件设置里的 Project ID / Token 是否已填写。`;
+					`请检查：①手机网络能否访问 ${apiBaseFor(this.settings)}；②是否需要 VPN/代理；③插件设置里的 Project ID / Token / 自定义 API 域名 是否已填写。`;
 			} else {
 				msg = `拉取失败（HTTP ${status}）：${detail}`;
 			}
@@ -529,7 +540,7 @@ export default class SanityPublishPlugin extends Plugin {
 		const isImage = fileType?.includes("image");
 		const fileName = file.path.split("/").pop() || "file";
 		const url =
-			`https://${this.settings.projectId}.api.sanity.io/v${API_VERSION}/assets/` +
+			`${apiBaseFor(this.settings)}/v${API_VERSION}/assets/` +
 			`${isImage ? "images" : "files"}/${this.settings.dataset}` +
 			`?filename=${encodeURIComponent(fileName)}`;
 		const res = await requestUrl({

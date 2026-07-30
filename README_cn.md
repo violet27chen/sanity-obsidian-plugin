@@ -64,6 +64,10 @@ cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidia
 
 拉取的笔记保存到哪个文件夹。留空则保存到仓库根目录。
 
+### Custom API base URL（可选）
+
+插件默认访问 `https://<projectId>.api.sanity.io`。在部分网络环境（如中国大陆）下该域名无法连通，而 Sanity CDN（`cdn.sanity.io`）仍可正常访问。在此填入一个反向代理地址（例如 `https://sanity-api.your-domain.com`），插件就会把**所有** API 调用（query / mutate / upload）都改走该代理。代理之后的路径保持不变，其余逻辑无需改动。留空则使用默认域名。
+
 ### Additional fields to sync（高级）
 
 你还想保持同步的其他 Sanity 字段。设置界面提供 **10 行字段输入框**——每行左侧填 Sanity 字段（支持 GROQ 路径，如 `slug.current`），右侧填对应的 frontmatter 键（右侧留空则直接复用左侧字段名）。需要几行就填几行，空行会被忽略。
