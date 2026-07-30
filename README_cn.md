@@ -1,10 +1,10 @@
 > 🌐 语言： [中文](README_cn.md) · [English](README.md)
 
-# Sanity Publish for Obsidian（中文版）
+# Sanity for Obsidian（中文版）
 
 ![Obsidian 与 Sanity 徽标](cover-image.png)
 
-Sanity Publish 是一款 Obsidian 插件，让你可以在 Obsidian 仓库与 Sanity Studio 之间**双向**发布和拉取文档。它支持完整的工作流：在 Obsidian 中写作并发布到 Sanity，或从 Sanity 把文档（包括草稿）拉回 Obsidian 阅读、编辑。
+Sanity 是一款 Obsidian 插件，让你可以在 Obsidian 仓库与 Sanity Studio 之间**双向**发布和拉取文档。它支持完整的工作流：在 Obsidian 中写作并发布到 Sanity，或从 Sanity 把文档（包括草稿）拉回 Obsidian 阅读、编辑。
 
 ## 安装
 
@@ -50,15 +50,32 @@ cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidia
 
 ### Sanity Title Field
 
-代表标题的 schema 字段名。Sanity Publish 会把 Obsidian 文件名与该字段同步。留空则不同步文件名。
+代表标题的 schema 字段名。Sanity 会把这个字段同步进每篇笔记的 frontmatter（发布时也会写回）。留空则不同步标题。
 
 ### Sanity Body Field
 
-代表正文的 schema 字段名。它应当存储原始 Markdown（如 `bodyMarkdown`）。Sanity Publish 会把 Obsidian 文档内容同步到该字段。
+代表正文的 schema 字段名。它应当存储原始 Markdown（如 `bodyMarkdown`）。Sanity 会把 Obsidian 文档内容同步到该字段。
 
 ### Pull folder（高级）
 
 拉取的笔记保存到哪个文件夹。留空则保存到仓库根目录。
+
+### Additional fields to sync（高级）
+
+你还想保持同步的其他 Sanity 字段。每行一条，格式为 `sanityField:frontmatterKey`。支持 GROQ 路径，因此可以拉取嵌套值，例如 `slug.current:slug`。拉取时这些字段会写入每篇笔记的 frontmatter（图片引用会自动转换为 Sanity CDN URL）；发布时同样的 frontmatter 字段会写回 Sanity（CDN URL 会还原为资源引用）。
+
+典型博客的示例：
+
+```
+slug.current:slug
+description:description
+publishedAt:published
+tags:tags
+category:category
+image:image
+```
+
+留空则只同步标题与正文。
 
 ## 发布到 Sanity
 
@@ -76,6 +93,8 @@ cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidia
 - 每篇笔记的 frontmatter 包含：
   - `sanity_id` —— 该文档的 Sanity `_id`，是往返同步的钥匙。之后对该笔记点「发布」会更新**同一个** Sanity 文档。
   - `sanity_draft: true | false` —— 标记来源是草稿（`drafts.*`）还是正式文档（`post.*`），一眼即可区分。
+  - **标题** —— 配置好的标题字段会写入 frontmatter，因此拉回的笔记显示的是真实标题（发布时也会保留，而不会被文件名覆盖）。
+  - **Additional fields** —— 在「Additional fields to sync」中列出的字段也会写入 frontmatter，并在发布时写回。
 - 已存在的笔记（按 `sanity_id` 匹配）会原地更新，并保留你自行添加的其他 frontmatter 字段；新文档则新建，文件名依次取 `slug.current`、标题、`_id`。
 - 若设置了 **Pull folder**，笔记保存到此文件夹；否则保存到仓库根目录。
 

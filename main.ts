@@ -55,6 +55,62 @@ async function sanityMutate(
 	return res.json;
 }
 
+/**
+ * 解析「额外同步字段」配置（设置里的多行文本，通用、不绑定博客字段）。
+ * 每行格式：`sanityField:frontmatterKey`，例如 `slug.current:slug`。
+ * 只写字段名则前后都同名。用于把任意 Sanity 字段双向同步进 frontmatter。
+ */
+function parseSyncFields(raw?: string): { expr: string; key: string }[] {
+	const out: { expr: string; key: string }[] = [];
+	if (!raw) return out;
+	for (const line of raw.split(/\r?\n/)) {
+		const trimmed = line.trim();
+		if (!trimmed) continue;
+		const idx = trimmed.indexOf(":");
+		let expr: string;
+		let key: string;
+		if (idx === -1) {
+			expr = trimmed;
+			key = trimmed.replace(/[^A-Za-z0-9_]/g, "_");
+		} else {
+			expr = trimmed.slice(0, idx).trim();
+			key = trimmed.slice(idx + 1).trim().replace(/[^A-Za-z0-9_]/g, "_");
+		}
+		// 清洗 GROQ 表达式，避免注入 / 语法错误
+		expr = expr.replace(/[^A-Za-z0-9_.[\]]/g, "");
+		if (!expr || !key) continue;
+		out.push({ expr, key });
+	}
+	return out;
+}
+
+/** Sanity 图片 asset ref（image-xxx-WxH.ext）→ CDN URL */
+function sanityAssetUrlFromRef(
+	ref: string,
+	projectId: string,
+	dataset: string
+): string | null {
+	const m = ref.match(/^image-(.*)-(\d+x\d+)\.(\w+)$/);
+	if (!m) return null;
+	const [, assetId, dims, ext] = m;
+	return `https://cdn.sanity.io/images/${projectId}/${dataset}/${assetId}-${dims}.${ext}`;
+}
+
+/** CDN URL → Sanity 图片 asset ref（仅同项目同 dataset 时有效） */
+function sanityRefFromAssetUrl(
+	url: string,
+	projectId: string,
+	dataset: string
+): string | null {
+	const m = url.match(
+		/^https:\/\/cdn\.sanity\.io\/images\/(.+?)\/(.+?)\/(.+)-(\d+x\d+)\.(\w+)$/
+	);
+	if (!m) return null;
+	const [, p, d, assetId, dims, ext] = m;
+	if (p !== projectId || d !== dataset) return null;
+	return `image-${assetId}-${dims}.${ext}`;
+}
+
 export default class SanityPublishPlugin extends Plugin {
 	settings: SanityPluginSettings;
 	client: SanityClient;
@@ -214,10 +270,45 @@ export default class SanityPublishPlugin extends Plugin {
 		this.uploadAllImages().then(() =>
 			this.getActiveViewData().then(({ content, data }) => {
 				new Notice("Publishing content to Sanity...");
+				// 标题优先取 frontmatter 里配置好的标题字段，缺失才回退文件名
+				const titleField = this.settings.sanityTitleField;
+				const fmTitle = titleField ? data?.[titleField] : undefined;
+				const title =
+					typeof fmTitle === "string" && fmTitle
+						? fmTitle
+						: activeFile.basename;
+
+				// 收集「额外字段」回写 Sanity（图片 URL 还原为 asset ref）
+				const extraAttrs: Record<string, any> = {};
+				const extraFields = parseSyncFields(this.settings.syncFields);
+				for (const f of extraFields) {
+					const raw = (data as any)?.[f.key];
+					if (raw === undefined || raw === null) continue;
+					if (
+						typeof raw === "string" &&
+						raw.startsWith("https://cdn.sanity.io/images/")
+					) {
+						const ref = sanityRefFromAssetUrl(
+							raw,
+							this.settings.projectId || "",
+							this.settings.dataset
+						);
+						if (ref) {
+							extraAttrs[f.key] = {
+								_type: "image",
+								asset: { _type: "reference", _ref: ref },
+							};
+							continue;
+						}
+					}
+					extraAttrs[f.key] = raw;
+				}
+
 				this.createorUpdateDocument({
 					content,
-					title: activeFile.basename,
+					title,
 					sanityId: data?.sanity_id,
+					extra: extraAttrs,
 				})
 					.then((r) => {
 						if (r?._id) {
@@ -250,18 +341,24 @@ export default class SanityPublishPlugin extends Plugin {
 		const titleField = this.settings.sanityTitleField || "title";
 		const bodyField = this.settings.sanityBodyField || "body";
 
-		// 拉取全部 post（含草稿）：用 isDraft 标记区分正式 / 草稿。
+		// 拉取全部文档（含草稿）：用 isDraft 标记区分正式 / 草稿。
 		// 类型/字段名内联进 GROQ（并做标识符清洗），不使用 $param，避免请求 400。
 		const safeType = String(type).replace(/[^a-zA-Z0-9_]/g, "");
 		const safeTitle = String(titleField).replace(/[^a-zA-Z0-9_]/g, "");
 		const safeBody = String(bodyField).replace(/[^a-zA-Z0-9_]/g, "");
+		// 额外字段（通用双向同步）：slug/描述/标签/分类/封面/发布时间等
+		const extraFields = parseSyncFields(this.settings.syncFields);
+		const extraProj = extraFields
+			.map((f) => `"${f.key}": ${f.expr}`)
+			.join(", ");
 		const query =
 			`*[_type == "${safeType}"]{` +
 			`  _id,` +
 			`  "title": ${safeTitle},` +
 			`  "body": ${safeBody},` +
-			`  "slug": slug.current,` +
+			`  "_syncSlug": slug.current,` +
 			`  "isDraft": _id in path("drafts.**")` +
+			(extraFields.length ? `,  ${extraProj}` : ``) +
 			`}`;
 
 		let docs: any[] = [];
@@ -307,12 +404,33 @@ export default class SanityPublishPlugin extends Plugin {
 		for (const doc of docs) {
 			const isDraft = !!doc.isDraft;
 			const baseName = this.sanitizeFilename(
-				doc.slug || doc.title || doc._id
+				doc._syncSlug || doc.title || doc._id
 			);
-			const frontmatter = {
+			const frontmatter: any = {
 				sanity_id: doc._id,
 				sanity_draft: isDraft,
 			};
+			// 标题写入 frontmatter（双向同步）
+			if (doc.title) frontmatter[safeTitle] = doc.title;
+			// 额外字段写入 frontmatter（图片引用自动转为 CDN URL）
+			for (const f of extraFields) {
+				let v = (doc as any)[f.key];
+				if (v === undefined || v === null) continue;
+				if (
+					v &&
+					v._type === "image" &&
+					v.asset &&
+					typeof v.asset._ref === "string"
+				) {
+					const url = sanityAssetUrlFromRef(
+						v.asset._ref,
+						projectId,
+						dataset
+					);
+					if (url) v = url;
+				}
+				frontmatter[f.key] = v;
+			}
 			const body: string = doc.body || "";
 
 			const existing = existingById.get(doc._id);
@@ -398,10 +516,12 @@ export default class SanityPublishPlugin extends Plugin {
 		title,
 		content,
 		sanityId,
+		extra,
 	}: {
 		title: string;
 		content: string;
 		sanityId: string;
+		extra?: Record<string, any>;
 	}) {
 		const _type = this.settings.sanityTypeName;
 		const titleField = this.settings.sanityTitleField;
@@ -415,6 +535,8 @@ export default class SanityPublishPlugin extends Plugin {
 		// Use the users field settings for the attribute names
 		let attributes = { [bodyField]: content };
 		if (titleField) attributes[titleField] = title;
+		// 额外字段（通用双向同步）
+		if (extra) Object.assign(attributes, extra);
 
 		let mutation;
 		if (!sanityId) {

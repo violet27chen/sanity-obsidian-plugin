@@ -1,10 +1,10 @@
 > 🌐 Language: [English](README.md) · [中文](README_cn.md)
 
-# Sanity Publish for Obsidian
+# Sanity for Obsidian
 
 ![Obsidian logo and Sanity logo together](cover-image.png)
 
-Sanity Publish is a plugin for Obsidian that lets you publish **and** pull documents between your Obsidian vault and your Sanity Studio. It supports a two-way workflow: write in Obsidian and publish to Sanity, or pull your Sanity documents (including drafts) back into Obsidian to read or edit them.
+Sanity is a plugin for Obsidian that lets you publish **and** pull documents between your Obsidian vault and your Sanity Studio. It supports a two-way workflow: write in Obsidian and publish to Sanity, or pull your Sanity documents (including drafts) back into Obsidian to read or edit them.
 
 ## Installation
 
@@ -50,15 +50,32 @@ The document type to sync (e.g. `post` or `blog`). Default `post`.
 
 ### Sanity Title Field
 
-The schema field that holds the title. Sanity Publish syncs the Obsidian filename with this field. Leave blank to skip syncing the filename.
+The schema field that holds the title. Sanity syncs this field into each note's frontmatter (and back when publishing). Leave blank to skip syncing the title.
 
 ### Sanity Body Field
 
-The schema field that holds the document body. It should store the raw Markdown (e.g. `bodyMarkdown`). Sanity Publish syncs the Obsidian document content with this field.
+The schema field that holds the document body. It should store the raw Markdown (e.g. `bodyMarkdown`). Sanity syncs the Obsidian document content with this field.
 
 ### Pull folder (Advanced)
 
 Where notes pulled from Sanity are saved. Leave blank to save at the vault root.
+
+### Additional fields to sync (Advanced)
+
+Any other Sanity fields you want to keep in sync. Enter one per line as `sanityField:frontmatterKey`. GROQ paths are allowed, so you can pull nested values, e.g. `slug.current:slug`. On pull, these fields are written into each note's frontmatter (image references are converted to Sanity CDN URLs automatically); on publish, the same frontmatter fields are written back to Sanity (CDN URLs are converted back to asset references).
+
+Example for a typical blog:
+
+```
+slug.current:slug
+description:description
+publishedAt:published
+tags:tags
+category:category
+image:image
+```
+
+Leave blank to sync only the title and body.
 
 ## Publishing to Sanity
 
@@ -76,6 +93,8 @@ Run the command **`Pull from Sanity (sync all posts)`** to sync your Sanity docu
 - Each note gets frontmatter:
   - `sanity_id` — the document's Sanity `_id`. This is the round-trip key: publishing the note later updates the **same** Sanity document.
   - `sanity_draft: true | false` — marks whether the source is a draft (`drafts.*`) or a published document (`post.*`), so you can tell them apart at a glance.
+  - **Title** — the configured title field is written into frontmatter, so the pulled note shows the real title (and publishing preserves it instead of overwriting with the filename).
+  - **Additional fields** — any fields listed in *Additional fields to sync* are also written into frontmatter and pushed back on publish.
 - Existing notes (matched by `sanity_id`) are updated in place, preserving any other frontmatter you have added. New documents are created; filenames use `slug.current`, then the title, then the `_id`.
 - Notes are saved to the **Pull folder** if set, otherwise the vault root.
 

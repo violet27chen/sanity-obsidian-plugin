@@ -10,6 +10,7 @@ export interface SanityPluginSettings {
 	sanityBodyField: string;
 	contentDivider?: string;
 	pullFolder?: string;
+	syncFields?: string;
 }
 
 export const DEFAULT_SETTINGS: SanityPluginSettings = {
@@ -20,6 +21,7 @@ export const DEFAULT_SETTINGS: SanityPluginSettings = {
 	sanityBodyField: "body",
 	contentDivider: "",
 	pullFolder: "",
+	syncFields: "",
 };
 
 export class SanitySettingTab extends PluginSettingTab {
@@ -158,6 +160,21 @@ export class SanitySettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.pullFolder || "")
 					.onChange(async (value) => {
 						this.plugin.settings.pullFolder = value || "";
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Additional fields to sync")
+			.setDesc(
+				"Extra Sanity fields to sync into each note's frontmatter (and back on publish). One per line: `sanityField:frontmatterKey`. GROQ paths allowed, e.g. `slug.current:slug`. Leave blank to sync only title + body."
+			)
+			.addTextArea((text) =>
+				text
+					.setPlaceholder("slug.current:slug\ndescription:description\ntags:tags")
+					.setValue(this.plugin.settings.syncFields || "")
+					.onChange(async (value) => {
+						this.plugin.settings.syncFields = value || "";
 						await this.plugin.saveSettings();
 					})
 			);

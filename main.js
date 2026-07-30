@@ -9632,7 +9632,8 @@ var DEFAULT_SETTINGS = {
   sanityTypeName: "post",
   sanityBodyField: "body",
   contentDivider: "",
-  pullFolder: ""
+  pullFolder: "",
+  syncFields: ""
 };
 var SanitySettingTab = class extends import_obsidian.PluginSettingTab {
   constructor(app, plugin) {
@@ -9707,6 +9708,14 @@ var SanitySettingTab = class extends import_obsidian.PluginSettingTab {
     ).addText(
       (text) => text.setPlaceholder("e.g. Sanity").setValue(this.plugin.settings.pullFolder || "").onChange(async (value) => {
         this.plugin.settings.pullFolder = value || "";
+        await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("Additional fields to sync").setDesc(
+      "Extra Sanity fields to sync into each note's frontmatter (and back on publish). One per line: `sanityField:frontmatterKey`. GROQ paths allowed, e.g. `slug.current:slug`. Leave blank to sync only title + body."
+    ).addTextArea(
+      (text) => text.setPlaceholder("slug.current:slug\ndescription:description\ntags:tags").setValue(this.plugin.settings.syncFields || "").onChange(async (value) => {
+        this.plugin.settings.syncFields = value || "";
         await this.plugin.saveSettings();
       })
     );
@@ -10923,6 +10932,49 @@ async function sanityMutate(mutations, settings) {
   }
   return res.json;
 }
+function parseSyncFields(raw) {
+  const out = [];
+  if (!raw)
+    return out;
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed)
+      continue;
+    const idx = trimmed.indexOf(":");
+    let expr;
+    let key;
+    if (idx === -1) {
+      expr = trimmed;
+      key = trimmed.replace(/[^A-Za-z0-9_]/g, "_");
+    } else {
+      expr = trimmed.slice(0, idx).trim();
+      key = trimmed.slice(idx + 1).trim().replace(/[^A-Za-z0-9_]/g, "_");
+    }
+    expr = expr.replace(/[^A-Za-z0-9_.[\]]/g, "");
+    if (!expr || !key)
+      continue;
+    out.push({ expr, key });
+  }
+  return out;
+}
+function sanityAssetUrlFromRef(ref, projectId2, dataset2) {
+  const m = ref.match(/^image-(.*)-(\d+x\d+)\.(\w+)$/);
+  if (!m)
+    return null;
+  const [, assetId, dims, ext] = m;
+  return `https://cdn.sanity.io/images/${projectId2}/${dataset2}/${assetId}-${dims}.${ext}`;
+}
+function sanityRefFromAssetUrl(url, projectId2, dataset2) {
+  const m = url.match(
+    /^https:\/\/cdn\.sanity\.io\/images\/(.+?)\/(.+?)\/(.+)-(\d+x\d+)\.(\w+)$/
+  );
+  if (!m)
+    return null;
+  const [, p3, d3, assetId, dims, ext] = m;
+  if (p3 !== projectId2 || d3 !== dataset2)
+    return null;
+  return `image-${assetId}-${dims}.${ext}`;
+}
 var SanityPublishPlugin = class extends import_obsidian2.Plugin {
   async onload() {
     await this.loadSettings();
@@ -11045,10 +11097,36 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     this.uploadAllImages().then(
       () => this.getActiveViewData().then(({ content, data }) => {
         new import_obsidian2.Notice("Publishing content to Sanity...");
+        const titleField = this.settings.sanityTitleField;
+        const fmTitle = titleField ? data == null ? void 0 : data[titleField] : void 0;
+        const title = typeof fmTitle === "string" && fmTitle ? fmTitle : activeFile.basename;
+        const extraAttrs = {};
+        const extraFields = parseSyncFields(this.settings.syncFields);
+        for (const f3 of extraFields) {
+          const raw = data == null ? void 0 : data[f3.key];
+          if (raw === void 0 || raw === null)
+            continue;
+          if (typeof raw === "string" && raw.startsWith("https://cdn.sanity.io/images/")) {
+            const ref = sanityRefFromAssetUrl(
+              raw,
+              this.settings.projectId || "",
+              this.settings.dataset
+            );
+            if (ref) {
+              extraAttrs[f3.key] = {
+                _type: "image",
+                asset: { _type: "reference", _ref: ref }
+              };
+              continue;
+            }
+          }
+          extraAttrs[f3.key] = raw;
+        }
         this.createorUpdateDocument({
           content,
-          title: activeFile.basename,
-          sanityId: data == null ? void 0 : data.sanity_id
+          title,
+          sanityId: data == null ? void 0 : data.sanity_id,
+          extra: extraAttrs
         }).then((r2) => {
           if (r2 == null ? void 0 : r2._id) {
             this.updateFrontmatter({ sanity_id: r2._id });
@@ -11080,7 +11158,9 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     const safeType = String(type).replace(/[^a-zA-Z0-9_]/g, "");
     const safeTitle = String(titleField).replace(/[^a-zA-Z0-9_]/g, "");
     const safeBody = String(bodyField).replace(/[^a-zA-Z0-9_]/g, "");
-    const query = `*[_type == "${safeType}"]{  _id,  "title": ${safeTitle},  "body": ${safeBody},  "slug": slug.current,  "isDraft": _id in path("drafts.**")}`;
+    const extraFields = parseSyncFields(this.settings.syncFields);
+    const extraProj = extraFields.map((f3) => `"${f3.key}": ${f3.expr}`).join(", ");
+    const query = `*[_type == "${safeType}"]{  _id,  "title": ${safeTitle},  "body": ${safeBody},  "_syncSlug": slug.current,  "isDraft": _id in path("drafts.**")` + (extraFields.length ? `,  ${extraProj}` : ``) + `}`;
     let docs = [];
     try {
       const url = `https://${projectId2}.api.sanity.io/${QUERY_API_VERSION}/data/query/${dataset2}?query=${encodeURIComponent(query)}`;
@@ -11114,12 +11194,29 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     for (const doc of docs) {
       const isDraft = !!doc.isDraft;
       const baseName = this.sanitizeFilename(
-        doc.slug || doc.title || doc._id
+        doc._syncSlug || doc.title || doc._id
       );
       const frontmatter = {
         sanity_id: doc._id,
         sanity_draft: isDraft
       };
+      if (doc.title)
+        frontmatter[safeTitle] = doc.title;
+      for (const f3 of extraFields) {
+        let v2 = doc[f3.key];
+        if (v2 === void 0 || v2 === null)
+          continue;
+        if (v2 && v2._type === "image" && v2.asset && typeof v2.asset._ref === "string") {
+          const url = sanityAssetUrlFromRef(
+            v2.asset._ref,
+            projectId2,
+            dataset2
+          );
+          if (url)
+            v2 = url;
+        }
+        frontmatter[f3.key] = v2;
+      }
       const body = doc.body || "";
       const existing = existingById.get(doc._id);
       if (existing) {
@@ -11189,7 +11286,8 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
   async createorUpdateDocument({
     title,
     content,
-    sanityId
+    sanityId,
+    extra
   }) {
     var _a, _b;
     const _type = this.settings.sanityTypeName;
@@ -11201,6 +11299,8 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     let attributes = { [bodyField]: content };
     if (titleField)
       attributes[titleField] = title;
+    if (extra)
+      Object.assign(attributes, extra);
     let mutation;
     if (!sanityId) {
       mutation = {
