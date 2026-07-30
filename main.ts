@@ -450,7 +450,8 @@ export default class SanityPublishPlugin extends Plugin {
 
 	getFilePathFromLine(line: string) {
 		// See if it matches either an Obsidian embed or normal md embed
-		const matches = line.match(/!\[\[(.*?)\]\]|!\[.\]\((.*?)\)/);
+		// Alt text can be any length, so use non-greedy match for brackets.
+		const matches = line.match(/!\[\[(.*?)\]\]|!\[.*?\]\((.*?)\)/);
 		if (!matches) return;
 		// Don't upload if already a URL
 		if (matches?.[2]?.match(httpRegex)) return;

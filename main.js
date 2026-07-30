@@ -11231,7 +11231,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
   }
   getFilePathFromLine(line) {
     var _a;
-    const matches = line.match(/!\[\[(.*?)\]\]|!\[.\]\((.*?)\)/);
+    const matches = line.match(/!\[\[(.*?)\]\]|!\[.*?\]\((.*?)\)/);
     if (!matches)
       return;
     if ((_a = matches == null ? void 0 : matches[2]) == null ? void 0 : _a.match(httpRegex))
