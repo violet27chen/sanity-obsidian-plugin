@@ -375,7 +375,12 @@ export default class SanityPublishPlugin extends Plugin {
 		const parts: string[] = [`_id`, `"isDraft": _id in path("drafts.**")`];
 		if (safeTitle) parts.push(`"_syncTitle": ${safeTitle}`);
 		if (safeBody) parts.push(`"_syncBody": ${safeBody}`);
-		if (safeFilename) parts.push(`"_syncFilename": ${safeFilename}`);
+		if (safeFilename) {
+			parts.push(`"_syncFilename": ${safeFilename}`);
+		} else {
+			// 未指定文件名来源时，自动回退 slug.current（再回退标题、sanity_id）
+			parts.push(`"_syncFilename": slug.current`);
+		}
 		for (const f of extraFields) {
 			parts.push(`"${f.key}": ${f.expr}`);
 		}
@@ -423,9 +428,9 @@ export default class SanityPublishPlugin extends Plugin {
 		let updated = 0;
 		for (const doc of docs) {
 			const isDraft = !!doc.isDraft;
-			// 文件名来源：Filename field > Title field，不再用 sanity_id 当文件名
+			// 文件名来源回退：Filename field > slug.current > Title field > sanity_id
 			const baseName = this.sanitizeFilename(
-				doc._syncFilename || doc._syncTitle || "untitled"
+				doc._syncFilename || doc._syncTitle || doc._id || "untitled"
 			);
 			const frontmatter: any = {
 				sanity_id: doc._id,

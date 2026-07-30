@@ -1,5 +1,31 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab, Setting, TextComponent } from "obsidian";
 import SanityPublishPlugin from "main";
+
+/** 把 syncFields 字符串解析成最多 10 行的 {sanity, fm} 结构（通用，不预设字段名） */
+function splitSyncRows(raw?: string): { sanity: string; fm: string }[] {
+	const rows: { sanity: string; fm: string }[] = [];
+	for (const line of (raw || "").split(/\r?\n/)) {
+		const t = line.trim();
+		if (!t) continue;
+		const i = t.indexOf(":");
+		if (i === -1) rows.push({ sanity: t, fm: "" });
+		else
+			rows.push({
+				sanity: t.slice(0, i).trim(),
+				fm: t.slice(i + 1).trim(),
+			});
+	}
+	while (rows.length < 10) rows.push({ sanity: "", fm: "" });
+	return rows;
+}
+
+/** 把字段行序列化回 syncFields 字符串（fm 留空则省略冒号，复用 sanity 名） */
+function joinSyncRows(rows: { sanity: string; fm: string }[]): string {
+	return rows
+		.filter((r) => r.sanity.trim())
+		.map((r) => r.sanity.trim() + (r.fm.trim() ? ":" + r.fm.trim() : ""))
+		.join("\n");
+}
 
 export interface SanityPluginSettings {
 	apiToken: string | undefined;
@@ -184,16 +210,45 @@ export class SanitySettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Additional fields to sync")
 			.setDesc(
-				"Extra Sanity fields to sync into each note's frontmatter (and back on publish). One per line: `sanityField:frontmatterKey`. GROQ paths allowed, e.g. `slug.current:slug`. Leave blank to sync only title + body."
-			)
-			.addTextArea((text) =>
-				text
-					.setPlaceholder("slug.current:slug\ndescription:description\ntags:tags")
-					.setValue(this.plugin.settings.syncFields || "")
-					.onChange(async (value) => {
-						this.plugin.settings.syncFields = value || "";
-						await this.plugin.saveSettings();
-					})
+				"Extra Sanity fields to sync into each note's frontmatter (and back on publish). " +
+					"One row per field — left = Sanity field (GROQ path allowed, e.g. `slug.current`), " +
+					"right = frontmatter key (leave blank to reuse the Sanity field name). " +
+					"Fill as many rows as you need; blank rows are ignored."
 			);
+
+		// 通用字段行：每行两个输入框，不预设任何字段名，保持插件通用性
+		const rows = splitSyncRows(this.plugin.settings.syncFields);
+		const box = containerEl.createDiv({ cls: "sanity-sync-box" });
+		const persist = async () => {
+			this.plugin.settings.syncFields = joinSyncRows(rows);
+			await this.plugin.saveSettings();
+		};
+		for (let i = 0; i < 10; i++) {
+			const rowEl = box.createDiv({ cls: "sanity-sync-row" });
+			const left = new TextComponent(rowEl)
+				.setPlaceholder("Sanity 字段 (如 slug.current)")
+				.setValue(rows[i].sanity)
+				.onChange(async (v) => {
+					rows[i].sanity = v;
+					await persist();
+				});
+			left.inputEl.addClass("sanity-sync-input");
+			const right = new TextComponent(rowEl)
+				.setPlaceholder("Frontmatter 键 (可留空)")
+				.setValue(rows[i].fm)
+				.onChange(async (v) => {
+					rows[i].fm = v;
+					await persist();
+				});
+			right.inputEl.addClass("sanity-sync-input");
+		}
+		containerEl.createEl("style", {
+			text:
+				".sanity-sync-box{display:flex;flex-direction:column;gap:6px;margin:6px 0 2px;}" +
+				".sanity-sync-row{display:flex;gap:8px;}" +
+				".sanity-sync-input{flex:1 1 0;min-width:0;background:var(--background-modifier-form-field);" +
+				"border:1px solid var(--background-modifier-border);border-radius:4px;" +
+				"padding:5px 8px;color:var(--text-normal);height:auto;}",
+		});
 	}
 }

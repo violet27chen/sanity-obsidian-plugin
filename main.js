@@ -9625,6 +9625,28 @@ var deprecatedCreateClient = defineDeprecatedCreateClient(createClient);
 
 // SanitySettingTab.ts
 var import_obsidian = require("obsidian");
+function splitSyncRows(raw) {
+  const rows = [];
+  for (const line of (raw || "").split(/\r?\n/)) {
+    const t2 = line.trim();
+    if (!t2)
+      continue;
+    const i2 = t2.indexOf(":");
+    if (i2 === -1)
+      rows.push({ sanity: t2, fm: "" });
+    else
+      rows.push({
+        sanity: t2.slice(0, i2).trim(),
+        fm: t2.slice(i2 + 1).trim()
+      });
+  }
+  while (rows.length < 10)
+    rows.push({ sanity: "", fm: "" });
+  return rows;
+}
+function joinSyncRows(rows) {
+  return rows.filter((r2) => r2.sanity.trim()).map((r2) => r2.sanity.trim() + (r2.fm.trim() ? ":" + r2.fm.trim() : "")).join("\n");
+}
 var DEFAULT_SETTINGS = {
   apiToken: "",
   projectId: "",
@@ -9721,13 +9743,30 @@ var SanitySettingTab = class extends import_obsidian.PluginSettingTab {
       })
     );
     new import_obsidian.Setting(containerEl).setName("Additional fields to sync").setDesc(
-      "Extra Sanity fields to sync into each note's frontmatter (and back on publish). One per line: `sanityField:frontmatterKey`. GROQ paths allowed, e.g. `slug.current:slug`. Leave blank to sync only title + body."
-    ).addTextArea(
-      (text) => text.setPlaceholder("slug.current:slug\ndescription:description\ntags:tags").setValue(this.plugin.settings.syncFields || "").onChange(async (value) => {
-        this.plugin.settings.syncFields = value || "";
-        await this.plugin.saveSettings();
-      })
+      "Extra Sanity fields to sync into each note's frontmatter (and back on publish). One row per field \u2014 left = Sanity field (GROQ path allowed, e.g. `slug.current`), right = frontmatter key (leave blank to reuse the Sanity field name). Fill as many rows as you need; blank rows are ignored."
     );
+    const rows = splitSyncRows(this.plugin.settings.syncFields);
+    const box = containerEl.createDiv({ cls: "sanity-sync-box" });
+    const persist = async () => {
+      this.plugin.settings.syncFields = joinSyncRows(rows);
+      await this.plugin.saveSettings();
+    };
+    for (let i2 = 0; i2 < 10; i2++) {
+      const rowEl = box.createDiv({ cls: "sanity-sync-row" });
+      const left = new import_obsidian.TextComponent(rowEl).setPlaceholder("Sanity \u5B57\u6BB5 (\u5982 slug.current)").setValue(rows[i2].sanity).onChange(async (v2) => {
+        rows[i2].sanity = v2;
+        await persist();
+      });
+      left.inputEl.addClass("sanity-sync-input");
+      const right = new import_obsidian.TextComponent(rowEl).setPlaceholder("Frontmatter \u952E (\u53EF\u7559\u7A7A)").setValue(rows[i2].fm).onChange(async (v2) => {
+        rows[i2].fm = v2;
+        await persist();
+      });
+      right.inputEl.addClass("sanity-sync-input");
+    }
+    containerEl.createEl("style", {
+      text: ".sanity-sync-box{display:flex;flex-direction:column;gap:6px;margin:6px 0 2px;}.sanity-sync-row{display:flex;gap:8px;}.sanity-sync-input{flex:1 1 0;min-width:0;background:var(--background-modifier-form-field);border:1px solid var(--background-modifier-border);border-radius:4px;padding:5px 8px;color:var(--text-normal);height:auto;}"
+    });
   }
 };
 
@@ -11192,8 +11231,11 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       parts.push(`"_syncTitle": ${safeTitle}`);
     if (safeBody)
       parts.push(`"_syncBody": ${safeBody}`);
-    if (safeFilename)
+    if (safeFilename) {
       parts.push(`"_syncFilename": ${safeFilename}`);
+    } else {
+      parts.push(`"_syncFilename": slug.current`);
+    }
     for (const f3 of extraFields) {
       parts.push(`"${f3.key}": ${f3.expr}`);
     }
@@ -11231,7 +11273,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     for (const doc of docs) {
       const isDraft = !!doc.isDraft;
       const baseName = this.sanitizeFilename(
-        doc._syncFilename || doc._syncTitle || "untitled"
+        doc._syncFilename || doc._syncTitle || doc._id || "untitled"
       );
       const frontmatter = {
         sanity_id: doc._id,
