@@ -352,7 +352,7 @@ export default class SanityPublishPlugin extends Plugin {
 		const { projectId, dataset, apiToken } = this.settings;
 		if (!projectId || !apiToken) {
 			new Notice(
-				"Please configure Sanity project ID and API token in settings first."
+				"请先在插件设置中填写 Sanity Project ID 和 API Token，再执行拉取。"
 			);
 			return;
 		}
@@ -398,13 +398,19 @@ export default class SanityPublishPlugin extends Plugin {
 			});
 			docs = res.json?.result || [];
 		} catch (e: any) {
-			const detail = e?.response?.text || e?.text || e?.message || e;
-			console.error("Sanity pull failed:", e?.status, detail);
-			new Notice(
-				"Failed to pull from Sanity (HTTP " +
-					(e?.status || "?") +
-					"). See developer console for details."
-			);
+			const status = e?.status;
+			const detail = e?.message || e?.response?.text || e?.text || String(e);
+			console.error("Sanity pull failed:", status, detail, "project=", projectId);
+			let msg: string;
+			if (!status) {
+				// 请求未返回 HTTP 状态码 = 网络层异常（DNS / 超时 / 被墙 / 无网络）
+				msg =
+					"拉取失败：无法连接到 Sanity（网络错误）。\n" +
+					`请检查：①手机网络能否访问 ${projectId}.api.sanity.io；②是否需要 VPN/代理；③插件设置里的 Project ID / Token 是否已填写。`;
+			} else {
+				msg = `拉取失败（HTTP ${status}）：${detail}`;
+			}
+			new Notice(msg, 12000);
 			return;
 		}
 

@@ -11212,7 +11212,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     const { projectId: projectId2, dataset: dataset2, apiToken } = this.settings;
     if (!projectId2 || !apiToken) {
       new import_obsidian2.Notice(
-        "Please configure Sanity project ID and API token in settings first."
+        "\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u586B\u5199 Sanity Project ID \u548C API Token\uFF0C\u518D\u6267\u884C\u62C9\u53D6\u3002"
       );
       return;
     }
@@ -11250,11 +11250,17 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       });
       docs = ((_a = res.json) == null ? void 0 : _a.result) || [];
     } catch (e2) {
-      const detail = ((_b = e2 == null ? void 0 : e2.response) == null ? void 0 : _b.text) || (e2 == null ? void 0 : e2.text) || (e2 == null ? void 0 : e2.message) || e2;
-      console.error("Sanity pull failed:", e2 == null ? void 0 : e2.status, detail);
-      new import_obsidian2.Notice(
-        "Failed to pull from Sanity (HTTP " + ((e2 == null ? void 0 : e2.status) || "?") + "). See developer console for details."
-      );
+      const status = e2 == null ? void 0 : e2.status;
+      const detail = (e2 == null ? void 0 : e2.message) || ((_b = e2 == null ? void 0 : e2.response) == null ? void 0 : _b.text) || (e2 == null ? void 0 : e2.text) || String(e2);
+      console.error("Sanity pull failed:", status, detail, "project=", projectId2);
+      let msg;
+      if (!status) {
+        msg = `\u62C9\u53D6\u5931\u8D25\uFF1A\u65E0\u6CD5\u8FDE\u63A5\u5230 Sanity\uFF08\u7F51\u7EDC\u9519\u8BEF\uFF09\u3002
+\u8BF7\u68C0\u67E5\uFF1A\u2460\u624B\u673A\u7F51\u7EDC\u80FD\u5426\u8BBF\u95EE ${projectId2}.api.sanity.io\uFF1B\u2461\u662F\u5426\u9700\u8981 VPN/\u4EE3\u7406\uFF1B\u2462\u63D2\u4EF6\u8BBE\u7F6E\u91CC\u7684 Project ID / Token \u662F\u5426\u5DF2\u586B\u5199\u3002`;
+      } else {
+        msg = `\u62C9\u53D6\u5931\u8D25\uFF08HTTP ${status}\uFF09\uFF1A${detail}`;
+      }
+      new import_obsidian2.Notice(msg, 12e3);
       return;
     }
     if (!docs.length) {
