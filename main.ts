@@ -162,26 +162,28 @@ export default class SanityPublishPlugin extends Plugin {
 		this.addCommand({
 			id: "sanity-publish-command",
 			name: "Publish to Sanity",
-			checkCallback: (checking) => {
-				const activeView =
-					this.app.workspace.getActiveViewOfType(MarkdownView);
+			callback: () => {
 				const activeFile = this.app.workspace.getActiveFile();
-
-				if (!activeView || !activeFile) {
-					if (checking) return false;
+				if (!activeFile) {
+					new Notice("请先打开一个 Markdown 文件，再执行发布。");
 					return;
-				} else if (checking) {
-					return true;
 				}
-
-				this.publishToSanity(activeFile);
+				this.publishToSanity(activeFile).catch((e: any) => {
+					console.error("Publish crashed:", e);
+					new Notice("Publish 出错：" + (e?.message || String(e)), 10000);
+				});
 			},
 		});
 
 		this.addCommand({
 			id: "sanity-pull-command",
 			name: "Pull from Sanity (sync all posts)",
-			callback: () => this.pullFromSanity(),
+			callback: () => {
+				this.pullFromSanity().catch((e: any) => {
+					console.error("Pull crashed:", e);
+					new Notice("Pull 出错：" + (e?.message || String(e)), 10000);
+				});
+			},
 		});
 
 		this.registerEvent(

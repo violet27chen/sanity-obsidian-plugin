@@ -11066,23 +11066,27 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     this.addCommand({
       id: "sanity-publish-command",
       name: "Publish to Sanity",
-      checkCallback: (checking) => {
-        const activeView = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
+      callback: () => {
         const activeFile = this.app.workspace.getActiveFile();
-        if (!activeView || !activeFile) {
-          if (checking)
-            return false;
+        if (!activeFile) {
+          new import_obsidian2.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u4EF6\uFF0C\u518D\u6267\u884C\u53D1\u5E03\u3002");
           return;
-        } else if (checking) {
-          return true;
         }
-        this.publishToSanity(activeFile);
+        this.publishToSanity(activeFile).catch((e2) => {
+          console.error("Publish crashed:", e2);
+          new import_obsidian2.Notice("Publish \u51FA\u9519\uFF1A" + ((e2 == null ? void 0 : e2.message) || String(e2)), 1e4);
+        });
       }
     });
     this.addCommand({
       id: "sanity-pull-command",
       name: "Pull from Sanity (sync all posts)",
-      callback: () => this.pullFromSanity()
+      callback: () => {
+        this.pullFromSanity().catch((e2) => {
+          console.error("Pull crashed:", e2);
+          new import_obsidian2.Notice("Pull \u51FA\u9519\uFF1A" + ((e2 == null ? void 0 : e2.message) || String(e2)), 1e4);
+        });
+      }
     });
     this.registerEvent(
       this.app.workspace.on("editor-menu", (menu, editor, info) => {
