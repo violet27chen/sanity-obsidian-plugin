@@ -1,3 +1,5 @@
+> 🌐 Language: [English](README.md) · [中文](README_cn.md)
+
 # Sanity Publish for Obsidian
 
 ![Obsidian logo and Sanity logo together](cover-image.png)
@@ -8,8 +10,10 @@ Sanity Publish is a plugin for Obsidian that allows you to publish and sync docu
 
 **Sanity Publish is in alpha and not currently available through the Community Plugins marketplace.** So, in order to install it into your Obsidian vault, you'll have to clone the repository manually. You can do that by running the following command from your vault's root directory:
 
+> **Note:** this is the **CORS-fixed, bidirectional fork**. For auto-updates we recommend installing via **BRAT** instead (see the 📦 section at the bottom).
+
 ```
-cd .obsidian/plugins && git clone https://github.com/drewlyton/sanity-obsidian-plugin.git
+cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidian-plugin.git
 ```
 
 Once the repo is cloned into your `plugins` folder, restart Obsidian and navigate to 'Settings'. You should see 'Sanity Publish' in your list of Installed Plugins. Enable the plugin and then navigate to the plugin settings to continue configuration.

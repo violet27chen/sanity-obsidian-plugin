@@ -1,3 +1,5 @@
+> 🌐 语言： [中文](README_cn.md) · [English](README.md)
+
 # Sanity Publish for Obsidian（中文版）
 
 ![Obsidian 与 Sanity 徽标](cover-image.png)
@@ -8,8 +10,10 @@ Sanity Publish 是一款 Obsidian 插件，允许你把 Obsidian 仓库中的文
 
 **Sanity Publish 目前处于 alpha 阶段，尚未上架社区插件市场。** 因此，要把它装进你的 Obsidian 仓库，需要手动克隆仓库。在仓库根目录下执行以下命令即可：
 
+> **说明：** 这是**已修复 CORS、支持双向同步的 fork 版本**。如需自动更新，推荐用 **BRAT** 安装（见底部 📦 章节）。
+
 ```
-cd .obsidian/plugins && git clone https://github.com/drewlyton/sanity-obsidian-plugin.git
+cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidian-plugin.git
 ```
 
 克隆到 `plugins` 文件夹后，重启 Obsidian 并进入「设置」。你应该在「已安装插件」列表中看到「Sanity Publish」。启用插件，然后进入插件设置继续配置。
