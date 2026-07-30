@@ -58,7 +58,7 @@ The schema field that holds the document body. It should store the raw Markdown 
 
 ### Filename field
 
-The Sanity field used to generate each Obsidian filename (and, by extension, the URL slug). GROQ paths are allowed, e.g. `slug.current`. If left blank, the **Title field** is used for the filename instead. The document's `sanity_id` is never used as the filename.
+The Sanity field used to generate each Obsidian filename (and, by extension, the URL slug). GROQ paths are allowed, e.g. `slug.current`. If left blank, the plugin falls back to `slug.current`, then the **Title field**, then the document's `sanity_id` as a last resort. The `sanity_id` is only ever used for the filename when no better source exists.
 
 ### Pull folder (Advanced)
 
@@ -66,20 +66,20 @@ Where notes pulled from Sanity are saved. Leave blank to save at the vault root.
 
 ### Additional fields to sync (Advanced)
 
-Any other Sanity fields you want to keep in sync. Enter one per line as `sanityField:frontmatterKey`. GROQ paths are allowed, so you can pull nested values, e.g. `slug.current:slug`. On pull, these fields are written into each note's frontmatter (image references are converted to Sanity CDN URLs automatically); on publish, the same frontmatter fields are written back to Sanity (CDN URLs are converted back to asset references).
+Any other Sanity fields you want to keep in sync. The settings UI shows **10 field rows** — for each row, type the Sanity field on the left (GROQ paths allowed, e.g. `slug.current`) and the frontmatter key on the right (leave the right side blank to reuse the Sanity field name). Fill as many rows as you need; blank rows are ignored.
 
-Example for a typical blog:
+Example for a typical blog (left → right):
 
 ```
-slug.current:slug
-description:description
-publishedAt:published
-tags:tags
-category:category
-image:image
+slug.current   →   slug
+description     →   description
+publishedAt     →   published
+tags            →   tags
+category        →   category
+image           →   image
 ```
 
-Leave blank to sync only the title and body.
+On pull, these fields are written into each note's frontmatter (image references are converted to Sanity CDN URLs automatically); on publish, the same frontmatter fields are written back to Sanity (CDN URLs are converted back to asset references). Leave all rows blank to sync only the title and body.
 
 ## Publishing to Sanity
 

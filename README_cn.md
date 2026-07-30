@@ -58,7 +58,7 @@ cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidia
 
 ### Filename field（文件名字段）
 
-用于生成每篇 Obsidian 笔记文件名的 Sanity 字段（也就是访问路由 slug）。支持 GROQ 路径，例如 `slug.current`。留空时改用**标题字段**作为文件名。插件永远不会用文档的 `sanity_id` 当文件名。
+用于生成每篇 Obsidian 笔记文件名的 Sanity 字段（也就是访问路由 slug）。支持 GROQ 路径，例如 `slug.current`。留空时，插件会依次回退到 `slug.current`、再回退到**标题字段**、最后以文档的 `sanity_id` 兜底。只有当没有任何更合适的来源时，`sanity_id` 才会被用作文件名。
 
 ### Pull folder（高级）
 
@@ -66,20 +66,20 @@ cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidia
 
 ### Additional fields to sync（高级）
 
-你还想保持同步的其他 Sanity 字段。每行一条，格式为 `sanityField:frontmatterKey`。支持 GROQ 路径，因此可以拉取嵌套值，例如 `slug.current:slug`。拉取时这些字段会写入每篇笔记的 frontmatter（图片引用会自动转换为 Sanity CDN URL）；发布时同样的 frontmatter 字段会写回 Sanity（CDN URL 会还原为资源引用）。
+你还想保持同步的其他 Sanity 字段。设置界面提供 **10 行字段输入框**——每行左侧填 Sanity 字段（支持 GROQ 路径，如 `slug.current`），右侧填对应的 frontmatter 键（右侧留空则直接复用左侧字段名）。需要几行就填几行，空行会被忽略。
 
-典型博客的示例：
+典型博客的示例（左 → 右）：
 
 ```
-slug.current:slug
-description:description
-publishedAt:published
-tags:tags
-category:category
-image:image
+slug.current   →   slug
+description     →   description
+publishedAt     →   published
+tags            →   tags
+category        →   category
+image           →   image
 ```
 
-留空则只同步标题与正文。
+拉取时这些字段会写入每篇笔记的 frontmatter（图片引用会自动转换为 Sanity CDN URL）；发布时同样的 frontmatter 字段会写回 Sanity（CDN URL 会还原为资源引用）。全部留空则只同步标题与正文。
 
 ## 发布到 Sanity
 
