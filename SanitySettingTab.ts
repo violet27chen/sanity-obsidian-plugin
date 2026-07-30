@@ -9,6 +9,7 @@ export interface SanityPluginSettings {
 	sanityTitleField?: string;
 	sanityBodyField: string;
 	contentDivider?: string;
+	pullFolder?: string;
 }
 
 export const DEFAULT_SETTINGS: SanityPluginSettings = {
@@ -18,6 +19,7 @@ export const DEFAULT_SETTINGS: SanityPluginSettings = {
 	sanityTypeName: "post",
 	sanityBodyField: "body",
 	contentDivider: "",
+	pullFolder: "",
 };
 
 export class SanitySettingTab extends PluginSettingTab {
@@ -139,8 +141,23 @@ export class SanitySettingTab extends PluginSettingTab {
 				text
 					.setPlaceholder("Enter your divider")
 					.setValue(this.plugin.settings.contentDivider || "")
+				.onChange(async (value) => {
+					this.plugin.settings.contentDivider = value || "";
+					await this.plugin.saveSettings();
+				})
+			);
+
+		new Setting(containerEl)
+			.setName("Pull folder")
+			.setDesc(
+				"Folder where posts pulled from Sanity are saved. Leave blank to save at the vault root."
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("e.g. Sanity")
+					.setValue(this.plugin.settings.pullFolder || "")
 					.onChange(async (value) => {
-						this.plugin.settings.contentDivider = value || "";
+						this.plugin.settings.pullFolder = value || "";
 						await this.plugin.saveSettings();
 					})
 			);

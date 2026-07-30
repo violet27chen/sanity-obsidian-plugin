@@ -92,6 +92,12 @@ export default class SanityPublishPlugin extends Plugin {
 			},
 		});
 
+		this.addCommand({
+			id: "sanity-pull-command",
+			name: "Pull from Sanity (sync all posts)",
+			callback: () => this.pullFromSanity(),
+		});
+
 		this.registerEvent(
 			this.app.workspace.on("editor-menu", (menu, editor, info) => {
 				const lineNumber = editor.getCursor().line;
@@ -230,6 +236,124 @@ export default class SanityPublishPlugin extends Plugin {
 					});
 			})
 		);
+	}
+
+	async pullFromSanity() {
+		const { projectId, dataset, apiToken } = this.settings;
+		if (!projectId || !apiToken) {
+			new Notice(
+				"Please configure Sanity project ID and API token in settings first."
+			);
+			return;
+		}
+
+		new Notice("Pulling all posts from Sanity...");
+		const type = this.settings.sanityTypeName || "post";
+		const titleField = this.settings.sanityTitleField || "title";
+		const bodyField = this.settings.sanityBodyField || "body";
+
+		// 拉取全部 post（含草稿）：用 isDraft 标记区分正式 / 草稿
+		const query =
+			`*[_type == $type]{` +
+			`  _id,` +
+			`  "title": ${titleField},` +
+			`  "body": ${bodyField},` +
+			`  "slug": slug.current,` +
+			`  "isDraft": _id in path("drafts.**")` +
+			`}`;
+
+		let docs: any[] = [];
+		try {
+			const url =
+				`https://${projectId}.api.sanity.io/v${API_VERSION}/data/query/` +
+				`${dataset}?query=${encodeURIComponent(query)}` +
+				`&$type=${encodeURIComponent(type)}`;
+			const res = await requestUrl({
+				url,
+				method: "GET",
+				headers: { Authorization: `Bearer ${apiToken}` },
+			});
+			if (res.status >= 400) {
+				console.error("Sanity query failed", res.status, res.text);
+				new Notice("Failed to query Sanity (HTTP " + res.status + ")");
+				return;
+			}
+			docs = res.json?.result || [];
+		} catch (e) {
+			console.error(e);
+			new Notice("Failed to query Sanity.");
+			return;
+		}
+
+		if (!docs.length) {
+			new Notice("No documents found in Sanity.");
+			return;
+		}
+
+		// 用 sanity_id 索引现有 vault 文件，便于去重 / 更新
+		const existingById = new Map<string, TFile>();
+		for (const f of this.app.vault.getMarkdownFiles()) {
+			const fm = this.app.metadataCache.getFileCache(f)?.frontmatter;
+			if (fm && fm.sanity_id) existingById.set(fm.sanity_id, f);
+		}
+
+		const folderPrefix = this.settings.pullFolder
+			? this.settings.pullFolder.replace(/\/+$/, "") + "/"
+			: "";
+
+		let created = 0;
+		let updated = 0;
+		for (const doc of docs) {
+			const isDraft = !!doc.isDraft;
+			const baseName = this.sanitizeFilename(
+				doc.slug || doc.title || doc._id
+			);
+			const frontmatter = {
+				sanity_id: doc._id,
+				sanity_draft: isDraft,
+			};
+			const body: string = doc.body || "";
+
+			const existing = existingById.get(doc._id);
+			if (existing) {
+				// 已存在：原地更新正文与 frontmatter（保留用户新增的其他字段）
+				const raw = await this.app.vault.read(existing);
+				const { data } = matter(raw);
+				const mergedFm = { ...data, ...frontmatter };
+				await this.app.vault.modify(
+					existing,
+					matter.stringify(body, mergedFm)
+				);
+				updated++;
+				continue;
+			}
+
+			// 新建：保证路径不冲突
+			let finalPath = folderPrefix + baseName + ".md";
+			let n = 1;
+			while (await this.app.vault.adapter.exists(finalPath)) {
+				finalPath = folderPrefix + baseName + "-" + n + ".md";
+				n++;
+			}
+			await this.app.vault.create(
+				finalPath,
+				matter.stringify(body, frontmatter)
+			);
+			created++;
+		}
+
+		new Notice(
+			`Pulled from Sanity: ${created} created, ${updated} updated ` +
+				`(${docs.length} total; drafts flagged with sanity_draft: true).`
+		);
+	}
+
+	sanitizeFilename(name: string): string {
+		const cleaned = name
+			.replace(/[\\/:*?"<>|#]/g, "-")
+			.replace(/^\.+/, "")
+			.trim();
+		return cleaned.slice(0, 80) || "untitled";
 	}
 
 	createClient() {

@@ -1,68 +1,136 @@
-# Sanity Publish for Obsidian（CORS 绕过补丁 Fork）
+# Sanity Publish for Obsidian
 
-> ⚠️ **本仓库是 [drewlyton/sanity-obsidian-plugin](https://github.com/drewlyton/sanity-obsidian-plugin) 的补丁 fork。**
-> 仅做一处关键修复：**绕过浏览器 CORS，使 Obsidian 能直接把笔记发布到 Sanity**，无需在 Sanity 配置 CORS 白名单（Sanity 不支持 `app://` 来源）。
-> 其余功能与原版完全一致。
+![Obsidian logo and Sanity logo together](cover-image.png)
 
-## 为什么需要这个补丁
+Sanity Publish is a plugin for Obsidian that allows you to publish and sync documents from your Obsidian vault to your Sanity Studio.
 
-原版插件使用 `@sanity/client`（浏览器 `fetch`）直连 Sanity API，请求来源是
-`app://obsidian.md`，被浏览器识别为跨域。而 Sanity 的 CORS 配置界面**不接受
-`app://` 协议**，无法加白名单，导致 Publish 必然报错：
+## ⬇️ Installing the plugin
+
+**Sanity Publish is in alpha and not currently available through the Community Plugins marketplace.** So, in order to install it into your Obsidian vault, you'll have to clone the repository manually. You can do that by running the following command from your vault's root directory:
 
 ```
-from origin 'app://obsidian.md' has been blocked by CORS policy:
-No 'Access-Control-Allow-Origin' header is present
+cd .obsidian/plugins && git clone https://github.com/drewlyton/sanity-obsidian-plugin.git
 ```
 
-## 补丁做了什么
+Once the repo is cloned into your `plugins` folder, restart Obsidian and navigate to 'Settings'. You should see 'Sanity Publish' in your list of Installed Plugins. Enable the plugin and then navigate to the plugin settings to continue configuration.
 
-`main.ts` 中两个 HTTP 方法改为使用 Obsidian 自带的 `requestUrl`（Electron 主进程
-请求，不受浏览器 CORS 限制）直连 Sanity HTTP API：
+## ⚙️ Plugin Settings
 
-- `uploadFileToSanity`：改用 `…/assets/images|files/<dataset>?filename=` 直传二进制
-- `createorUpdateDocument`：改用 `…/data/mutate/<dataset>` 发送 create / patch 事务
-- 新增 `sanityMutate()` 辅助函数
-- 新建文档生成合法 draft id（`drafts.<随机>`，修复原版 `drafts.` 会被 Sanity 拒绝的问题）
+### Sanity API Token
 
-## 通过 BRAT 安装（推荐，一劳永逸）
+In order for Obsidian to sync data with your Sanity studio, you must provide an API token for your Sanity project with _read/write access_. You can find a [guide for how to generate Sanity access tokens here](https://www.sanity.io/docs/http-auth).
 
-本 fork 已将构建产物 `main.js` 纳入版本库（原版 `.gitignore` 排除了它），因此可直接用
-BRAT 从本仓库安装，不再受上游覆盖影响。
+**Note:** by providing this API token, you are granting 'Sanity Publish' and _any other_ installed Obsidian plugin the ability to publish to your Studio on your behalf. Tread lightly here and ensure that you trust the authors of all plugins in your vault before doing this.
 
-1. Obsidian → 社区插件市场 → 安装 **BRAT**
-2. 打开 BRAT 设置 → `Add a beta plugin`
-3. 仓库地址填：`violet27chen/sanity-obsidian-plugin`
-4. 启用 **Sanity Publish** 插件
-5. 配置插件（见下）
+### Sanity Project ID
 
-> 如果你之前装的是原版（`drewlyton/...`），请先在 BRAT 里移除原版仓库，再添加本 fork，
-> 避免 BRAT 拉回 CORS 损坏的原版。
+Paste your Sanity project id into this field.
 
-## 插件设置（必填）
+### Sanity Dataset Name
 
-| 项 | 值 |
-|---|---|
-| Sanity API token | 具备 `3hwpvo77` 读写权限的 token |
-| Project ID | `3hwpvo77` |
-| Type name | `post` |
-| Title field | `title` |
-| Body field | `bodyMarkdown` |
-| Content divider | 留空 |
+Provide the name of the dataset you'd like to publish documents to. This defaults to 'production'.
 
-正文以**原始 Markdown** 写入 `bodyMarkdown`，与博客同步脚本读取的字段一致；内嵌图片
-在发布时自动上传 Sanity CDN 并改写链接。
+### Sanity Document Type Name
 
-## 写作 → 发布流程
+Provide the name of document type in your Sanity project's schema that you'd like to publish documents to (i.e. 'post' or 'blog')
 
-1. Obsidian 写笔记（文件名即标题）
-2. 命令面板 → **Publish to Sanity** → 笔记以草稿（`drafts.`）写入 Sanity
-3. 打开编辑后台 `https://admin.violet27chen.com` → 草稿出现 → 补全 `slug` 等字段 → 点「发布」
-4. 网站 2–3 分钟后自动重建更新
+### Sanity Title Field
 
-## 本地构建
+Provide the field name that represents a `title` in your project's schema. Sanity Publish will sync the file name in Obsidian with this field. If you don't want to sync the file name, you can leave this blank.
 
-```bash
-npm install
-npm run build      # 生成 main.js
+### Sanity Body Field
+
+Provide the field name that matches the body of your file's content. Sanity Publish will sync the Obsidian document's contents with this field in your studio.
+
+## 🙌 Hitting Publish
+
+Once you've configured the plugin settings, you can navigate to a document you'd like to publish, open the command pallete, and search for `Sanity Publish`.
+
+Hitting enter will create or update a _draft_ document in your Sanity Studio. It will also update the frontmatter of your file in Obsidian to store the `sanity_id`. This allows you to update the document after it's initially published.
+
+**Note** that changing or removing this `sanity_id` may have unintended consequences. However, it can also be very useful to update this ID field once you've published your document in the Studio. This allows you to update the title and body of your published document right from Obsidian!
+
+## 🌄 Uploading Images
+
+One convenient additional feature of Sanity Publish is the ability to upload images to Sanity from Obsidian. By right clicking on an embedded image in your Obsidian document, you can click the `Upload to Sanity` menu action and automatically have your image uploaded and the content of your document changed to link to the Sanity CDN.
+
+When you publish a document, we automatically run this process on all embedded images.
+
+## 🤓 Advanced Settings
+
+If you're like me, while working on an article I often keep previous drafts and cut content below a comment in the document. Something along the lines of:
+
+```md
+Content I want to publish
+
+<!-- DRAFTS -->
+
+Content I don't want to publish
 ```
+
+Sanity Publish allows you to set a "Content Divider" string for this reason. Just paste your usual divider comment text and when you go to publish, the only content that will be published to Sanity will be that which is above that dividing line.
+
+## 🙏 Contributing
+
+Sanity Publish is currently mostly a personal pet project for my own publishing workflow. However, if you find it useful and come across any bugs or feature ideas while using it, please make a new issue here on GitHub.
+
+---
+
+# 🔄 Bidirectional: Pull from Sanity (added in this fork)
+
+This fork adds a **Pull** command so Obsidian can stay in sync with your Sanity Studio — not just publish _to_ it.
+
+Open the command palette and run **`Pull from Sanity (sync all posts)`**. It does **not** require an open document; it scans your whole vault.
+
+What it does:
+
+- Queries Sanity for **all** documents of the configured type (default `post`), **including drafts**.
+- Writes each document into your vault as a Markdown note:
+  - **Filename**: uses `slug.current` if present, otherwise the title field, otherwise the Sanity `_id`. Invalid filename characters are sanitized.
+  - **Frontmatter** always includes:
+    - `sanity_id: <_id>` — the round-trip key. Publishing the note later patches the same Sanity document.
+    - `sanity_draft: true | false` — **distinguishes drafts from published documents**. Drafts (`drafts.*`) get `sanity_draft: true`; published (`post.*`) get `sanity_draft: false`.
+- **Dedupes**: if a note with the same `sanity_id` already exists in your vault, it is updated in place (content + `sanity_draft` flag) while preserving any other frontmatter you added. New documents are created; name collisions get a numeric suffix.
+
+### Pull folder (Advanced setting)
+
+A new **`Pull folder`** setting controls where pulled notes are saved. Leave it blank to save at the **vault root** (default). Set it to e.g. `Sanity` to keep pulled posts in a dedicated folder.
+
+### Behavior notes
+
+- A pulled **draft** (`sanity_draft: true`, `sanity_id: drafts.xxx`) → editing it and hitting **Publish** updates the Sanity draft (does **not** trigger your deploy webhook; publish it from your admin UI to go live).
+- A pulled **published** document (`sanity_draft: false`, `sanity_id: post.xxx`) → editing it and hitting **Publish** updates the live document and **will** trigger your deploy webhook.
+
+This matches the one-way publish design: the Obsidian plugin creates/updates drafts, while going live is handled by your Sanity admin UI.
+
+---
+
+# 🛡️ CORS fix (this fork)
+
+The original plugin uses `@sanity/client` (browser `fetch`) to talk to the Sanity API. Inside Obsidian the request origin is `app://obsidian.md`, which Sanity treats as cross-origin. Sanity's CORS settings **reject the `app://` protocol**, so you can't whitelist it — every Publish fails with:
+
+```
+from origin 'app://obsidian.md' has been blocked by CORS policy
+```
+
+This fork rewrites the two HTTP methods to use Obsidian's built-in **`requestUrl`**, which calls Sanity's HTTP API directly from the desktop app and bypasses the browser CORS entirely. No Sanity CORS whitelist is needed.
+
+- `uploadFileToSanity` → `POST …/assets/images|files/<dataset>?filename=` (binary upload)
+- `createorUpdateDocument` → `POST …/data/mutate/<dataset>` (create / patch transaction)
+- New `sanityMutate()` helper
+- New documents get a valid draft id (`drafts.<random>`), avoiding the upstream `drafts.` rejection
+
+---
+
+# 📦 Install this fork via BRAT
+
+For long-term use, install the CORS-fixed, bidirectional fork through [BRAT](https://github.com/TfTHacker/obsidian42-brat):
+
+1. Install BRAT from Community Plugins, then add a beta plugin with the repository:
+   ```
+   violet27chen/sanity-obsidian-plugin
+   ```
+2. The latest release (e.g. `v1.1.0`) is detected automatically. Enable **Sanity Publish** and configure your token / project id / dataset / fields.
+3. To pull or publish, open the command palette and run `Pull from Sanity (sync all posts)` or `Publish to Sanity`.
+
+Releases are tagged (e.g. `v1.1.0`) with `main.js`, `manifest.json`, `manifest-beta.json`, and `styles.css` attached, so BRAT never falls back to the unpatched upstream build.
