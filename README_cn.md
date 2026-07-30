@@ -56,6 +56,10 @@ cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidia
 
 代表正文的 schema 字段名。它应当存储原始 Markdown（如 `bodyMarkdown`）。Sanity 会把 Obsidian 文档内容同步到该字段。
 
+### Filename field（文件名字段）
+
+用于生成每篇 Obsidian 笔记文件名的 Sanity 字段（也就是访问路由 slug）。支持 GROQ 路径，例如 `slug.current`。留空时改用**标题字段**作为文件名。插件永远不会用文档的 `sanity_id` 当文件名。
+
 ### Pull folder（高级）
 
 拉取的笔记保存到哪个文件夹。留空则保存到仓库根目录。
@@ -95,7 +99,7 @@ image:image
   - `sanity_draft: true | false` —— 标记来源是草稿（`drafts.*`）还是正式文档（`post.*`），一眼即可区分。
   - **标题** —— 配置好的标题字段会写入 frontmatter，因此拉回的笔记显示的是真实标题（发布时也会保留，而不会被文件名覆盖）。
   - **Additional fields** —— 在「Additional fields to sync」中列出的字段也会写入 frontmatter，并在发布时写回。
-- 已存在的笔记（按 `sanity_id` 匹配）会原地更新，并保留你自行添加的其他 frontmatter 字段；新文档则新建，文件名依次取 `slug.current`、标题、`_id`。
+- 已存在的笔记（按 `sanity_id` 匹配）会原地更新，并保留你自行添加的其他 frontmatter 字段；新文档则新建，文件名依次取 **Filename field**（留空时取标题字段）。插件不会用 Sanity `_id` 当文件名。
 - 若设置了 **Pull folder**，笔记保存到此文件夹；否则保存到仓库根目录。
 
 由于插件写入了 `sanity_id`，整个工作流是完全往返的：拉取一篇文档、在 Obsidian 中编辑、再点发布，改动会推送回同一个 Sanity 文档。

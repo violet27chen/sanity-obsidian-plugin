@@ -56,6 +56,10 @@ The schema field that holds the title. Sanity syncs this field into each note's 
 
 The schema field that holds the document body. It should store the raw Markdown (e.g. `bodyMarkdown`). Sanity syncs the Obsidian document content with this field.
 
+### Filename field
+
+The Sanity field used to generate each Obsidian filename (and, by extension, the URL slug). GROQ paths are allowed, e.g. `slug.current`. If left blank, the **Title field** is used for the filename instead. The document's `sanity_id` is never used as the filename.
+
 ### Pull folder (Advanced)
 
 Where notes pulled from Sanity are saved. Leave blank to save at the vault root.
@@ -95,7 +99,7 @@ Run the command **`Pull from Sanity (sync all posts)`** to sync your Sanity docu
   - `sanity_draft: true | false` — marks whether the source is a draft (`drafts.*`) or a published document (`post.*`), so you can tell them apart at a glance.
   - **Title** — the configured title field is written into frontmatter, so the pulled note shows the real title (and publishing preserves it instead of overwriting with the filename).
   - **Additional fields** — any fields listed in *Additional fields to sync* are also written into frontmatter and pushed back on publish.
-- Existing notes (matched by `sanity_id`) are updated in place, preserving any other frontmatter you have added. New documents are created; filenames use `slug.current`, then the title, then the `_id`.
+- Existing notes (matched by `sanity_id`) are updated in place, preserving any other frontmatter you have added. New documents are created; filenames use the **Filename field** (or the **Title field** if filename is blank). The Sanity `_id` is never used as the filename.
 - Notes are saved to the **Pull folder** if set, otherwise the vault root.
 
 Because the plugin writes `sanity_id`, the workflow is fully round-trip: pull a document, edit it in Obsidian, and publish to push the changes back to the same Sanity document.

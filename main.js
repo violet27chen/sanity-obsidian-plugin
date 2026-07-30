@@ -9631,6 +9631,7 @@ var DEFAULT_SETTINGS = {
   dataset: "production",
   sanityTypeName: "post",
   sanityBodyField: "body",
+  filenameField: "",
   contentDivider: "",
   pullFolder: "",
   syncFields: ""
@@ -9690,6 +9691,14 @@ var SanitySettingTab = class extends import_obsidian.PluginSettingTab {
     ).addText(
       (text) => text.setPlaceholder("Enter Your Field Name").setValue(this.plugin.settings.sanityBodyField || "body").onChange(async (value) => {
         this.plugin.settings.sanityBodyField = value || "body";
+        await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian.Setting(containerEl).setName("Filename field").setDesc(
+      "The Sanity field used to generate the Obsidian filename (and optionally the URL slug). GROQ paths allowed, e.g. 'slug.current'. Leave blank to use the Title field instead."
+    ).addText(
+      (text) => text.setPlaceholder("e.g. slug.current").setValue(this.plugin.settings.filenameField || "").onChange(async (value) => {
+        this.plugin.settings.filenameField = value;
         await this.plugin.saveSettings();
       })
     );
@@ -10950,12 +10959,26 @@ function parseSyncFields(raw) {
       expr = trimmed.slice(0, idx).trim();
       key = trimmed.slice(idx + 1).trim().replace(/[^A-Za-z0-9_]/g, "_");
     }
-    expr = expr.replace(/[^A-Za-z0-9_.[\]]/g, "");
+    expr = cleanGroqExpr(expr);
     if (!expr || !key)
       continue;
     out.push({ expr, key });
   }
   return out;
+}
+function cleanGroqExpr(expr) {
+  return expr.replace(/[^A-Za-z0-9_.[\]]/g, "");
+}
+function setDeepPath(obj, path, value) {
+  const keys = path.split(".");
+  let cur = obj;
+  for (let i2 = 0; i2 < keys.length - 1; i2++) {
+    const k = keys[i2];
+    if (!cur[k] || typeof cur[k] !== "object")
+      cur[k] = {};
+    cur = cur[k];
+  }
+  cur[keys[keys.length - 1]] = value;
 }
 function sanityAssetUrlFromRef(ref, projectId2, dataset2) {
   const m = ref.match(/^image-(.*)-(\d+x\d+)\.(\w+)$/);
@@ -11098,6 +11121,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       () => this.getActiveViewData().then(({ content, data }) => {
         new import_obsidian2.Notice("Publishing content to Sanity...");
         const titleField = this.settings.sanityTitleField;
+        const bodyField = this.settings.sanityBodyField;
         const fmTitle = titleField ? data == null ? void 0 : data[titleField] : void 0;
         const title = typeof fmTitle === "string" && fmTitle ? fmTitle : activeFile.basename;
         const extraAttrs = {};
@@ -11106,6 +11130,9 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
           const raw = data == null ? void 0 : data[f3.key];
           if (raw === void 0 || raw === null)
             continue;
+          if (f3.key === titleField || f3.key === bodyField)
+            continue;
+          let value = raw;
           if (typeof raw === "string" && raw.startsWith("https://cdn.sanity.io/images/")) {
             const ref = sanityRefFromAssetUrl(
               raw,
@@ -11113,14 +11140,13 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
               this.settings.dataset
             );
             if (ref) {
-              extraAttrs[f3.key] = {
+              value = {
                 _type: "image",
                 asset: { _type: "reference", _ref: ref }
               };
-              continue;
             }
           }
-          extraAttrs[f3.key] = raw;
+          setDeepPath(extraAttrs, f3.expr, value);
         }
         this.createorUpdateDocument({
           content,
@@ -11153,14 +11179,25 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     }
     new import_obsidian2.Notice("Pulling all posts from Sanity...");
     const type = this.settings.sanityTypeName || "post";
-    const titleField = this.settings.sanityTitleField || "title";
+    const titleField = this.settings.sanityTitleField;
     const bodyField = this.settings.sanityBodyField || "body";
+    const filenameField = this.settings.filenameField;
     const safeType = String(type).replace(/[^a-zA-Z0-9_]/g, "");
-    const safeTitle = String(titleField).replace(/[^a-zA-Z0-9_]/g, "");
-    const safeBody = String(bodyField).replace(/[^a-zA-Z0-9_]/g, "");
+    const safeTitle = titleField ? cleanGroqExpr(titleField) : "";
+    const safeBody = bodyField ? cleanGroqExpr(bodyField) : "";
+    const safeFilename = filenameField ? cleanGroqExpr(filenameField) : "";
     const extraFields = parseSyncFields(this.settings.syncFields);
-    const extraProj = extraFields.map((f3) => `"${f3.key}": ${f3.expr}`).join(", ");
-    const query = `*[_type == "${safeType}"]{  _id,  "title": ${safeTitle},  "body": ${safeBody},  "_syncSlug": slug.current,  "isDraft": _id in path("drafts.**")` + (extraFields.length ? `,  ${extraProj}` : ``) + `}`;
+    const parts = [`_id`, `"isDraft": _id in path("drafts.**")`];
+    if (safeTitle)
+      parts.push(`"_syncTitle": ${safeTitle}`);
+    if (safeBody)
+      parts.push(`"_syncBody": ${safeBody}`);
+    if (safeFilename)
+      parts.push(`"_syncFilename": ${safeFilename}`);
+    for (const f3 of extraFields) {
+      parts.push(`"${f3.key}": ${f3.expr}`);
+    }
+    const query = `*[_type == "${safeType}"]{ ${parts.join(", ")} }`;
     let docs = [];
     try {
       const url = `https://${projectId2}.api.sanity.io/${QUERY_API_VERSION}/data/query/${dataset2}?query=${encodeURIComponent(query)}`;
@@ -11194,14 +11231,15 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     for (const doc of docs) {
       const isDraft = !!doc.isDraft;
       const baseName = this.sanitizeFilename(
-        doc._syncSlug || doc.title || doc._id
+        doc._syncFilename || doc._syncTitle || "untitled"
       );
       const frontmatter = {
         sanity_id: doc._id,
         sanity_draft: isDraft
       };
-      if (doc.title)
-        frontmatter[safeTitle] = doc.title;
+      if (safeTitle && doc._syncTitle !== void 0 && doc._syncTitle !== null) {
+        frontmatter[safeTitle] = doc._syncTitle;
+      }
       for (const f3 of extraFields) {
         let v2 = doc[f3.key];
         if (v2 === void 0 || v2 === null)
@@ -11217,7 +11255,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         }
         frontmatter[f3.key] = v2;
       }
-      const body = doc.body || "";
+      const body = doc._syncBody || "";
       const existing = existingById.get(doc._id);
       if (existing) {
         const raw = await this.app.vault.read(existing);

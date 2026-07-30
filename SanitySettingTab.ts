@@ -8,6 +8,7 @@ export interface SanityPluginSettings {
 	sanityTypeName: string;
 	sanityTitleField?: string;
 	sanityBodyField: string;
+	filenameField?: string;
 	contentDivider?: string;
 	pullFolder?: string;
 	syncFields?: string;
@@ -19,6 +20,7 @@ export const DEFAULT_SETTINGS: SanityPluginSettings = {
 	dataset: "production",
 	sanityTypeName: "post",
 	sanityBodyField: "body",
+	filenameField: "",
 	contentDivider: "",
 	pullFolder: "",
 	syncFields: "",
@@ -127,6 +129,21 @@ export class SanitySettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.sanityBodyField || "body")
 					.onChange(async (value) => {
 						this.plugin.settings.sanityBodyField = value || "body";
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Filename field")
+			.setDesc(
+				"The Sanity field used to generate the Obsidian filename (and optionally the URL slug). GROQ paths allowed, e.g. 'slug.current'. Leave blank to use the Title field instead."
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("e.g. slug.current")
+					.setValue(this.plugin.settings.filenameField || "")
+					.onChange(async (value) => {
+						this.plugin.settings.filenameField = value;
 						await this.plugin.saveSettings();
 					})
 			);

@@ -77,11 +77,28 @@ function parseSyncFields(raw?: string): { expr: string; key: string }[] {
 			key = trimmed.slice(idx + 1).trim().replace(/[^A-Za-z0-9_]/g, "_");
 		}
 		// 清洗 GROQ 表达式，避免注入 / 语法错误
-		expr = expr.replace(/[^A-Za-z0-9_.[\]]/g, "");
+		expr = cleanGroqExpr(expr);
 		if (!expr || !key) continue;
 		out.push({ expr, key });
 	}
 	return out;
+}
+
+/** 清洗 GROQ 表达式，保留字段名、点号路径与方括号取值 */
+function cleanGroqExpr(expr: string): string {
+	return expr.replace(/[^A-Za-z0-9_.[\]]/g, "");
+}
+
+/** 把点号路径写入嵌套对象，例如 setDeepPath(obj, "slug.current", "x") => obj.slug.current = "x" */
+function setDeepPath(obj: any, path: string, value: any) {
+	const keys = path.split(".");
+	let cur = obj;
+	for (let i = 0; i < keys.length - 1; i++) {
+		const k = keys[i];
+		if (!cur[k] || typeof cur[k] !== "object") cur[k] = {};
+		cur = cur[k];
+	}
+	cur[keys[keys.length - 1]] = value;
 }
 
 /** Sanity 图片 asset ref（image-xxx-WxH.ext）→ CDN URL */
@@ -272,18 +289,23 @@ export default class SanityPublishPlugin extends Plugin {
 				new Notice("Publishing content to Sanity...");
 				// 标题优先取 frontmatter 里配置好的标题字段，缺失才回退文件名
 				const titleField = this.settings.sanityTitleField;
+				const bodyField = this.settings.sanityBodyField;
 				const fmTitle = titleField ? data?.[titleField] : undefined;
 				const title =
 					typeof fmTitle === "string" && fmTitle
 						? fmTitle
 						: activeFile.basename;
 
-				// 收集「额外字段」回写 Sanity（图片 URL 还原为 asset ref）
+				// 收集「额外字段」回写 Sanity（图片 URL 还原为 asset ref）。
+				// 使用 setDeepPath 把点号路径展开为嵌套对象，例如 slug.current -> { slug: { current: "x" } }。
 				const extraAttrs: Record<string, any> = {};
 				const extraFields = parseSyncFields(this.settings.syncFields);
 				for (const f of extraFields) {
 					const raw = (data as any)?.[f.key];
 					if (raw === undefined || raw === null) continue;
+					// 标题、正文字段单独处理，避免重复/冲突
+					if (f.key === titleField || f.key === bodyField) continue;
+					let value: any = raw;
 					if (
 						typeof raw === "string" &&
 						raw.startsWith("https://cdn.sanity.io/images/")
@@ -294,14 +316,13 @@ export default class SanityPublishPlugin extends Plugin {
 							this.settings.dataset
 						);
 						if (ref) {
-							extraAttrs[f.key] = {
+							value = {
 								_type: "image",
 								asset: { _type: "reference", _ref: ref },
 							};
-							continue;
 						}
 					}
-					extraAttrs[f.key] = raw;
+					setDeepPath(extraAttrs, f.expr, value);
 				}
 
 				this.createorUpdateDocument({
@@ -338,28 +359,27 @@ export default class SanityPublishPlugin extends Plugin {
 
 		new Notice("Pulling all posts from Sanity...");
 		const type = this.settings.sanityTypeName || "post";
-		const titleField = this.settings.sanityTitleField || "title";
+		const titleField = this.settings.sanityTitleField;
 		const bodyField = this.settings.sanityBodyField || "body";
+		const filenameField = this.settings.filenameField;
 
 		// 拉取全部文档（含草稿）：用 isDraft 标记区分正式 / 草稿。
 		// 类型/字段名内联进 GROQ（并做标识符清洗），不使用 $param，避免请求 400。
+		// 标题、正文、文件名、额外字段全部由用户在设置里指定，插件不再硬编码任何 schema 字段。
 		const safeType = String(type).replace(/[^a-zA-Z0-9_]/g, "");
-		const safeTitle = String(titleField).replace(/[^a-zA-Z0-9_]/g, "");
-		const safeBody = String(bodyField).replace(/[^a-zA-Z0-9_]/g, "");
-		// 额外字段（通用双向同步）：slug/描述/标签/分类/封面/发布时间等
+		const safeTitle = titleField ? cleanGroqExpr(titleField) : "";
+		const safeBody = bodyField ? cleanGroqExpr(bodyField) : "";
+		const safeFilename = filenameField ? cleanGroqExpr(filenameField) : "";
 		const extraFields = parseSyncFields(this.settings.syncFields);
-		const extraProj = extraFields
-			.map((f) => `"${f.key}": ${f.expr}`)
-			.join(", ");
-		const query =
-			`*[_type == "${safeType}"]{` +
-			`  _id,` +
-			`  "title": ${safeTitle},` +
-			`  "body": ${safeBody},` +
-			`  "_syncSlug": slug.current,` +
-			`  "isDraft": _id in path("drafts.**")` +
-			(extraFields.length ? `,  ${extraProj}` : ``) +
-			`}`;
+
+		const parts: string[] = [`_id`, `"isDraft": _id in path("drafts.**")`];
+		if (safeTitle) parts.push(`"_syncTitle": ${safeTitle}`);
+		if (safeBody) parts.push(`"_syncBody": ${safeBody}`);
+		if (safeFilename) parts.push(`"_syncFilename": ${safeFilename}`);
+		for (const f of extraFields) {
+			parts.push(`"${f.key}": ${f.expr}`);
+		}
+		const query = `*[_type == "${safeType}"]{ ${parts.join(", ")} }`;
 
 		let docs: any[] = [];
 		try {
@@ -403,15 +423,18 @@ export default class SanityPublishPlugin extends Plugin {
 		let updated = 0;
 		for (const doc of docs) {
 			const isDraft = !!doc.isDraft;
+			// 文件名来源：Filename field > Title field，不再用 sanity_id 当文件名
 			const baseName = this.sanitizeFilename(
-				doc._syncSlug || doc.title || doc._id
+				doc._syncFilename || doc._syncTitle || "untitled"
 			);
 			const frontmatter: any = {
 				sanity_id: doc._id,
 				sanity_draft: isDraft,
 			};
 			// 标题写入 frontmatter（双向同步）
-			if (doc.title) frontmatter[safeTitle] = doc.title;
+			if (safeTitle && doc._syncTitle !== undefined && doc._syncTitle !== null) {
+				frontmatter[safeTitle] = doc._syncTitle;
+			}
 			// 额外字段写入 frontmatter（图片引用自动转为 CDN URL）
 			for (const f of extraFields) {
 				let v = (doc as any)[f.key];
@@ -431,7 +454,7 @@ export default class SanityPublishPlugin extends Plugin {
 				}
 				frontmatter[f.key] = v;
 			}
-			const body: string = doc.body || "";
+			const body: string = doc._syncBody || "";
 
 			const existing = existingById.get(doc._id);
 			if (existing) {
