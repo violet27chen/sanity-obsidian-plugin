@@ -7,7 +7,6 @@ import {
 	SanityPluginSettings,
 	SanitySettingTab,
 } from "SanitySettingTab";
-import { readFile } from "fs/promises";
 import matter from "gray-matter";
 import mime from "mime";
 import {
@@ -115,9 +114,6 @@ export default class SanityPublishPlugin extends Plugin {
 					this.app.metadataCache.getFirstLinkpathDest(filePath, "");
 				if (!fileMetaData) return;
 
-				const absolutePath = this.getAbsolutePath(fileMetaData);
-				if (!absolutePath) return;
-
 				// Add menu item to right click editor menu
 				// that allows user to click to upload single image
 				menu.addItem((item) => {
@@ -126,12 +122,13 @@ export default class SanityPublishPlugin extends Plugin {
 						.onClick(() => {
 							const uploadText = `![uploading file...](${filePath})`;
 							editor.setLine(lineNumber, uploadText);
-							this.uploadFileToSanity(absolutePath)
+							this.uploadFileToSanity(fileMetaData)
 								.then((value) => {
 									const assetText = `![${value.originalFilename}](${value.url})`;
 									editor.setLine(lineNumber, assetText);
 								})
 								.catch((r) => {
+									console.error("Upload to Sanity failed", r);
 									const errorText = `![Couldn't upload file](${filePath})`;
 									editor.setLine(lineNumber, errorText);
 								});
@@ -197,16 +194,14 @@ export default class SanityPublishPlugin extends Plugin {
 					this.app.metadataCache.getFirstLinkpathDest(filePath, "");
 				if (!fileMetaData) return;
 
-				const absolutePath = this.getAbsolutePath(fileMetaData);
-				if (!absolutePath) return;
-
 				const uploadText = `![uploading file...](${filePath})`;
 				editor.setLine(lineNumber, uploadText);
 				try {
-					const value = await this.uploadFileToSanity(absolutePath);
+					const value = await this.uploadFileToSanity(fileMetaData);
 					const assetText = `![${value.originalFilename}](${value.url})`;
 					editor.setLine(lineNumber, assetText);
-				} catch {
+				} catch (e) {
+					console.error("Upload to Sanity failed", e);
 					const errorText = `![Couldn't upload file](${filePath})`;
 					editor.setLine(lineNumber, errorText);
 				}
@@ -373,11 +368,11 @@ export default class SanityPublishPlugin extends Plugin {
 			});
 	}
 
-	async uploadFileToSanity(path: string) {
-		const file = await readFile(path);
-		const fileType = mime.getType(path);
+	async uploadFileToSanity(file: TFile) {
+		const arrayBuffer = await this.app.vault.readBinary(file);
+		const fileType = mime.getType(file.path);
 		const isImage = fileType?.includes("image");
-		const fileName = path.split(/[\\/]/).pop() || "file";
+		const fileName = file.path.split("/").pop() || "file";
 		const url =
 			`https://${this.settings.projectId}.api.sanity.io/v${API_VERSION}/assets/` +
 			`${isImage ? "images" : "files"}/${this.settings.dataset}` +
@@ -389,7 +384,7 @@ export default class SanityPublishPlugin extends Plugin {
 				"Content-Type": fileType || "application/octet-stream",
 				Authorization: `Bearer ${this.settings.apiToken}`,
 			},
-			body: new Uint8Array(file),
+			body: arrayBuffer,
 		});
 		if (res.status >= 400) {
 			console.error("Sanity asset upload failed", res.status, res.text);

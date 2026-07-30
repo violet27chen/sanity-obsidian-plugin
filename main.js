@@ -9714,7 +9714,6 @@ var SanitySettingTab = class extends import_obsidian.PluginSettingTab {
 };
 
 // main.ts
-var import_promises = require("fs/promises");
 var import_gray_matter = __toESM(require_gray_matter());
 
 // node_modules/mime/dist/types/other.js
@@ -10967,17 +10966,15 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         const fileMetaData = this.app.metadataCache.getFirstLinkpathDest(filePath, "");
         if (!fileMetaData)
           return;
-        const absolutePath = this.getAbsolutePath(fileMetaData);
-        if (!absolutePath)
-          return;
         menu.addItem((item) => {
           item.setTitle("Upload to Sanity").setIcon("file-up").onClick(() => {
             const uploadText = `![uploading file...](${filePath})`;
             editor.setLine(lineNumber, uploadText);
-            this.uploadFileToSanity(absolutePath).then((value) => {
+            this.uploadFileToSanity(fileMetaData).then((value) => {
               const assetText = `![${value.originalFilename}](${value.url})`;
               editor.setLine(lineNumber, assetText);
             }).catch((r2) => {
+              console.error("Upload to Sanity failed", r2);
               const errorText = `![Couldn't upload file](${filePath})`;
               editor.setLine(lineNumber, errorText);
             });
@@ -11030,16 +11027,14 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         const fileMetaData = this.app.metadataCache.getFirstLinkpathDest(filePath, "");
         if (!fileMetaData)
           return;
-        const absolutePath = this.getAbsolutePath(fileMetaData);
-        if (!absolutePath)
-          return;
         const uploadText = `![uploading file...](${filePath})`;
         editor.setLine(lineNumber, uploadText);
         try {
-          const value = await this.uploadFileToSanity(absolutePath);
+          const value = await this.uploadFileToSanity(fileMetaData);
           const assetText = `![${value.originalFilename}](${value.url})`;
           editor.setLine(lineNumber, assetText);
         } catch (e2) {
+          console.error("Upload to Sanity failed", e2);
           const errorText = `![Couldn't upload file](${filePath})`;
           editor.setLine(lineNumber, errorText);
         }
@@ -11168,12 +11163,12 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         useCdn: true
       });
   }
-  async uploadFileToSanity(path) {
+  async uploadFileToSanity(file) {
     var _a;
-    const file = await (0, import_promises.readFile)(path);
-    const fileType = src_default.getType(path);
+    const arrayBuffer = await this.app.vault.readBinary(file);
+    const fileType = src_default.getType(file.path);
     const isImage = fileType == null ? void 0 : fileType.includes("image");
-    const fileName = path.split(/[\\/]/).pop() || "file";
+    const fileName = file.path.split("/").pop() || "file";
     const url = `https://${this.settings.projectId}.api.sanity.io/v${API_VERSION}/assets/${isImage ? "images" : "files"}/${this.settings.dataset}?filename=${encodeURIComponent(fileName)}`;
     const res = await (0, import_obsidian2.requestUrl)({
       url,
@@ -11182,7 +11177,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         "Content-Type": fileType || "application/octet-stream",
         Authorization: `Bearer ${this.settings.apiToken}`
       },
-      body: new Uint8Array(file)
+      body: arrayBuffer
     });
     if (res.status >= 400) {
       console.error("Sanity asset upload failed", res.status, res.text);
