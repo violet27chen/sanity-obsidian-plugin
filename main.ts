@@ -15,12 +15,43 @@ import {
 	MarkdownView,
 	Notice,
 	Plugin,
+	requestUrl,
 	TFile,
 	setIcon,
 } from "obsidian";
 
 const httpRegex =
 	/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+
+// Sanity API 版本，与原有 client 保持一致
+const API_VERSION = "2023-05-03";
+
+/**
+ * 用 Obsidian 的 requestUrl 直连 Sanity，绕过浏览器的 CORS 限制
+ * （Obsidian webview 来源 app://obsidian.md 不被 Sanity CORS 接受）。
+ */
+async function sanityMutate(
+	mutations: unknown[],
+	settings: SanityPluginSettings
+): Promise<any> {
+	const url =
+		`https://${settings.projectId}.api.sanity.io/v${API_VERSION}/data/mutate/` +
+		`${settings.dataset}?returnIds=true&returnDocuments=true&visibility=sync`;
+	const res = await requestUrl({
+		url,
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: `Bearer ${settings.apiToken}`,
+		},
+		body: JSON.stringify({ mutations }),
+	});
+	if (res.status >= 400) {
+		console.error("Sanity mutate failed", res.status, res.text);
+		throw new Error("Sanity mutate failed: " + res.status);
+	}
+	return res.json;
+}
 
 export default class SanityPublishPlugin extends Plugin {
 	settings: SanityPluginSettings;
@@ -215,11 +246,27 @@ export default class SanityPublishPlugin extends Plugin {
 	async uploadFileToSanity(path: string) {
 		const file = await readFile(path);
 		const fileType = mime.getType(path);
-		const response = await this.client.assets.upload(
-			fileType?.includes("image") ? "image" : "file",
-			file
-		);
-		return response;
+		const isImage = fileType?.includes("image");
+		const fileName = path.split(/[\\/]/).pop() || "file";
+		const url =
+			`https://${this.settings.projectId}.api.sanity.io/v${API_VERSION}/assets/` +
+			`${isImage ? "images" : "files"}/${this.settings.dataset}` +
+			`?filename=${encodeURIComponent(fileName)}`;
+		const res = await requestUrl({
+			url,
+			method: "POST",
+			headers: {
+				"Content-Type": fileType || "application/octet-stream",
+				Authorization: `Bearer ${this.settings.apiToken}`,
+			},
+			body: new Uint8Array(file),
+		});
+		if (res.status >= 400) {
+			console.error("Sanity asset upload failed", res.status, res.text);
+			throw new Error("Sanity asset upload failed: " + res.status);
+		}
+		const doc = res.json?.document || res.json;
+		return { originalFilename: doc.originalFilename, url: doc.url };
 	}
 
 	async createorUpdateDocument({
@@ -244,24 +291,23 @@ export default class SanityPublishPlugin extends Plugin {
 		let attributes = { [bodyField]: content };
 		if (titleField) attributes[titleField] = title;
 
-		if (!this.client) throw new Error("No Sanity client present...");
-
-		// If we don't have a Sanity id, create a new document
+		let mutation;
 		if (!sanityId) {
-			const result = await this.client.create({
-				_type,
-				_id: `drafts.`,
-				...attributes,
-			});
-			return result;
+			// 新建：生成合法 draft id（drafts.<随机>，避免 "drafts." 被拒）
+			mutation = {
+				create: {
+					_type,
+					_id: "drafts." + Math.random().toString(36).slice(2, 11),
+					...attributes,
+				},
+			};
+		} else {
+			mutation = { patch: { id: sanityId, set: attributes } };
 		}
-		// If we do have a Sanity id, patch that document
-		const result = await this.client
-			.patch(sanityId)
-			.set(attributes)
-			.commit();
 
-		return result;
+		const res = await sanityMutate([mutation], this.settings);
+		const doc = res?.results?.[0]?.document;
+		return doc || {};
 	}
 
 	getAbsolutePath(file: TFile) {

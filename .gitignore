@@ -8,9 +8,7 @@
 # npm
 node_modules
 
-# Don't include the compiled main.js file in the repo.
-# They should be uploaded to GitHub releases instead.
-main.js
+# main.js 故意纳入版本库：本 fork 通过 BRAT 直接从仓库安装，需要根目录存在 main.js
 .env*
 
 # Exclude sourcemaps
