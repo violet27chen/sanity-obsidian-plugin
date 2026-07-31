@@ -8,7 +8,6 @@ import {
 	SanitySettingTab,
 } from "SanitySettingTab";
 import matter from "gray-matter";
-import mime from "mime";
 import {
 	FileSystemAdapter,
 	MarkdownView,
@@ -160,6 +159,19 @@ function sanityRefFromAssetUrl(
 	const [, p, d, assetId, dims, ext] = m;
 	if (p !== projectId || d !== dataset) return null;
 	return `image-${assetId}-${dims}.${ext}`;
+}
+
+/** 根据文件扩展名推断 MIME 类型（不依赖 Node `mime`/`path` 模块，移动端安全）。 */
+function guessMime(ext?: string): string {
+	const map: Record<string, string> = {
+		png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif",
+		webp: "image/webp", svg: "image/svg+xml", bmp: "image/bmp", ico: "image/x-icon",
+		pdf: "application/pdf", mp4: "video/mp4", webm: "video/webm",
+		mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg",
+		zip: "application/zip", json: "application/json", txt: "text/plain",
+		md: "text/markdown", csv: "text/csv",
+	};
+	return (ext && map[ext.toLowerCase()]) || "application/octet-stream";
 }
 
 export default class SanityPublishPlugin extends Plugin {
@@ -536,6 +548,7 @@ export default class SanityPublishPlugin extends Plugin {
 		const safeType = String(type).replace(/[^a-zA-Z0-9_]/g, "");
 		const safeTitle = titleField ? cleanGroqExpr(titleField) : "";
 		const safeBody = bodyField ? cleanGroqExpr(bodyField) : "";
+		const safeCover = coverField ? cleanGroqExpr(coverField) : "";
 		const safeFilename = filenameField ? cleanGroqExpr(filenameField) : "";
 		const extraFields = parseSyncFields(this.settings.syncFields);
 
@@ -703,7 +716,7 @@ export default class SanityPublishPlugin extends Plugin {
 
 	async uploadFileToSanity(file: TFile) {
 		const arrayBuffer = await this.app.vault.readBinary(file);
-		const fileType = mime.getType(file.path);
+		const fileType = guessMime(file.extension);
 		const isImage = fileType?.includes("image");
 		const fileName = file.path.split("/").pop() || "file";
 		const url =
