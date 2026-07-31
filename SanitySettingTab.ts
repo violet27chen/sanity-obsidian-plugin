@@ -36,7 +36,6 @@ export interface SanityPluginSettings {
 	sanityTitleField?: string;
 	sanityBodyField: string;
 	filenameField?: string;
-	coverField?: string;
 	contentDivider?: string;
 	pullFolder?: string;
 	syncFields?: string;
@@ -56,7 +55,6 @@ export const DEFAULT_SETTINGS: SanityPluginSettings = {
 	contentDivider: "",
 	pullFolder: "",
 	syncFields: "series:series",
-	coverField: "heroImage",
 	announcementText: "",
 	announcementLink: "",
 	announcementType: "info",
@@ -180,23 +178,6 @@ export class SanitySettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.filenameField || "")
 					.onChange(async (value) => {
 						this.plugin.settings.filenameField = value;
-						await this.plugin.saveSettings();
-					})
-			);
-
-		new Setting(containerEl)
-			.setName("Cover field (封面字段)")
-			.setDesc(
-				"The Sanity field used as the cover / hero image (defaults to 'heroImage'). " +
-					"On publish, a local image path or CDN URL in this frontmatter key is uploaded / synced as the cover. " +
-					"On pull, the cover image ref is written back as a CDN URL."
-			)
-			.addText((text) =>
-				text
-					.setPlaceholder("e.g. heroImage")
-					.setValue(this.plugin.settings.coverField || "heroImage")
-					.onChange(async (value) => {
-						this.plugin.settings.coverField = value || "heroImage";
 						await this.plugin.saveSettings();
 					})
 			);

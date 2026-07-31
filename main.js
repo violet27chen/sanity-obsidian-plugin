@@ -9866,7 +9866,6 @@ var DEFAULT_SETTINGS = {
   contentDivider: "",
   pullFolder: "",
   syncFields: "series:series",
-  coverField: "heroImage",
   announcementText: "",
   announcementLink: "",
   announcementType: "info"
@@ -9934,14 +9933,6 @@ var SanitySettingTab = class extends import_obsidian.PluginSettingTab {
     ).addText(
       (text) => text.setPlaceholder("e.g. slug.current").setValue(this.plugin.settings.filenameField || "").onChange(async (value) => {
         this.plugin.settings.filenameField = value;
-        await this.plugin.saveSettings();
-      })
-    );
-    new import_obsidian.Setting(containerEl).setName("Cover field (\u5C01\u9762\u5B57\u6BB5)").setDesc(
-      "The Sanity field used as the cover / hero image (defaults to 'heroImage'). On publish, a local image path or CDN URL in this frontmatter key is uploaded / synced as the cover. On pull, the cover image ref is written back as a CDN URL."
-    ).addText(
-      (text) => text.setPlaceholder("e.g. heroImage").setValue(this.plugin.settings.coverField || "heroImage").onChange(async (value) => {
-        this.plugin.settings.coverField = value || "heroImage";
         await this.plugin.saveSettings();
       })
     );
@@ -10320,18 +10311,19 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     const fmTitle = titleField ? data == null ? void 0 : data[titleField] : void 0;
     const title = typeof fmTitle === "string" && fmTitle ? fmTitle : activeFile.basename;
     const extraAttrs = {};
-    const coverField = this.settings.coverField || "heroImage";
     const extraFields = parseSyncFields(this.settings.syncFields);
     for (const f2 of extraFields) {
-      if (f2.key === coverField)
-        continue;
       const raw = data == null ? void 0 : data[f2.key];
       if (raw === void 0 || raw === null)
         continue;
       if (f2.key === titleField || f2.key === bodyField)
         continue;
       let value = raw;
-      if (typeof raw === "string" && raw.startsWith("https://cdn.sanity.io/images/")) {
+      if (this.looksLikeImage(raw)) {
+        const coverVal = await this.resolveCoverValue(raw, activeFile, f2.key);
+        if (coverVal !== void 0)
+          value = coverVal;
+      } else if (typeof raw === "string" && raw.startsWith("https://cdn.sanity.io/images/")) {
         const ref = sanityRefFromAssetUrl(
           raw,
           this.settings.projectId || "",
@@ -10345,13 +10337,6 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         }
       }
       setDeepPath(extraAttrs, f2.expr, value);
-    }
-    const coverRaw = data == null ? void 0 : data[coverField];
-    if (coverRaw !== void 0 && coverRaw !== null && coverRaw !== "") {
-      const coverVal = await this.resolveCoverValue(coverRaw, activeFile, coverField);
-      if (coverVal !== void 0) {
-        setDeepPath(extraAttrs, coverField, coverVal);
-      }
     }
     const r = await this.createorUpdateDocument({
       content,
@@ -10407,6 +10392,21 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       return void 0;
     }
   }
+  /** 判断 frontmatter 值是否像本地图片（用于发布时把该字段自动上传成 image asset）。
+   *  仅认本地路径 / [[ ]] wikilink（带图片扩展名）；外链（含 cdn.sanity.io）不在此判断，
+   *  避免误把普通字符串字段（title/slug 等）当封面处理。 */
+  looksLikeImage(raw) {
+    if (!raw || typeof raw !== "string")
+      return false;
+    const s2 = raw.replace(/^\[\[|\]\]$/g, "").trim();
+    if (/^https?:\/\//i.test(s2))
+      return false;
+    return /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(s2);
+  }
+  /** 判断 Sanity 返回值是否为 image object（{_type:"image", asset:{_ref}}）。 */
+  isImageObject(v) {
+    return !!(v && v._type === "image" && v.asset && typeof v.asset._ref === "string");
+  }
   async publishAnnouncementToSanity() {
     const { announcementText, announcementLink, announcementType } = this.settings;
     if (!announcementText || !announcementText.trim()) {
@@ -10442,11 +10442,9 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     const titleField = this.settings.sanityTitleField;
     const bodyField = this.settings.sanityBodyField || "body";
     const filenameField = this.settings.filenameField;
-    const coverField = this.settings.coverField || "heroImage";
     const safeType = String(type).replace(/[^a-zA-Z0-9_]/g, "");
     const safeTitle = titleField ? cleanGroqExpr(titleField) : "";
     const safeBody = bodyField ? cleanGroqExpr(bodyField) : "";
-    const safeCover = coverField ? cleanGroqExpr(coverField) : "";
     const safeFilename = filenameField ? cleanGroqExpr(filenameField) : "";
     const extraFields = parseSyncFields(this.settings.syncFields);
     const parts = [`_id`, `"isDraft": _id in path("drafts.**")`];
@@ -10512,12 +10510,10 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         frontmatter[safeTitle] = doc._syncTitle;
       }
       for (const f2 of extraFields) {
-        if (f2.key === coverField)
-          continue;
         let v = doc[f2.key];
         if (v === void 0 || v === null)
           continue;
-        if (v && v._type === "image" && v.asset && typeof v.asset._ref === "string") {
+        if (this.isImageObject(v)) {
           const url = sanityAssetUrlFromRef(
             v.asset._ref,
             projectId2,
@@ -10527,12 +10523,6 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
             v = url;
         }
         frontmatter[f2.key] = v;
-      }
-      const coverVal = doc[coverField];
-      if (coverVal && typeof coverVal === "object" && coverVal._type === "image" && coverVal.asset && typeof coverVal.asset._ref === "string") {
-        const curl = sanityAssetUrlFromRef(coverVal.asset._ref, projectId2, dataset2);
-        if (curl)
-          frontmatter[coverField] = curl;
       }
       const body = doc._syncBody || "";
       const existing = existingById.get(doc._id);

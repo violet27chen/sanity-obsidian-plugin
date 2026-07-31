@@ -404,16 +404,18 @@ export default class SanityPublishPlugin extends Plugin {
 		// 收集「额外字段」回写 Sanity（图片 URL 还原为 asset ref）。
 		// 使用 setDeepPath 把点号路径展开为嵌套对象，例如 slug.current -> { slug: { current: "x" } }。
 		const extraAttrs: Record<string, any> = {};
-		const coverField = this.settings.coverField || "heroImage";
 		const extraFields = parseSyncFields(this.settings.syncFields);
 		for (const f of extraFields) {
-			if (f.key === coverField) continue; // 封面由专门逻辑处理，避免双重写
 			const raw = (data as any)?.[f.key];
 			if (raw === undefined || raw === null) continue;
 			// 标题、正文字段单独处理，避免重复/冲突
 			if (f.key === titleField || f.key === bodyField) continue;
 			let value: any = raw;
-			if (
+			if (this.looksLikeImage(raw)) {
+				// 本地图片（含 [[ ]] 包裹）：上传到 Sanity assets 并写成 image asset ref
+				const coverVal = await this.resolveCoverValue(raw, activeFile, f.key);
+				if (coverVal !== undefined) value = coverVal;
+			} else if (
 				typeof raw === "string" &&
 				raw.startsWith("https://cdn.sanity.io/images/")
 			) {
@@ -430,15 +432,6 @@ export default class SanityPublishPlugin extends Plugin {
 				}
 			}
 			setDeepPath(extraAttrs, f.expr, value);
-		}
-
-		// 封面 / hero image：本地图片自动上传到 Sanity assets，URL 还原为 asset ref
-		const coverRaw = (data as any)?.[coverField];
-		if (coverRaw !== undefined && coverRaw !== null && coverRaw !== "") {
-			const coverVal = await this.resolveCoverValue(coverRaw, activeFile, coverField);
-			if (coverVal !== undefined) {
-				setDeepPath(extraAttrs, coverField, coverVal);
-			}
 		}
 
 		const r = await this.createorUpdateDocument({
@@ -503,6 +496,26 @@ export default class SanityPublishPlugin extends Plugin {
 		}
 	}
 
+	/** 判断 frontmatter 值是否像本地图片（用于发布时把该字段自动上传成 image asset）。
+	 *  仅认本地路径 / [[ ]] wikilink（带图片扩展名）；外链（含 cdn.sanity.io）不在此判断，
+	 *  避免误把普通字符串字段（title/slug 等）当封面处理。 */
+	private looksLikeImage(raw: any): boolean {
+		if (!raw || typeof raw !== "string") return false;
+		const s = raw.replace(/^\[\[|\]\]$/g, "").trim();
+		if (/^https?:\/\//i.test(s)) return false;
+		return /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(s);
+	}
+
+	/** 判断 Sanity 返回值是否为 image object（{_type:"image", asset:{_ref}}）。 */
+	private isImageObject(v: any): boolean {
+		return !!(
+			v &&
+			v._type === "image" &&
+			v.asset &&
+			typeof v.asset._ref === "string"
+		);
+	}
+
 	async publishAnnouncementToSanity() {
 		const { announcementText, announcementLink, announcementType } =
 			this.settings;
@@ -540,7 +553,6 @@ export default class SanityPublishPlugin extends Plugin {
 		const titleField = this.settings.sanityTitleField;
 		const bodyField = this.settings.sanityBodyField || "body";
 		const filenameField = this.settings.filenameField;
-		const coverField = this.settings.coverField || "heroImage";
 
 		// 只拉取正式文档（排除 drafts.*）：避免 Obsidian 里草稿与正式并存导致重复。
 		// 类型/字段名内联进 GROQ（并做标识符清洗），不使用 $param，避免请求 400。
@@ -548,7 +560,6 @@ export default class SanityPublishPlugin extends Plugin {
 		const safeType = String(type).replace(/[^a-zA-Z0-9_]/g, "");
 		const safeTitle = titleField ? cleanGroqExpr(titleField) : "";
 		const safeBody = bodyField ? cleanGroqExpr(bodyField) : "";
-		const safeCover = coverField ? cleanGroqExpr(coverField) : "";
 		const safeFilename = filenameField ? cleanGroqExpr(filenameField) : "";
 		const extraFields = parseSyncFields(this.settings.syncFields);
 
@@ -629,17 +640,11 @@ export default class SanityPublishPlugin extends Plugin {
 			if (safeTitle && doc._syncTitle !== undefined && doc._syncTitle !== null) {
 				frontmatter[safeTitle] = doc._syncTitle;
 			}
-			// 额外字段写入 frontmatter（图片引用自动转为 CDN URL）
+			// 额外字段写入 frontmatter（image object 自动转为 CDN URL，其它原样）
 			for (const f of extraFields) {
-				if (f.key === coverField) continue; // 封面单独处理，避免双重写
 				let v = (doc as any)[f.key];
 				if (v === undefined || v === null) continue;
-				if (
-					v &&
-					v._type === "image" &&
-					v.asset &&
-					typeof v.asset._ref === "string"
-				) {
+				if (this.isImageObject(v)) {
 					const url = sanityAssetUrlFromRef(
 						v.asset._ref,
 						projectId,
@@ -648,16 +653,6 @@ export default class SanityPublishPlugin extends Plugin {
 					if (url) v = url;
 				}
 				frontmatter[f.key] = v;
-			}
-			// 封面：image asset ref -> CDN URL 写回 frontmatter
-			const coverVal = (doc as any)[coverField];
-			if (
-				coverVal && typeof coverVal === "object" &&
-				coverVal._type === "image" && coverVal.asset &&
-				typeof coverVal.asset._ref === "string"
-			) {
-				const curl = sanityAssetUrlFromRef(coverVal.asset._ref, projectId, dataset);
-				if (curl) frontmatter[coverField] = curl;
 			}
 			const body: string = doc._syncBody || "";
 
