@@ -15,6 +15,7 @@ import {
 	Notice,
 	Plugin,
 	requestUrl,
+	stringifyYaml,
 	TFile,
 	setIcon,
 } from "obsidian";
@@ -583,10 +584,10 @@ export default class SanityPublishPlugin extends Plugin {
 				const raw = await this.app.vault.read(existing);
 				const { data } = matter(raw);
 				const mergedFm = { ...data, ...frontmatter };
-				await this.app.vault.modify(
-					existing,
-					matter.stringify(body, mergedFm)
-				);
+			await this.app.vault.modify(
+				existing,
+				`---\n${stringifyYaml(mergedFm).trimEnd()}\n---\n\n${body}`
+			);
 				updated++;
 				continue;
 			}
@@ -598,10 +599,10 @@ export default class SanityPublishPlugin extends Plugin {
 				finalPath = folderPrefix + baseName + "-" + n + ".md";
 				n++;
 			}
-			await this.app.vault.create(
-				finalPath,
-				matter.stringify(body, frontmatter)
-			);
+		await this.app.vault.create(
+			finalPath,
+			`---\n${stringifyYaml(frontmatter).trimEnd()}\n---\n\n${body}`
+		);
 			created++;
 		}
 
@@ -761,12 +762,7 @@ export default class SanityPublishPlugin extends Plugin {
 
 		const { content, data } = await this.getFileData(currentFile);
 		const updatedFrontmatter =
-			matter
-				.stringify("", {
-					...data,
-					...updatedProperties,
-				})
-				.trimEnd() + "\n";
+			`---\n${stringifyYaml({ ...data, ...updatedProperties }).trimEnd()}\n---\n`;
 
 		// Update the content with the modified frontmatter
 		const updatedContent = updatedFrontmatter + content;

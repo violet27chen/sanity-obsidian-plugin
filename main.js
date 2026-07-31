@@ -10557,7 +10557,11 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         const mergedFm = { ...data, ...frontmatter };
         await this.app.vault.modify(
           existing,
-          import_gray_matter.default.stringify(body, mergedFm)
+          `---
+${(0, import_obsidian2.stringifyYaml)(mergedFm).trimEnd()}
+---
+
+${body}`
         );
         updated++;
         continue;
@@ -10570,7 +10574,11 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       }
       await this.app.vault.create(
         finalPath,
-        import_gray_matter.default.stringify(body, frontmatter)
+        `---
+${(0, import_obsidian2.stringifyYaml)(frontmatter).trimEnd()}
+---
+
+${body}`
       );
       created++;
     }
@@ -10683,10 +10691,10 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       return;
     }
     const { content, data } = await this.getFileData(currentFile);
-    const updatedFrontmatter = import_gray_matter.default.stringify("", {
-      ...data,
-      ...updatedProperties
-    }).trimEnd() + "\n";
+    const updatedFrontmatter = `---
+${(0, import_obsidian2.stringifyYaml)({ ...data, ...updatedProperties }).trimEnd()}
+---
+`;
     const updatedContent = updatedFrontmatter + content;
     await this.app.vault.modify(currentFile, updatedContent);
   }
