@@ -10296,10 +10296,12 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     statusButton.addClass("mod-clickable");
     statusButton.setAttr("aria-label", "Publish to Sanity");
     statusButton.setAttr("data-tooltip-position", "top");
-    statusButton.addEventListener(
-      "click",
-      () => this.publishToSanity(file)
-    );
+    statusButton.addEventListener("click", () => {
+      this.publishToSanity(file).catch((e) => {
+        console.error("Publish crashed:", e);
+        new import_obsidian2.Notice("Publish \u51FA\u9519\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 1e4);
+      });
+    });
     this.statusBarButton = statusButton;
   }
   removeStatusBarButton() {
@@ -10307,89 +10309,115 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       this.statusBarButton.remove();
     this.statusBarButton = void 0;
   }
-  async uploadAllImages() {
+  /**
+   * 取正对着目标文件的编辑器实例。
+   *
+   * 注意：`getActiveFile()` 与 `getActiveViewOfType(MarkdownView)` 并不等价——
+   * 从命令面板触发时焦点已转移到 suggestion 弹窗，文件在阅读视图/其它 leaf 打开时
+   * 也拿不到 MarkdownView。所以这里允许返回 null，由调用方退回 vault 读写。
+   */
+  getEditorForFile(file) {
+    var _a, _b;
     const view = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
     if (!view)
-      return;
-    const editor = view.editor;
-    if (!editor)
-      return;
-    const content = view.getViewData();
+      return null;
+    if (((_a = view.file) == null ? void 0 : _a.path) !== file.path)
+      return null;
+    return (_b = view.editor) != null ? _b : null;
+  }
+  /**
+   * 读取目标文件的 frontmatter + 正文。
+   * 优先取编辑器内容（含尚未保存的改动），取不到就读盘，
+   * 因此不再依赖「必须有活动 MarkdownView」。
+   */
+  async getFileData(file) {
+    const editor = this.getEditorForFile(file);
+    const raw = editor ? editor.getValue() : await this.app.vault.read(file);
+    return (0, import_gray_matter.default)(raw);
+  }
+  async uploadAllImages(file) {
+    const editor = this.getEditorForFile(file);
+    const content = editor ? editor.getValue() : await this.app.vault.read(file);
     const lines = content.split("\n");
+    const targets = lines.map((line, lineNumber) => ({
+      lineNumber,
+      filePath: this.getFilePathFromLine(line)
+    })).filter(
+      (t) => Boolean(t.filePath)
+    );
+    if (targets.length === 0)
+      return;
     new import_obsidian2.Notice("Uploading files in document...");
     await Promise.all(
-      lines.map(async (line, lineNumber) => {
-        const filePath = this.getFilePathFromLine(line);
-        if (!filePath)
-          return;
-        const fileMetaData = this.app.metadataCache.getFirstLinkpathDest(filePath, "");
+      targets.map(async ({ lineNumber, filePath }) => {
+        const fileMetaData = this.app.metadataCache.getFirstLinkpathDest(
+          filePath,
+          file.path
+        );
         if (!fileMetaData)
           return;
-        const uploadText = `![uploading file...](${filePath})`;
-        editor.setLine(lineNumber, uploadText);
+        if (editor) {
+          editor.setLine(
+            lineNumber,
+            `![uploading file...](${filePath})`
+          );
+        }
         try {
           const value = await this.uploadFileToSanity(fileMetaData);
-          const assetText = `![${value.originalFilename}](${value.url})`;
-          editor.setLine(lineNumber, assetText);
+          lines[lineNumber] = `![${value.originalFilename}](${value.url})`;
         } catch (e) {
           console.error("Upload to Sanity failed", e);
-          const errorText = `![Couldn't upload file](${filePath})`;
-          editor.setLine(lineNumber, errorText);
+          lines[lineNumber] = `![Couldn't upload file](${filePath})`;
         }
+        if (editor)
+          editor.setLine(lineNumber, lines[lineNumber]);
       })
     );
+    if (!editor)
+      await this.app.vault.modify(file, lines.join("\n"));
   }
-  publishToSanity(activeFile) {
-    this.uploadAllImages().then(
-      () => this.getActiveViewData().then(({ content, data }) => {
-        new import_obsidian2.Notice("Publishing content to Sanity...");
-        const titleField = this.settings.sanityTitleField;
-        const bodyField = this.settings.sanityBodyField;
-        const fmTitle = titleField ? data == null ? void 0 : data[titleField] : void 0;
-        const title = typeof fmTitle === "string" && fmTitle ? fmTitle : activeFile.basename;
-        const extraAttrs = {};
-        const extraFields = parseSyncFields(this.settings.syncFields);
-        for (const f2 of extraFields) {
-          const raw = data == null ? void 0 : data[f2.key];
-          if (raw === void 0 || raw === null)
-            continue;
-          if (f2.key === titleField || f2.key === bodyField)
-            continue;
-          let value = raw;
-          if (typeof raw === "string" && raw.startsWith("https://cdn.sanity.io/images/")) {
-            const ref = sanityRefFromAssetUrl(
-              raw,
-              this.settings.projectId || "",
-              this.settings.dataset
-            );
-            if (ref) {
-              value = {
-                _type: "image",
-                asset: { _type: "reference", _ref: ref }
-              };
-            }
-          }
-          setDeepPath(extraAttrs, f2.expr, value);
+  async publishToSanity(activeFile) {
+    await this.uploadAllImages(activeFile);
+    const { content, data } = await this.getFileData(activeFile);
+    new import_obsidian2.Notice("Publishing content to Sanity...");
+    const titleField = this.settings.sanityTitleField;
+    const bodyField = this.settings.sanityBodyField;
+    const fmTitle = titleField ? data == null ? void 0 : data[titleField] : void 0;
+    const title = typeof fmTitle === "string" && fmTitle ? fmTitle : activeFile.basename;
+    const extraAttrs = {};
+    const extraFields = parseSyncFields(this.settings.syncFields);
+    for (const f2 of extraFields) {
+      const raw = data == null ? void 0 : data[f2.key];
+      if (raw === void 0 || raw === null)
+        continue;
+      if (f2.key === titleField || f2.key === bodyField)
+        continue;
+      let value = raw;
+      if (typeof raw === "string" && raw.startsWith("https://cdn.sanity.io/images/")) {
+        const ref = sanityRefFromAssetUrl(
+          raw,
+          this.settings.projectId || "",
+          this.settings.dataset
+        );
+        if (ref) {
+          value = {
+            _type: "image",
+            asset: { _type: "reference", _ref: ref }
+          };
         }
-        this.createorUpdateDocument({
-          content,
-          title,
-          sanityId: data == null ? void 0 : data.sanity_id,
-          extra: extraAttrs
-        }).then((r) => {
-          if (r == null ? void 0 : r._id) {
-            this.updateFrontmatter({ sanity_id: r._id });
-            new import_obsidian2.Notice(
-              "Successfully published content to Sanity!"
-            );
-          }
-        }).catch(() => {
-          new import_obsidian2.Notice(
-            "Something went wrong when publishing to Sanity"
-          );
-        });
-      })
-    );
+      }
+      setDeepPath(extraAttrs, f2.expr, value);
+    }
+    const r = await this.createorUpdateDocument({
+      content,
+      title,
+      sanityId: data == null ? void 0 : data.sanity_id,
+      extra: extraAttrs
+    });
+    if (r == null ? void 0 : r._id) {
+      await this.updateFrontmatter({ sanity_id: r._id }, activeFile);
+      new import_obsidian2.Notice("Successfully published content to Sanity!");
+    }
   }
   async publishAnnouncementToSanity() {
     const { announcementText, announcementLink, announcementType } = this.settings;
@@ -10625,26 +10653,19 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     const filePath = (matches == null ? void 0 : matches[1]) || (matches == null ? void 0 : matches[2]);
     return filePath;
   }
-  async getActiveViewData() {
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
-    if (activeView) {
-      return (0, import_gray_matter.default)(activeView.getViewData());
-    }
-    throw new Error("No active view available.");
-  }
-  async updateFrontmatter(updatedProperties) {
-    const currentFile = this.app.workspace.getActiveFile();
-    if (currentFile) {
-      const { content, data } = await this.getActiveViewData();
-      const updatedFrontmatter = import_gray_matter.default.stringify("", {
-        ...data,
-        ...updatedProperties
-      }).trimEnd() + "\n";
-      const updatedContent = updatedFrontmatter + content;
-      this.app.vault.modify(currentFile, updatedContent);
-    } else {
+  async updateFrontmatter(updatedProperties, file) {
+    const currentFile = file != null ? file : this.app.workspace.getActiveFile();
+    if (!currentFile) {
       console.error("No active file found.");
+      return;
     }
+    const { content, data } = await this.getFileData(currentFile);
+    const updatedFrontmatter = import_gray_matter.default.stringify("", {
+      ...data,
+      ...updatedProperties
+    }).trimEnd() + "\n";
+    const updatedContent = updatedFrontmatter + content;
+    await this.app.vault.modify(currentFile, updatedContent);
   }
   async sleep(delay) {
     return new Promise((resolve) => setTimeout(resolve, delay));

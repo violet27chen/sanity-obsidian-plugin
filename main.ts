@@ -257,9 +257,12 @@ export default class SanityPublishPlugin extends Plugin {
 		statusButton.addClass("mod-clickable");
 		statusButton.setAttr("aria-label", "Publish to Sanity");
 		statusButton.setAttr("data-tooltip-position", "top");
-		statusButton.addEventListener("click", () =>
-			this.publishToSanity(file)
-		);
+		statusButton.addEventListener("click", () => {
+			this.publishToSanity(file).catch((e: any) => {
+				console.error("Publish crashed:", e);
+				new Notice("Publish 出错：" + (e?.message || String(e)), 10000);
+			});
+		});
 		this.statusBarButton = statusButton;
 	}
 
@@ -268,108 +271,140 @@ export default class SanityPublishPlugin extends Plugin {
 		this.statusBarButton = undefined;
 	}
 
-	async uploadAllImages() {
+	/**
+	 * 取正对着目标文件的编辑器实例。
+	 *
+	 * 注意：`getActiveFile()` 与 `getActiveViewOfType(MarkdownView)` 并不等价——
+	 * 从命令面板触发时焦点已转移到 suggestion 弹窗，文件在阅读视图/其它 leaf 打开时
+	 * 也拿不到 MarkdownView。所以这里允许返回 null，由调用方退回 vault 读写。
+	 */
+	getEditorForFile(file: TFile) {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (!view) return;
-		const editor = view.editor;
-		if (!editor) return;
+		if (!view) return null;
+		if (view.file?.path !== file.path) return null;
+		return view.editor ?? null;
+	}
 
-		const content = view.getViewData();
+	/**
+	 * 读取目标文件的 frontmatter + 正文。
+	 * 优先取编辑器内容（含尚未保存的改动），取不到就读盘，
+	 * 因此不再依赖「必须有活动 MarkdownView」。
+	 */
+	async getFileData(file: TFile) {
+		const editor = this.getEditorForFile(file);
+		const raw = editor ? editor.getValue() : await this.app.vault.read(file);
+		return matter(raw);
+	}
+
+	async uploadAllImages(file: TFile) {
+		const editor = this.getEditorForFile(file);
+		const content = editor
+			? editor.getValue()
+			: await this.app.vault.read(file);
 		const lines = content.split("\n");
+
+		// 先扫出需要上传的行；没有本地引用就直接返回，
+		// 避免无谓的 Notice 与写盘。
+		const targets = lines
+			.map((line, lineNumber) => ({
+				lineNumber,
+				filePath: this.getFilePathFromLine(line),
+			}))
+			.filter((t): t is { lineNumber: number; filePath: string } =>
+				Boolean(t.filePath)
+			);
+		if (targets.length === 0) return;
 
 		new Notice("Uploading files in document...");
 
-		// For every new line, check if it's an embedded image
-		// if it is, upload it to Sanity and replace the text in the
-		// editor
 		await Promise.all(
-			lines.map(async (line, lineNumber) => {
-				const filePath = this.getFilePathFromLine(line);
-				if (!filePath) return;
-
+			targets.map(async ({ lineNumber, filePath }) => {
+				// 以当前笔记为解析基准，相对路径的 wikilink 才能正确定位
 				const fileMetaData =
-					this.app.metadataCache.getFirstLinkpathDest(filePath, "");
+					this.app.metadataCache.getFirstLinkpathDest(
+						filePath,
+						file.path
+					);
 				if (!fileMetaData) return;
 
-				const uploadText = `![uploading file...](${filePath})`;
-				editor.setLine(lineNumber, uploadText);
+				// 有编辑器时给出「上传中」的即时反馈
+				if (editor) {
+					editor.setLine(
+						lineNumber,
+						`![uploading file...](${filePath})`
+					);
+				}
 				try {
 					const value = await this.uploadFileToSanity(fileMetaData);
-					const assetText = `![${value.originalFilename}](${value.url})`;
-					editor.setLine(lineNumber, assetText);
+					lines[
+						lineNumber
+					] = `![${value.originalFilename}](${value.url})`;
 				} catch (e) {
 					console.error("Upload to Sanity failed", e);
-					const errorText = `![Couldn't upload file](${filePath})`;
-					editor.setLine(lineNumber, errorText);
+					lines[lineNumber] = `![Couldn't upload file](${filePath})`;
 				}
+				if (editor) editor.setLine(lineNumber, lines[lineNumber]);
 			})
 		);
+
+		// 无编辑器（命令面板触发 / 手机端焦点丢失）时直接写回文件
+		if (!editor) await this.app.vault.modify(file, lines.join("\n"));
 	}
 
-	publishToSanity(activeFile: TFile) {
-		// Upload images and then push content to Sanity
-		this.uploadAllImages().then(() =>
-			this.getActiveViewData().then(({ content, data }) => {
-				new Notice("Publishing content to Sanity...");
-				// 标题优先取 frontmatter 里配置好的标题字段，缺失才回退文件名
-				const titleField = this.settings.sanityTitleField;
-				const bodyField = this.settings.sanityBodyField;
-				const fmTitle = titleField ? data?.[titleField] : undefined;
-				const title =
-					typeof fmTitle === "string" && fmTitle
-						? fmTitle
-						: activeFile.basename;
+	async publishToSanity(activeFile: TFile) {
+		// 先把正文里的本地图片/附件上传并替换为 CDN 链接，再推送内容
+		await this.uploadAllImages(activeFile);
+		const { content, data } = await this.getFileData(activeFile);
 
-				// 收集「额外字段」回写 Sanity（图片 URL 还原为 asset ref）。
-				// 使用 setDeepPath 把点号路径展开为嵌套对象，例如 slug.current -> { slug: { current: "x" } }。
-				const extraAttrs: Record<string, any> = {};
-				const extraFields = parseSyncFields(this.settings.syncFields);
-				for (const f of extraFields) {
-					const raw = (data as any)?.[f.key];
-					if (raw === undefined || raw === null) continue;
-					// 标题、正文字段单独处理，避免重复/冲突
-					if (f.key === titleField || f.key === bodyField) continue;
-					let value: any = raw;
-					if (
-						typeof raw === "string" &&
-						raw.startsWith("https://cdn.sanity.io/images/")
-					) {
-						const ref = sanityRefFromAssetUrl(
-							raw,
-							this.settings.projectId || "",
-							this.settings.dataset
-						);
-						if (ref) {
-							value = {
-								_type: "image",
-								asset: { _type: "reference", _ref: ref },
-							};
-						}
-					}
-					setDeepPath(extraAttrs, f.expr, value);
+		new Notice("Publishing content to Sanity...");
+		// 标题优先取 frontmatter 里配置好的标题字段，缺失才回退文件名
+		const titleField = this.settings.sanityTitleField;
+		const bodyField = this.settings.sanityBodyField;
+		const fmTitle = titleField ? data?.[titleField] : undefined;
+		const title =
+			typeof fmTitle === "string" && fmTitle
+				? fmTitle
+				: activeFile.basename;
+
+		// 收集「额外字段」回写 Sanity（图片 URL 还原为 asset ref）。
+		// 使用 setDeepPath 把点号路径展开为嵌套对象，例如 slug.current -> { slug: { current: "x" } }。
+		const extraAttrs: Record<string, any> = {};
+		const extraFields = parseSyncFields(this.settings.syncFields);
+		for (const f of extraFields) {
+			const raw = (data as any)?.[f.key];
+			if (raw === undefined || raw === null) continue;
+			// 标题、正文字段单独处理，避免重复/冲突
+			if (f.key === titleField || f.key === bodyField) continue;
+			let value: any = raw;
+			if (
+				typeof raw === "string" &&
+				raw.startsWith("https://cdn.sanity.io/images/")
+			) {
+				const ref = sanityRefFromAssetUrl(
+					raw,
+					this.settings.projectId || "",
+					this.settings.dataset
+				);
+				if (ref) {
+					value = {
+						_type: "image",
+						asset: { _type: "reference", _ref: ref },
+					};
 				}
+			}
+			setDeepPath(extraAttrs, f.expr, value);
+		}
 
-				this.createorUpdateDocument({
-					content,
-					title,
-					sanityId: data?.sanity_id,
-					extra: extraAttrs,
-				})
-					.then((r) => {
-						if (r?._id) {
-							this.updateFrontmatter({ sanity_id: r._id });
-							new Notice(
-								"Successfully published content to Sanity!"
-							);
-						}
-					})
-					.catch(() => {
-						new Notice(
-							"Something went wrong when publishing to Sanity"
-						);
-					});
-			})
-		);
+		const r = await this.createorUpdateDocument({
+			content,
+			title,
+			sanityId: data?.sanity_id,
+			extra: extraAttrs,
+		});
+		if (r?._id) {
+			await this.updateFrontmatter({ sanity_id: r._id }, activeFile);
+			new Notice("Successfully published content to Sanity!");
+		}
 	}
 
 	async publishAnnouncementToSanity() {
@@ -661,36 +696,33 @@ export default class SanityPublishPlugin extends Plugin {
 		return filePath;
 	}
 
-	async getActiveViewData() {
-		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (activeView) {
-			return matter(activeView.getViewData());
-		}
-		throw new Error("No active view available.");
-	}
-
-	async updateFrontmatter(updatedProperties: {
-		[x: string]: string | string[];
-	}) {
-		const currentFile = this.app.workspace.getActiveFile();
-		if (currentFile) {
-			const { content, data } = await this.getActiveViewData();
-			const updatedFrontmatter =
-				matter
-					.stringify("", {
-						...data,
-						...updatedProperties,
-					})
-					.trimEnd() + "\n";
-
-			// Update the content with the modified frontmatter
-			const updatedContent = updatedFrontmatter + content;
-
-			// Save the updated content back to the file
-			this.app.vault.modify(currentFile, updatedContent);
-		} else {
+	async updateFrontmatter(
+		updatedProperties: {
+			[x: string]: string | string[];
+		},
+		file?: TFile
+	) {
+		// 优先用显式传入的文件；没有才回退到当前活动文件
+		const currentFile = file ?? this.app.workspace.getActiveFile();
+		if (!currentFile) {
 			console.error("No active file found.");
+			return;
 		}
+
+		const { content, data } = await this.getFileData(currentFile);
+		const updatedFrontmatter =
+			matter
+				.stringify("", {
+					...data,
+					...updatedProperties,
+				})
+				.trimEnd() + "\n";
+
+		// Update the content with the modified frontmatter
+		const updatedContent = updatedFrontmatter + content;
+
+		// Save the updated content back to the file
+		await this.app.vault.modify(currentFile, updatedContent);
 	}
 
 	async sleep(delay: number) {
