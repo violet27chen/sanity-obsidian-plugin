@@ -424,7 +424,10 @@ export default class SanityPublishPlugin extends Plugin {
 			extra: extraAttrs,
 		});
 		if (r?._id) {
-			await this.updateFrontmatter({ sanity_id: r._id }, activeFile);
+			await this.updateFrontmatter(
+				{ sanity_id: r._id, sanity_draft: false },
+				activeFile
+			);
 			new Notice("Successfully published content to Sanity!");
 		}
 	}
@@ -467,7 +470,7 @@ export default class SanityPublishPlugin extends Plugin {
 		const bodyField = this.settings.sanityBodyField || "body";
 		const filenameField = this.settings.filenameField;
 
-		// 拉取全部文档（含草稿）：用 isDraft 标记区分正式 / 草稿。
+		// 只拉取正式文档（排除 drafts.*）：避免 Obsidian 里草稿与正式并存导致重复。
 		// 类型/字段名内联进 GROQ（并做标识符清洗），不使用 $param，避免请求 400。
 		// 标题、正文、文件名、额外字段全部由用户在设置里指定，插件不再硬编码任何 schema 字段。
 		const safeType = String(type).replace(/[^a-zA-Z0-9_]/g, "");
@@ -488,7 +491,7 @@ export default class SanityPublishPlugin extends Plugin {
 		for (const f of extraFields) {
 			parts.push(`"${f.key}": ${f.expr}`);
 		}
-		const query = `*[_type == "${safeType}"]{ ${parts.join(", ")} }`;
+		const query = `*[_type == "${safeType}" && !(_id in path("drafts.**"))]{ ${parts.join(", ")} }`;
 
 		let docs: any[] = [];
 		try {
@@ -681,18 +684,20 @@ export default class SanityPublishPlugin extends Plugin {
 		// 额外字段（通用双向同步）
 		if (extra) Object.assign(attributes, extra);
 
+		// 规范化目标 id：若 sanity_id 指向草稿（drafts.x），发布应落到对应
+		// 正式文档 x，并准备删除原草稿，避免 Sanity 里草稿/正式并存造成重复。
+		let targetId = sanityId || "";
+		let draftToDelete: string | null = null;
+		if (targetId.startsWith("drafts.")) {
+			draftToDelete = targetId;
+			targetId = targetId.slice("drafts.".length);
+		}
+
 		let mutations: unknown[];
-		if (!sanityId) {
-			// 新建：生成合法 draft id（drafts.<随机>，避免 "drafts." 被拒）
-			mutations = [
-				{
-					create: {
-						_type,
-						_id: "drafts." + Math.random().toString(36).slice(2, 11),
-						...attributes,
-					},
-				},
-			];
+		if (!targetId) {
+			// 新建：直接生成正式文档 id（发布即正式，不生成草稿，避免重复）
+			targetId = "post-" + Math.random().toString(36).slice(2, 11);
+			mutations = [{ create: { _type, _id: targetId, ...attributes } }];
 		} else {
 			// 已有 sanity_id：不能只发 patch。
 			// Sanity 对「不存在的文档」执行 patch 会返回 HTTP 404
@@ -701,8 +706,8 @@ export default class SanityPublishPlugin extends Plugin {
 			// 先 createIfNotExists 兜底再 patch，同一事务内原子执行：
 			// 文档存在 → create 被忽略，正常 patch；文档不存在 → 先建再写，自愈。
 			mutations = [
-				{ createIfNotExists: { _id: sanityId, _type } },
-				{ patch: { id: sanityId, set: attributes } },
+				{ createIfNotExists: { _id: targetId, _type } },
+				{ patch: { id: targetId, set: attributes } },
 			];
 		}
 
@@ -714,7 +719,11 @@ export default class SanityPublishPlugin extends Plugin {
 			? results[results.length - 1]
 			: undefined;
 		const doc = last?.document || (last?.id ? { _id: last.id } : undefined);
-		return doc || {};
+		// 发布成功后删除原草稿（独立请求，失败不阻断正式发布）
+		if (draftToDelete) {
+			await sanityMutate([{ delete: { id: draftToDelete } }], this.settings);
+		}
+		return doc?._id ? doc : { _id: targetId };
 	}
 
 	getAbsolutePath(file: TFile) {
@@ -739,7 +748,7 @@ export default class SanityPublishPlugin extends Plugin {
 
 	async updateFrontmatter(
 		updatedProperties: {
-			[x: string]: string | string[];
+			[x: string]: any;
 		},
 		file?: TFile
 	) {

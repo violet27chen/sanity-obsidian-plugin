@@ -10425,7 +10425,10 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       extra: extraAttrs
     });
     if (r == null ? void 0 : r._id) {
-      await this.updateFrontmatter({ sanity_id: r._id }, activeFile);
+      await this.updateFrontmatter(
+        { sanity_id: r._id, sanity_draft: false },
+        activeFile
+      );
       new import_obsidian2.Notice("Successfully published content to Sanity!");
     }
   }
@@ -10482,7 +10485,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     for (const f2 of extraFields) {
       parts.push(`"${f2.key}": ${f2.expr}`);
     }
-    const query = `*[_type == "${safeType}"]{ ${parts.join(", ")} }`;
+    const query = `*[_type == "${safeType}" && !(_id in path("drafts.**"))]{ ${parts.join(", ")} }`;
     let docs = [];
     try {
       const url = `${apiBaseFor(this.settings)}/${QUERY_API_VERSION}/data/query/${dataset2}?query=${encodeURIComponent(query)}`;
@@ -10631,28 +10634,30 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       attributes[titleField] = title;
     if (extra)
       Object.assign(attributes, extra);
+    let targetId = sanityId || "";
+    let draftToDelete = null;
+    if (targetId.startsWith("drafts.")) {
+      draftToDelete = targetId;
+      targetId = targetId.slice("drafts.".length);
+    }
     let mutations;
-    if (!sanityId) {
-      mutations = [
-        {
-          create: {
-            _type,
-            _id: "drafts." + Math.random().toString(36).slice(2, 11),
-            ...attributes
-          }
-        }
-      ];
+    if (!targetId) {
+      targetId = "post-" + Math.random().toString(36).slice(2, 11);
+      mutations = [{ create: { _type, _id: targetId, ...attributes } }];
     } else {
       mutations = [
-        { createIfNotExists: { _id: sanityId, _type } },
-        { patch: { id: sanityId, set: attributes } }
+        { createIfNotExists: { _id: targetId, _type } },
+        { patch: { id: targetId, set: attributes } }
       ];
     }
     const res = await sanityMutate(mutations, this.settings);
     const results = res == null ? void 0 : res.results;
     const last2 = Array.isArray(results) ? results[results.length - 1] : void 0;
     const doc = (last2 == null ? void 0 : last2.document) || ((last2 == null ? void 0 : last2.id) ? { _id: last2.id } : void 0);
-    return doc || {};
+    if (draftToDelete) {
+      await sanityMutate([{ delete: { id: draftToDelete } }], this.settings);
+    }
+    return (doc == null ? void 0 : doc._id) ? doc : { _id: targetId };
   }
   getAbsolutePath(file) {
     const adapter2 = this.app.vault.adapter;
