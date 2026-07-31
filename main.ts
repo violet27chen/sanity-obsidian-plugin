@@ -392,8 +392,10 @@ export default class SanityPublishPlugin extends Plugin {
 		// 收集「额外字段」回写 Sanity（图片 URL 还原为 asset ref）。
 		// 使用 setDeepPath 把点号路径展开为嵌套对象，例如 slug.current -> { slug: { current: "x" } }。
 		const extraAttrs: Record<string, any> = {};
+		const coverField = this.settings.coverField || "heroImage";
 		const extraFields = parseSyncFields(this.settings.syncFields);
 		for (const f of extraFields) {
+			if (f.key === coverField) continue; // 封面由专门逻辑处理，避免双重写
 			const raw = (data as any)?.[f.key];
 			if (raw === undefined || raw === null) continue;
 			// 标题、正文字段单独处理，避免重复/冲突
@@ -418,6 +420,15 @@ export default class SanityPublishPlugin extends Plugin {
 			setDeepPath(extraAttrs, f.expr, value);
 		}
 
+		// 封面 / hero image：本地图片自动上传到 Sanity assets，URL 还原为 asset ref
+		const coverRaw = (data as any)?.[coverField];
+		if (coverRaw !== undefined && coverRaw !== null && coverRaw !== "") {
+			const coverVal = await this.resolveCoverValue(coverRaw, activeFile, coverField);
+			if (coverVal !== undefined) {
+				setDeepPath(extraAttrs, coverField, coverVal);
+			}
+		}
+
 		const r = await this.createorUpdateDocument({
 			content,
 			title,
@@ -430,6 +441,53 @@ export default class SanityPublishPlugin extends Plugin {
 				activeFile
 			);
 			new Notice("Successfully published content to Sanity!");
+		}
+	}
+
+	/** 把 frontmatter 里的封面值解析成可写入 Sanity 的值：
+	 *  - 已是 image object -> 原样返回
+	 *  - cdn.sanity.io URL -> 还原 asset ref -> image object
+	 *  - 其它 http(s) 外链 -> 原样字符串返回（保守，不假设 schema）
+	 *  - 本地附件路径（可带 [[ ]] 包裹）-> 上传到 Sanity assets -> image object
+	 * 本地路径在库里找不到或上传失败时返回 undefined（不写封面，避免写入无效路径）。 */
+	async resolveCoverValue(raw: any, file: TFile, coverField: string): Promise<any> {
+		if (
+			raw && typeof raw === "object" &&
+			raw._type === "image" && raw.asset && typeof raw.asset._ref === "string"
+		) {
+			return raw;
+		}
+		if (typeof raw !== "string") return raw;
+
+		const { projectId, dataset } = this.settings;
+		// cdn.sanity.io URL -> asset ref
+		if (raw.startsWith("https://cdn.sanity.io/images/")) {
+			const ref = sanityRefFromAssetUrl(raw, projectId || "", dataset);
+			if (ref) {
+				return { _type: "image", asset: { _type: "reference", _ref: ref } };
+			}
+			return raw;
+		}
+		// 其它外链 -> 原样字符串
+		if (/^https?:\/\//i.test(raw)) return raw;
+
+		// 本地路径：去掉可能的 [[ ]] wikilink 包裹
+		const linkpath = raw.replace(/^\[\[|\]\]$/g, "").trim();
+		const meta = this.app.metadataCache.getFirstLinkpathDest(linkpath, file.path);
+		if (!meta) {
+			new Notice(`封面「${raw}」在库中未找到，未写入封面字段。`, 8000);
+			return undefined;
+		}
+		try {
+			const up = await this.uploadFileToSanity(meta);
+			const ref = sanityRefFromAssetUrl(up.url, projectId || "", dataset);
+			if (ref) {
+				return { _type: "image", asset: { _type: "reference", _ref: ref } };
+			}
+			return raw;
+		} catch (e: any) {
+			new Notice("封面上传失败：" + (e?.message || String(e)), 8000);
+			return undefined;
 		}
 	}
 
@@ -470,6 +528,7 @@ export default class SanityPublishPlugin extends Plugin {
 		const titleField = this.settings.sanityTitleField;
 		const bodyField = this.settings.sanityBodyField || "body";
 		const filenameField = this.settings.filenameField;
+		const coverField = this.settings.coverField || "heroImage";
 
 		// 只拉取正式文档（排除 drafts.*）：避免 Obsidian 里草稿与正式并存导致重复。
 		// 类型/字段名内联进 GROQ（并做标识符清洗），不使用 $param，避免请求 400。
@@ -559,6 +618,7 @@ export default class SanityPublishPlugin extends Plugin {
 			}
 			// 额外字段写入 frontmatter（图片引用自动转为 CDN URL）
 			for (const f of extraFields) {
+				if (f.key === coverField) continue; // 封面单独处理，避免双重写
 				let v = (doc as any)[f.key];
 				if (v === undefined || v === null) continue;
 				if (
@@ -575,6 +635,16 @@ export default class SanityPublishPlugin extends Plugin {
 					if (url) v = url;
 				}
 				frontmatter[f.key] = v;
+			}
+			// 封面：image asset ref -> CDN URL 写回 frontmatter
+			const coverVal = (doc as any)[coverField];
+			if (
+				coverVal && typeof coverVal === "object" &&
+				coverVal._type === "image" && coverVal.asset &&
+				typeof coverVal.asset._ref === "string"
+			) {
+				const curl = sanityAssetUrlFromRef(coverVal.asset._ref, projectId, dataset);
+				if (curl) frontmatter[coverField] = curl;
 			}
 			const body: string = doc._syncBody || "";
 
