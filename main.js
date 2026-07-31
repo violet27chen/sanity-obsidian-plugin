@@ -10133,6 +10133,14 @@ function apiBaseFor(settings) {
   const custom = (_a = settings.sanityApiBaseUrl) == null ? void 0 : _a.trim().replace(/\/+$/, "");
   return custom || `https://${settings.projectId}.api.sanity.io`;
 }
+function sanityErrorText(res) {
+  var _a, _b, _c, _d, _e;
+  const err = (_a = res.json) == null ? void 0 : _a.error;
+  const desc = (typeof err === "string" ? err : err == null ? void 0 : err.description) || ((_b = res.json) == null ? void 0 : _b.message) || res.text;
+  const itemType = (_e = (_d = (_c = err == null ? void 0 : err.items) == null ? void 0 : _c[0]) == null ? void 0 : _d.error) == null ? void 0 : _e.type;
+  const detail = desc ? String(desc).slice(0, 400) : "(\u65E0\u54CD\u5E94\u4F53)";
+  return itemType ? `${detail} [${itemType}]` : detail;
+}
 async function sanityMutate(mutations, settings) {
   const url = `${apiBaseFor(settings)}/v${API_VERSION}/data/mutate/${settings.dataset}?returnIds=true&returnDocuments=true&visibility=sync`;
   const res = await (0, import_obsidian2.requestUrl)({
@@ -10142,11 +10150,13 @@ async function sanityMutate(mutations, settings) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${settings.apiToken}`
     },
-    body: JSON.stringify({ mutations })
+    body: JSON.stringify({ mutations }),
+    throw: false
   });
   if (res.status >= 400) {
+    const reason = sanityErrorText(res);
     console.error("Sanity mutate failed", res.status, res.text);
-    throw new Error("Sanity mutate failed: " + res.status);
+    throw new Error(`Sanity mutate ${res.status}: ${reason}`);
   }
   return res.json;
 }
@@ -10593,11 +10603,13 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         "Content-Type": fileType || "application/octet-stream",
         Authorization: `Bearer ${this.settings.apiToken}`
       },
-      body: arrayBuffer
+      body: arrayBuffer,
+      throw: false
     });
     if (res.status >= 400) {
+      const reason = sanityErrorText(res);
       console.error("Sanity asset upload failed", res.status, res.text);
-      throw new Error("Sanity asset upload failed: " + res.status);
+      throw new Error(`\u4E0A\u4F20\u300C${fileName}\u300D\u5931\u8D25\uFF08HTTP ${res.status}\uFF09\uFF1A${reason}`);
     }
     const doc = ((_a = res.json) == null ? void 0 : _a.document) || res.json;
     return { originalFilename: doc.originalFilename, url: doc.url };
@@ -10608,7 +10620,6 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     sanityId,
     extra
   }) {
-    var _a, _b;
     const _type = this.settings.sanityTypeName;
     const titleField = this.settings.sanityTitleField;
     const bodyField = this.settings.sanityBodyField;
@@ -10620,20 +10631,27 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       attributes[titleField] = title;
     if (extra)
       Object.assign(attributes, extra);
-    let mutation;
+    let mutations;
     if (!sanityId) {
-      mutation = {
-        create: {
-          _type,
-          _id: "drafts." + Math.random().toString(36).slice(2, 11),
-          ...attributes
+      mutations = [
+        {
+          create: {
+            _type,
+            _id: "drafts." + Math.random().toString(36).slice(2, 11),
+            ...attributes
+          }
         }
-      };
+      ];
     } else {
-      mutation = { patch: { id: sanityId, set: attributes } };
+      mutations = [
+        { createIfNotExists: { _id: sanityId, _type } },
+        { patch: { id: sanityId, set: attributes } }
+      ];
     }
-    const res = await sanityMutate([mutation], this.settings);
-    const doc = (_b = (_a = res == null ? void 0 : res.results) == null ? void 0 : _a[0]) == null ? void 0 : _b.document;
+    const res = await sanityMutate(mutations, this.settings);
+    const results = res == null ? void 0 : res.results;
+    const last2 = Array.isArray(results) ? results[results.length - 1] : void 0;
+    const doc = (last2 == null ? void 0 : last2.document) || ((last2 == null ? void 0 : last2.id) ? { _id: last2.id } : void 0);
     return doc || {};
   }
   getAbsolutePath(file) {

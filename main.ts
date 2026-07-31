@@ -40,8 +40,28 @@ function apiBaseFor(settings: SanityPluginSettings): string {
 }
 
 /**
+ * 从 Sanity 的错误响应里提取人类可读的原因。
+ * Sanity 出错时返回 `{ error: { description, items:[{error:{type,...}}], type } }`，
+ * 直接把 HTTP 状态码抛给用户毫无信息量（例如 patch 一个已删除的文档会得到裸 404）。
+ */
+function sanityErrorText(res: { status: number; text?: string; json?: any }): string {
+	const err = res.json?.error;
+	const desc =
+		(typeof err === "string" ? err : err?.description) ||
+		res.json?.message ||
+		res.text;
+	const itemType = err?.items?.[0]?.error?.type;
+	const detail = desc ? String(desc).slice(0, 400) : "(无响应体)";
+	return itemType ? `${detail} [${itemType}]` : detail;
+}
+
+/**
  * 用 Obsidian 的 requestUrl 直连 Sanity，绕过浏览器的 CORS 限制
  * （Obsidian webview 来源 app://obsidian.md 不被 Sanity CORS 接受）。
+ *
+ * 注意必须带 `throw: false`：否则 requestUrl 在 status>=400 时自己先抛
+ * `Request failed, status 404`，下面读取错误体的分支永远执行不到，
+ * 用户只能看到一个裸状态码。
  */
 async function sanityMutate(
 	mutations: unknown[],
@@ -58,10 +78,12 @@ async function sanityMutate(
 			Authorization: `Bearer ${settings.apiToken}`,
 		},
 		body: JSON.stringify({ mutations }),
+		throw: false,
 	});
 	if (res.status >= 400) {
+		const reason = sanityErrorText(res);
 		console.error("Sanity mutate failed", res.status, res.text);
-		throw new Error("Sanity mutate failed: " + res.status);
+		throw new Error(`Sanity mutate ${res.status}: ${reason}`);
 	}
 	return res.json;
 }
@@ -622,10 +644,12 @@ export default class SanityPublishPlugin extends Plugin {
 				Authorization: `Bearer ${this.settings.apiToken}`,
 			},
 			body: arrayBuffer,
+			throw: false,
 		});
 		if (res.status >= 400) {
+			const reason = sanityErrorText(res);
 			console.error("Sanity asset upload failed", res.status, res.text);
-			throw new Error("Sanity asset upload failed: " + res.status);
+			throw new Error(`上传「${fileName}」失败（HTTP ${res.status}）：${reason}`);
 		}
 		const doc = res.json?.document || res.json;
 		return { originalFilename: doc.originalFilename, url: doc.url };
@@ -657,22 +681,39 @@ export default class SanityPublishPlugin extends Plugin {
 		// 额外字段（通用双向同步）
 		if (extra) Object.assign(attributes, extra);
 
-		let mutation;
+		let mutations: unknown[];
 		if (!sanityId) {
 			// 新建：生成合法 draft id（drafts.<随机>，避免 "drafts." 被拒）
-			mutation = {
-				create: {
-					_type,
-					_id: "drafts." + Math.random().toString(36).slice(2, 11),
-					...attributes,
+			mutations = [
+				{
+					create: {
+						_type,
+						_id: "drafts." + Math.random().toString(36).slice(2, 11),
+						...attributes,
+					},
 				},
-			};
+			];
 		} else {
-			mutation = { patch: { id: sanityId, set: attributes } };
+			// 已有 sanity_id：不能只发 patch。
+			// Sanity 对「不存在的文档」执行 patch 会返回 HTTP 404
+			// （documentNotFoundError）—— 当 frontmatter 里的 sanity_id 指向
+			// 一个已被删除 / 从未创建成功的文档时就会崩。
+			// 先 createIfNotExists 兜底再 patch，同一事务内原子执行：
+			// 文档存在 → create 被忽略，正常 patch；文档不存在 → 先建再写，自愈。
+			mutations = [
+				{ createIfNotExists: { _id: sanityId, _type } },
+				{ patch: { id: sanityId, set: attributes } },
+			];
 		}
 
-		const res = await sanityMutate([mutation], this.settings);
-		const doc = res?.results?.[0]?.document;
+		const res = await sanityMutate(mutations, this.settings);
+		// 事务里可能有多条 mutation（createIfNotExists + patch），
+		// results[0] 是建档结果、最后一条才是写入后的最终文档，取最后一条。
+		const results = res?.results;
+		const last = Array.isArray(results)
+			? results[results.length - 1]
+			: undefined;
+		const doc = last?.document || (last?.id ? { _id: last.id } : undefined);
 		return doc || {};
 	}
 
