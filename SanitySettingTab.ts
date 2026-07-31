@@ -39,6 +39,9 @@ export interface SanityPluginSettings {
 	contentDivider?: string;
 	pullFolder?: string;
 	syncFields?: string;
+	announcementText?: string;
+	announcementLink?: string;
+	announcementType?: string;
 }
 
 export const DEFAULT_SETTINGS: SanityPluginSettings = {
@@ -51,7 +54,10 @@ export const DEFAULT_SETTINGS: SanityPluginSettings = {
 	filenameField: "",
 	contentDivider: "",
 	pullFolder: "",
-	syncFields: "",
+	syncFields: "series:series",
+	announcementText: "",
+	announcementLink: "",
+	announcementType: "info",
 };
 
 export class SanitySettingTab extends PluginSettingTab {
@@ -268,5 +274,53 @@ export class SanitySettingTab extends PluginSettingTab {
 				"border:1px solid var(--background-modifier-border);border-radius:4px;" +
 				"padding:5px 8px;color:var(--text-normal);height:auto;}",
 		});
+
+		containerEl.createEl("br");
+		containerEl.createEl("h3", { text: "Site announcement (optional)" });
+		containerEl.createEl("p", {
+			text: "填写后执行命令「Publish announcement to Sanity」，网站公告栏即显示；三项全空则不显示。",
+			cls: "setting-item-description",
+		});
+
+		new Setting(containerEl)
+			.setName("Announcement text")
+			.setDesc("公告正文。留空 = 不显示公告。")
+			.addText((text) =>
+				text
+					.setPlaceholder("如：本站已升级个性化样式")
+					.setValue(this.plugin.settings.announcementText || "")
+					.onChange(async (value) => {
+						this.plugin.settings.announcementText = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Announcement link")
+			.setDesc("点击公告跳转的链接（可留空）。")
+			.addText((text) =>
+				text
+					.setPlaceholder("/about/")
+					.setValue(this.plugin.settings.announcementLink || "")
+					.onChange(async (value) => {
+						this.plugin.settings.announcementLink = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Announcement type")
+			.setDesc("info / success / warn，对应不同强调色。")
+			.addDropdown((dd) =>
+				dd
+					.addOption("info", "info")
+					.addOption("success", "success")
+					.addOption("warn", "warn")
+					.setValue(this.plugin.settings.announcementType || "info")
+					.onChange(async (value) => {
+						this.plugin.settings.announcementType = value;
+						await this.plugin.saveSettings();
+					})
+			);
 	}
 }

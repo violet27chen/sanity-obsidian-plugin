@@ -186,6 +186,17 @@ export default class SanityPublishPlugin extends Plugin {
 			},
 		});
 
+		this.addCommand({
+			id: "sanity-publish-announcement-command",
+			name: "Publish announcement to Sanity",
+			callback: () => {
+				this.publishAnnouncementToSanity().catch((e: any) => {
+					console.error("Publish announcement crashed:", e);
+					new Notice("发布公告出错：" + (e?.message || String(e)), 10000);
+				});
+			},
+		});
+
 		this.registerEvent(
 			this.app.workspace.on("editor-menu", (menu, editor, info) => {
 				const lineNumber = editor.getCursor().line;
@@ -359,6 +370,29 @@ export default class SanityPublishPlugin extends Plugin {
 					});
 			})
 		);
+	}
+
+	async publishAnnouncementToSanity() {
+		const { announcementText, announcementLink, announcementType } =
+			this.settings;
+		if (!announcementText || !announcementText.trim()) {
+			new Notice("公告文本为空，未发布（留空则不显示）。");
+			return;
+		}
+		const doc = {
+			_id: "siteSettings",
+			_type: "siteSettings",
+			announcementText: announcementText.trim(),
+			announcementLink: (announcementLink || "").trim(),
+			announcementType: (announcementType || "info").trim(),
+		};
+		try {
+			await sanityMutate([{ createOrReplace: doc }], this.settings);
+			new Notice("公告已发布到 Sanity，网站稍后自动更新。");
+		} catch (e: any) {
+			console.error("Publish announcement failed:", e);
+			new Notice("发布公告失败：" + (e?.message || String(e)), 10000);
+		}
 	}
 
 	async pullFromSanity() {
