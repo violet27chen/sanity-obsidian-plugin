@@ -115,6 +115,20 @@ slug.current    →   slug
 
 插件默认访问 `https://<projectId>.api.sanity.io`。在部分网络（如中国大陆）下该域名无法连通，而 Sanity CDN（`cdn.sanity.io`）仍可访问。在此填入反代地址（例如 `https://sanity-api.your-domain.com`），**所有** API 调用（query / mutate / upload）都会走该代理，代理之后的路径保持不变，其余逻辑无需改动。留空则用默认域名。
 
+### 在 EdgeOne 边缘加速平台搭建反向代理（可选）
+
+之所以推荐 EdgeOne：它的边缘节点在中国大陆及亚太地区分布密集，国内用户会被就近调度到边缘节点，相比直连 `api.sanity.io`（国内常缓慢或不可达），延迟更低、可达性更好。如果你打算在腾讯云 EdgeOne 边缘加速平台上自建反代，请配置以下三项：
+
+| 字段 | 值 |
+|---|---|
+| **加速域名** | 你自己的子域名，例如 `sanity-api.your-domain.com` —— 也就是填入 *Custom API base URL* 的那个地址。 |
+| **源站域名** | `<projectId>.api.sanity.io`（例如 `3hwpvo77.api.sanity.io`）。路径按 1:1 透传，不要改写。 |
+| **回源请求头** | `Host: <projectId>.api.sanity.io` 与 `Authorization: Bearer <SANITY_TOKEN>`。Sanity 需要 `Host` 请求头，否则会拒绝请求；`Authorization` 头代替客户端完成鉴权。 |
+
+> ⚠️ `Authorization` 头携带的是真实 Sanity Token。请只在你自己掌控的代理上启用，并尽量使用仅限本项目作用域的令牌。
+
+代理上线后，将其 URL 粘贴到 **设置 → Sanity → Custom API base URL**，插件此后所有 query / mutate / upload 调用都会走边缘反代。
+
 ## 笔记 frontmatter —— 插件读写哪些属性
 
 | frontmatter 键 | 由谁写 | 含义 / 怎么用 |

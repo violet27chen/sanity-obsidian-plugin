@@ -115,6 +115,20 @@ Delete all rows (or leave them blank) to sync only the title and body.
 
 By default the plugin talks to `https://<projectId>.api.sanity.io`. In some networks (e.g. mainland China) that host is unreachable while the Sanity CDN (`cdn.sanity.io`) stays up. Enter a reverse-proxy URL — e.g. `https://sanity-api.your-domain.com` — and **all** API calls (query, mutate, upload) route through it. The path after the host is preserved, so nothing else changes. Leave blank to use the default host.
 
+### Set up the reverse proxy on EdgeOne (optional)
+
+EdgeOne is a good fit here because its edge nodes are densely distributed across mainland China and the Asia–Pacific — clients in China are served from a nearby node, so latency drops and the Sanity API stays reachable where `api.sanity.io` is slow or blocked. If you run the proxy on Tencent EdgeOne's edge-acceleration platform, configure these three fields:
+
+| Field | Value |
+|---|---|
+| **Acceleration domain** | Your own subdomain, e.g. `sanity-api.your-domain.com` — this is the URL you paste into *Custom API base URL*. |
+| **Origin domain** | `<projectId>.api.sanity.io` (e.g. `3hwpvo77.api.sanity.io`). Forward the path 1:1; do not rewrite it. |
+| **Origin request headers** | `Host: <projectId>.api.sanity.io` and `Authorization: Bearer <SANITY_TOKEN>`. Sanity requires the `Host` header or it rejects the request; the `Authorization` header authenticates on the client's behalf. |
+
+> ⚠️ The `Authorization` header carries a real Sanity token. Only enable this on a proxy you control, and prefer a token scoped to your project.
+
+Once the proxy is live, paste its URL into **Settings → Sanity → Custom API base URL** — every query, mutate, and upload call then routes through the edge proxy.
+
 ## Note frontmatter — what the plugin reads/writes
 
 | Frontmatter key | Filled by | Meaning / how to use |
