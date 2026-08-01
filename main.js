@@ -10092,7 +10092,7 @@ function setDeepPath(obj, path, value) {
   cur[keys[keys.length - 1]] = value;
 }
 function sanityAssetUrlFromRef(ref, projectId2, dataset2) {
-  const m = ref.match(/^image-(.*)-(\d+x\d+)\.(\w+)$/);
+  const m = ref.match(/^image-(.*)-(\d+x\d+)-(\w+)$/);
   if (!m)
     return null;
   const [, assetId, dims, ext] = m;
@@ -10107,7 +10107,7 @@ function sanityRefFromAssetUrl(url, projectId2, dataset2) {
   const [, p, d2, assetId, dims, ext] = m;
   if (p !== projectId2 || d2 !== dataset2)
     return null;
-  return `image-${assetId}-${dims}.${ext}`;
+  return `image-${assetId}-${dims}-${ext}`;
 }
 function guessMime(ext) {
   const map2 = {

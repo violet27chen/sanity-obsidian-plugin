@@ -140,7 +140,8 @@ function sanityAssetUrlFromRef(
 	projectId: string,
 	dataset: string
 ): string | null {
-	const m = ref.match(/^image-(.*)-(\d+x\d+)\.(\w+)$/);
+	// Sanity asset ref 格式：image-{hash}-{W}x{H}-{fmt}（ext 前是连字符，不是点号）
+	const m = ref.match(/^image-(.*)-(\d+x\d+)-(\w+)$/);
 	if (!m) return null;
 	const [, assetId, dims, ext] = m;
 	return `https://cdn.sanity.io/images/${projectId}/${dataset}/${assetId}-${dims}.${ext}`;
@@ -158,7 +159,8 @@ function sanityRefFromAssetUrl(
 	if (!m) return null;
 	const [, p, d, assetId, dims, ext] = m;
 	if (p !== projectId || d !== dataset) return null;
-	return `image-${assetId}-${dims}.${ext}`;
+	// 生成 Sanity asset ref：ext 前用连字符（image-{hash}-{W}x{H}-{fmt}）
+	return `image-${assetId}-${dims}-${ext}`;
 }
 
 /** 根据文件扩展名推断 MIME 类型（不依赖 Node `mime`/`path` 模块，移动端安全）。 */
