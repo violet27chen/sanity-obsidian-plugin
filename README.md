@@ -32,6 +32,25 @@ cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidia
 
 Restart Obsidian, then enable the plugin in **Settings → Installed Plugins**.
 
+## Understanding your Sanity structure (read this first)
+
+The plugin is **completely schema-agnostic** — it does not hard-code any field names. Every field name you enter in the settings must come from **your own Sanity schema**. Before filling the settings, know these four identifiers:
+
+| Concept | What it is | Where to find it |
+|---|---|---|
+| **Project ID** | A short ID like `3hwpvo77` that identifies your Sanity project. | [sanity.io/manage](https://www.sanity.io/manage) → your project → the ID is shown in the URL and project header. |
+| **Dataset** | A named container inside the project (usually `production` or `development`). | sanity.io/manage → project → **Datasets**. |
+| **Document type** | The type name you defined in your Studio schema (e.g. `post`, `author`, `product`, `article`). The plugin syncs **one** type at a time. | Your Sanity Studio → **Schema** / **Structure**, or the `_type` field of a document. |
+| **Schema field** | The individual field names inside that type, e.g. `title`, `body`, `slug`, `heroImage`, or any custom field you added. | Your Studio schema definition, or open a document and look at its fields. |
+
+> 💡 **Rule of thumb:** anything you type into the plugin settings (type name, title field, body field, GROQ paths in sync rows) must exactly match a name that exists in **your** Sanity schema. If a field name is wrong, sync silently skips it or the publish fails.
+
+A quick mental model:
+
+- **Type name** = which kind of document you want to sync.
+- **Title / Body field** = which two fields of that document hold the title and the Markdown body.
+- **Additional fields to sync** = every *other* field you want to round-trip into the note's frontmatter.
+
 ## Settings
 
 Open **Settings → Sanity**. Every field is explained below.
@@ -39,35 +58,37 @@ Open **Settings → Sanity**. Every field is explained below.
 | Setting | Default | What to put |
 |---|---|---|
 | **Sanity API token** | empty | A Sanity API token with **Editor (or Admin) role**. A Viewer/read-only token will fail at publish with `403 insufficientPermissions (update)`. Generate one at sanity.io → project → API → Tokens. |
-| **Project ID** | empty | Your Sanity project ID (e.g. `3hwpvo77`). |
-| **Dataset name** | `production` | The dataset to sync with. |
-| **Type name** | `post` | The document type to sync (e.g. `post`, `blog`). |
-| **Title field** | empty | The Sanity schema field that holds the title. Leave blank to skip syncing the title. |
-| **Body field** | `body` | The Sanity schema field that holds the document body (raw Markdown). |
-| **Filename field** | empty | Sanity field used to generate the Obsidian filename / slug. GROQ paths allowed, e.g. `slug.current`. Left blank → falls back to **Title field** → `slug.current` → `sanity_id`. |
+| **Project ID** | empty | Your Sanity project ID (e.g. `3hwpvo77`). See the table above. |
+| **Dataset name** | `production` | The dataset to sync with (e.g. `production`, `development`). |
+| **Type name** | `post` | The document type to sync. **This is your own schema type name** — it can be `post`, but also `author`, `product`, `article`, `note`, or anything you defined. The plugin syncs all published documents of this type. |
+| **Title field** | empty | The schema field that holds the title, e.g. `title` for a blog, `name` for an author, `label` for a product. Leave blank to skip syncing the title (filename is then used as title). |
+| **Body field** | `body` | The schema field that holds the document body as raw Markdown, e.g. `body`, `bio`, `content`, `description`. |
+| **Filename field** | empty | Which Sanity field generates the Obsidian filename / slug. GROQ paths allowed, e.g. `slug.current`. Left blank → falls back to **Title field** → `slug.current` → `sanity_id`. |
 | **Content divider** | empty | A marker string; anything below it in the note is NOT published. |
 | **Pull folder** | empty | Folder where pulled notes are saved. Blank → vault root. |
 | **Custom API base URL** | empty | Reverse-proxy URL for when `api.sanity.io` is unreachable (e.g. mainland China). All query/mutate/upload calls go through it. Blank → default host. |
-| **Additional fields to sync** | empty | Extra Sanity fields ↔ frontmatter mappings (see below). |
+| **Additional fields to sync** | empty | Extra Sanity fields ↔ frontmatter mappings (see below). **Empty by default** — add the fields you actually need. |
 | **Announcement text / link / type** | empty / `info` | Site announcement; used by the *Publish announcement to Sanity* command. Leave text empty to show nothing. |
 
 ### Additional fields to sync — how to fill
 
-This is the most flexible setting. It maps arbitrary Sanity fields into each note's frontmatter (and back on publish).
+This is the most flexible setting. It maps arbitrary Sanity fields into each note's frontmatter (and back on publish). **It is empty by default** — nothing is synced except the title and body until you add rows.
 
 - **Format:** one row per field — `Sanity field : frontmatter key`.
-  - **Left** = the Sanity field name. GROQ paths are allowed, e.g. `slug.current`, `heroImage`.
-  - **Right** = the frontmatter key to map it to. Leave it blank to reuse the left-side name as the key.
+  - **Left** = the Sanity field name. GROQ paths are allowed, e.g. `slug.current`, `heroImage`, `social.github`.
+  - **Right** = the frontmatter key to map it to. **This is the name you want inside the Obsidian note** — it does not have to equal the Sanity field name. Leave it blank to reuse the left-side name as the key.
 - Up to **10 rows**; blank rows are ignored.
 - **Pull:** these Sanity fields are written into the note's frontmatter (image objects become Sanity CDN URLs automatically).
 - **Publish:** the same frontmatter keys are written back to Sanity (CDN URLs are converted back to asset references; local image paths / `[[ ]]` are uploaded).
-- Dot-notation paths like `slug.current` are expanded into nested objects on write (`slug: { current: "..." }`).
+- **Arrays:** a field that is an array in Sanity (e.g. `categories[]`, `tags[]`) is written back as a YAML list — just write the field name, no special syntax.
+- **Nested objects:** dot-notation paths like `slug.current` are expanded into nested objects on write (`slug: { current: "..." }`).
+- **Image fields:** any field whose Sanity value is an `image` object (e.g. `heroImage`, `avatar`, `cover`) is auto-converted: on pull → a `cdn.sanity.io` URL in frontmatter; on publish → back to an asset reference (or uploaded if it is a local path).
 
 > 💡 **Cover image vs body images**
-> Use `heroImage:heroImage` for the **cover**. A Sanity `image` object in a field is handled here.
+> Cover / thumbnail / avatar fields live **here** as image-object fields (e.g. `heroImage:heroImage`, `avatar:avatar`).
 > **Body images** inside the note (`![[image]]` or `![alt](image)`) are uploaded automatically on publish and do **not** need a row here.
 
-Typical blog example (left → right):
+**Blog example** (left → right):
 
 ```
 slug.current   →   slug
@@ -77,6 +98,16 @@ categories      →   categories
 series          →   series
 heroImage       →   heroImage
 ```
+
+**Non-blog example** — imagine a Sanity `author` type with fields `name`, `bio`, `avatar` (image), `social` (object with `github`), `slug`:
+
+```
+avatar         →   avatar
+social.github   →   github
+slug.current    →   slug
+```
+
+With that, the settings would be: Type name = `author`, Title field = `name`, Body field = `bio`, Filename field = `slug.current`, and the three rows above. The note's frontmatter would end up with `avatar`, `github`, and `slug` keys — note that `github` is a custom name you chose for `social.github`.
 
 Delete all rows (or leave them blank) to sync only the title and body.
 
@@ -90,10 +121,10 @@ By default the plugin talks to `https://<projectId>.api.sanity.io`. In some netw
 |---|---|---|
 | `sanity_id` | plugin (auto) | The Sanity `_id` of the document. The round-trip key — publishing the note later updates the **same** Sanity document. **Do not set it by hand.** If it points to `drafts.x`, publish lands on the matching published doc `x` and deletes the draft. |
 | `sanity_draft` | plugin (auto) | `true`/`false` — marks whether the source was a draft. Set by Pull; the publish logic does not consume it. |
-| Title field (e.g. `title`) | you / plugin | The title. On publish the plugin prefers this field; if absent it falls back to the filename. |
-| Body field (e.g. `body`) | plugin | The document body (raw Markdown). |
-| Sync-field keys (e.g. `series`, `categories`, `slug`, `heroImage`) | you / plugin | Mapped via *Additional fields to sync*. Written back to Sanity on publish, filled in on pull. |
-| `heroImage` (cover) | you | Local image path (`[[ ]]` allowed) or a `cdn.sanity.io` URL. Uploaded / reference-restored automatically. |
+| Title field (whatever you configured, e.g. `title` / `name`) | you / plugin | The title. On publish the plugin prefers this field; if absent it falls back to the filename. |
+| Body field (whatever you configured, e.g. `body` / `bio`) | plugin | The document body (raw Markdown). |
+| Your sync-field keys (e.g. `categories`, `slug`, `heroImage`, `github`) | you / plugin | Mapped via *Additional fields to sync*. Written back to Sanity on publish, filled in on pull. The key name is the one you put on the **right** of each sync row. |
+| Image fields (e.g. `heroImage`, `avatar`) | you | Local image path (`[[ ]]` allowed) or a `cdn.sanity.io` URL. Uploaded / reference-restored automatically. |
 
 > Body images (`![[img]]` / `![alt](img)`) are uploaded automatically on publish and replaced with CDN URLs — no frontmatter key needed.
 
@@ -109,7 +140,7 @@ Open the command palette (Ctrl/Cmd + P) and search **Sanity**:
 
 ### Publish a note
 
-1. Fill the note's frontmatter (title, and any sync fields like `heroImage`, `categories`).
+1. Fill the note's frontmatter (the title field, and any sync fields you configured — e.g. `heroImage`, `categories`, or your custom keys).
 2. Put images inline with `![[image]]` or `![alt](path)`.
 3. Run **Publish to Sanity**.
 4. The plugin uploads images, sends the document as **published**, and writes `sanity_id` into the frontmatter.
