@@ -48,7 +48,7 @@ cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidia
 | **Content divider** | 空 | 分隔符，正文里它**以下**的内容不会被发布。 |
 | **Pull folder** | 空 | 拉取笔记存放的文件夹。留空 → 库根。 |
 | **Custom API base URL** | 空 | 当 `api.sanity.io` 不可达时（如中国大陆）填反代地址，所有 query/mutate/upload 都走它。留空用默认域名。 |
-| **Additional fields to sync** | `series:series` | 额外 Sanity 字段 ↔ frontmatter 映射（见下）。默认值只是示例，不需要时请删除或替换成你实际使用的字段。 |
+| **Additional fields to sync** | 空 | 额外 Sanity 字段 ↔ frontmatter 映射（见下）。 |
 | **公告 text / link / type** | 空 / `info` | 网站公告，由「Publish announcement to Sanity」命令使用。text 留空则不显示。 |
 
 ### Additional fields to sync（额外字段同步）—— 怎么填
@@ -67,13 +67,14 @@ cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidia
 > 封面请用 `heroImage:heroImage`（字段里的 Sanity `image` object 在此处理）。
 > 正文里的图片（`![[图]]` 或 `![alt](图)`）会在发布时**自动上传**，无需在此配置一行。
 
-典型博客示例（左 → 右）。示例里**不再列 series**，因为设置里的默认行已经包含它：
+典型博客示例（左 → 右）：
 
 ```
 slug.current   →   slug
 description     →   description
 publishedAt     →   published
 categories      →   categories
+series          →   series
 heroImage       →   heroImage
 ```
 

@@ -6307,7 +6307,7 @@ var DEFAULT_SETTINGS = {
   filenameField: "",
   contentDivider: "",
   pullFolder: "",
-  syncFields: "series:series",
+  syncFields: "",
   announcementText: "",
   announcementLink: "",
   announcementType: "info"

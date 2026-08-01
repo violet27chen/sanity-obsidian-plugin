@@ -54,7 +54,7 @@ export const DEFAULT_SETTINGS: SanityPluginSettings = {
 	filenameField: "",
 	contentDivider: "",
 	pullFolder: "",
-	syncFields: "series:series",
+	syncFields: "",
 	announcementText: "",
 	announcementLink: "",
 	announcementType: "info",

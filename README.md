@@ -48,7 +48,7 @@ Open **Settings → Sanity**. Every field is explained below.
 | **Content divider** | empty | A marker string; anything below it in the note is NOT published. |
 | **Pull folder** | empty | Folder where pulled notes are saved. Blank → vault root. |
 | **Custom API base URL** | empty | Reverse-proxy URL for when `api.sanity.io` is unreachable (e.g. mainland China). All query/mutate/upload calls go through it. Blank → default host. |
-| **Additional fields to sync** | `series:series` | Extra Sanity fields ↔ frontmatter mappings (see below). The default is just an example — delete or replace it with the fields you actually use. |
+| **Additional fields to sync** | empty | Extra Sanity fields ↔ frontmatter mappings (see below). |
 | **Announcement text / link / type** | empty / `info` | Site announcement; used by the *Publish announcement to Sanity* command. Leave text empty to show nothing. |
 
 ### Additional fields to sync — how to fill
@@ -67,13 +67,14 @@ This is the most flexible setting. It maps arbitrary Sanity fields into each not
 > Use `heroImage:heroImage` for the **cover**. A Sanity `image` object in a field is handled here.
 > **Body images** inside the note (`![[image]]` or `![alt](image)`) are uploaded automatically on publish and do **not** need a row here.
 
-Typical blog example (left → right). This example intentionally does **not** include `series`, since the default row already covers it:
+Typical blog example (left → right):
 
 ```
 slug.current   →   slug
 description     →   description
 publishedAt     →   published
 categories      →   categories
+series          →   series
 heroImage       →   heroImage
 ```
 
