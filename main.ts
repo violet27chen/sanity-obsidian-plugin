@@ -7,11 +7,11 @@ import {
 	SanityPluginSettings,
 	SanitySettingTab,
 } from "SanitySettingTab";
-import matter from "gray-matter";
 import {
 	FileSystemAdapter,
 	MarkdownView,
 	Notice,
+	parseYaml,
 	Plugin,
 	requestUrl,
 	stringifyYaml,
@@ -176,6 +176,21 @@ function guessMime(ext?: string): string {
 	return (ext && map[ext.toLowerCase()]) || "application/octet-stream";
 }
 
+/** 解析 Markdown 的 frontmatter + 正文，使用 Obsidian 自带 parseYaml。
+ * 完全不依赖 gray-matter / Node 的 Buffer，移动端与桌面端一致。
+ * 返回 { data, content }：data 为 frontmatter 对象，content 为去掉 frontmatter 的正文。 */
+function parseFrontmatter(raw: string): { data: any; content: string } {
+	const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+	if (!m) return { data: {}, content: raw };
+	let data: any = {};
+	try {
+		data = parseYaml(m[1]) || {};
+	} catch {
+		data = {};
+	}
+	return { data, content: m[2] };
+}
+
 export default class SanityPublishPlugin extends Plugin {
 	settings: SanityPluginSettings;
 	client: SanityClient;
@@ -330,7 +345,7 @@ export default class SanityPublishPlugin extends Plugin {
 	async getFileData(file: TFile) {
 		const editor = this.getEditorForFile(file);
 		const raw = editor ? editor.getValue() : await this.app.vault.read(file);
-		return matter(raw);
+		return parseFrontmatter(raw);
 	}
 
 	async uploadAllImages(file: TFile) {
@@ -661,8 +676,8 @@ export default class SanityPublishPlugin extends Plugin {
 			const existing = existingById.get(doc._id);
 			if (existing) {
 				// 已存在：原地更新正文与 frontmatter（保留用户新增的其他字段）
-				const raw = await this.app.vault.read(existing);
-				const { data } = matter(raw);
+			const raw = await this.app.vault.read(existing);
+			const { data } = parseFrontmatter(raw);
 				const mergedFm = { ...data, ...frontmatter };
 			await this.app.vault.modify(
 				existing,
