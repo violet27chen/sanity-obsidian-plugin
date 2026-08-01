@@ -4,11 +4,15 @@
 
 ![Obsidian 与 Sanity 徽标](cover-image.png)
 
-Sanity 是一款 Obsidian 插件，让你可以在 Obsidian 仓库与 Sanity Studio 之间**双向**发布和拉取文档。它支持完整的工作流：在 Obsidian 中写作并发布到 Sanity，或从 Sanity 把文档（包括草稿）拉回 Obsidian 阅读、编辑。
+Sanity 是一款 Obsidian 插件，让你可以在 Obsidian 仓库与 Sanity Studio 之间**双向**发布和拉取文档——**通用同步，不绑定任何特定博客或网站**。
+
+- 在 Obsidian 中写作并发布到 Sanity，生成的是**正式文档**。
+- 从 Sanity 把文档拉回 Obsidian 阅读、编辑。
+- 一切由插件设置驱动，适配你自定义的任意 schema。
 
 ## 安装
 
-**Sanity Publish 尚未上架社区插件市场。** 你可以手动安装，或通过 BRAT 安装。
+本插件**尚未上架社区插件市场**，可手动安装或通过 BRAT 安装。
 
 ### 方式 A — BRAT（推荐）
 
@@ -16,7 +20,7 @@ Sanity 是一款 Obsidian 插件，让你可以在 Obsidian 仓库与 Sanity Stu
    ```
    violet27chen/sanity-obsidian-plugin
    ```
-2. 启用 **Sanity Publish** 并打开其设置。
+2. 启用 **Sanity** 并打开其设置。
 
 ### 方式 B — 手动克隆
 
@@ -30,88 +34,100 @@ cd .obsidian/plugins && git clone https://github.com/violet27chen/sanity-obsidia
 
 ## 设置
 
-### Sanity API Token
+打开 **设置 → Sanity**。各项填法如下。
 
-具备**读写**权限的 Sanity 项目 API Token。生成方法见 [Sanity 令牌指南](https://www.sanity.io/docs/http-auth)。
+| 设置项 | 默认 | 填什么 |
+|---|---|---|
+| **Sanity API token** | 空 | 具备 **Editor（或 Admin）角色** 的 Sanity token。**只读（Viewer）token 会在发布时报 `403 insufficientPermissions (update)`**。在 sanity.io → 项目 → API → Tokens 生成。 |
+| **Project ID** | 空 | 你的 Sanity 项目 ID（如 `3hwpvo77`）。 |
+| **Dataset name** | `production` | 要同步的数据集。 |
+| **Type name** | `post` | 要同步的文档类型（如 `post`、`blog`）。 |
+| **Title field** | 空 | 标题对应的 schema 字段名。留空则不单独同步标题。 |
+| **Body field** | `body` | 正文对应的 schema 字段名（存原始 Markdown）。 |
+| **Filename field** | 空 | 生成 Obsidian 文件名 / slug 用的 Sanity 字段。支持 GROQ 路径如 `slug.current`。留空 → 回退 **标题字段** → `slug.current` → `sanity_id`。 |
+| **Content divider** | 空 | 分隔符，正文里它**以下**的内容不会被发布。 |
+| **Pull folder** | 空 | 拉取笔记存放的文件夹。留空 → 库根。 |
+| **Custom API base URL** | 空 | 当 `api.sanity.io` 不可达时（如中国大陆）填反代地址，所有 query/mutate/upload 都走它。留空用默认域名。 |
+| **Additional fields to sync** | `series:series` | 额外 Sanity 字段 ↔ frontmatter 映射（见下）。 |
+| **公告 text / link / type** | 空 / `info` | 网站公告，由「Publish announcement to Sanity」命令使用。text 留空则不显示。 |
 
-> 提供此 Token 即表示你允许 Sanity Publish（以及仓库中其他已安装插件）代表你向 Studio 发布内容。
+### Additional fields to sync（额外字段同步）—— 怎么填
 
-### Sanity Project ID
+这是最灵活的设置，把任意 Sanity 字段映射到每篇笔记的 frontmatter（发布时写回）。
 
-你的 Sanity 项目 ID。
+- **格式：** 每行一个字段 —— `Sanity字段 : frontmatter键`。
+  - **左列** = Sanity 字段名，支持 GROQ 路径，如 `slug.current`、`heroImage`。
+  - **右列** = 对应的 frontmatter 键。留空则直接复用左列字段名作为键。
+- 最多 **10 行**，空行忽略。
+- **拉取：** 这些 Sanity 字段写入笔记 frontmatter（image object 自动转为 Sanity CDN URL）。
+- **发布：** 同样的 frontmatter 键写回 Sanity（CDN URL 还原为资源引用；本地图片路径 / `[[ ]]` 自动上传）。
+- 点号路径（如 `slug.current`）在写回时展开为嵌套对象（`slug: { current: "..." }`）。
 
-### Sanity Dataset Name
+> 💡 **封面图 ≠ 正文图**
+> 封面请用 `heroImage:heroImage`（字段里的 Sanity `image` object 在此处理）。
+> 正文里的图片（`![[图]]` 或 `![alt](图)`）会在发布时**自动上传**，无需在此配置一行。
 
-要同步的数据集名称。默认为 `production`。
-
-### Sanity Document Type Name
-
-要同步的文档类型（如 `post` 或 `blog`）。默认 `post`。
-
-### Sanity Title Field
-
-代表标题的 schema 字段名。Sanity 会把这个字段同步进每篇笔记的 frontmatter（发布时也会写回）。留空则不同步标题。
-
-### Sanity Body Field
-
-代表正文的 schema 字段名。它应当存储原始 Markdown（如 `bodyMarkdown`）。Sanity 会把 Obsidian 文档内容同步到该字段。
-
-### Filename field（文件名字段）
-
-用于生成每篇 Obsidian 笔记文件名的 Sanity 字段（也就是访问路由 slug）。支持 GROQ 路径，例如 `slug.current`。留空时，插件会依次回退到**标题字段**、再回退到 `slug.current`、最后以文档的 `sanity_id` 兜底。只有当没有任何更合适的来源时，`sanity_id` 才会被用作文件名。
-
-### Pull folder（高级）
-
-拉取的笔记保存到哪个文件夹。留空则保存到仓库根目录。
-
-### Custom API base URL（可选）
-
-插件默认访问 `https://<projectId>.api.sanity.io`。在部分网络环境（如中国大陆）下该域名无法连通，而 Sanity CDN（`cdn.sanity.io`）仍可正常访问。在此填入一个反向代理地址（例如 `https://sanity-api.your-domain.com`），插件就会把**所有** API 调用（query / mutate / upload）都改走该代理。代理之后的路径保持不变，其余逻辑无需改动。留空则使用默认域名。
-
-### Additional fields to sync（高级）
-
-你还想保持同步的其他 Sanity 字段。设置界面提供 **10 行字段输入框**——每行左侧填 Sanity 字段（支持 GROQ 路径，如 `slug.current`），右侧填对应的 frontmatter 键（右侧留空则直接复用左侧字段名）。需要几行就填几行，空行会被忽略。
-
-典型博客的示例（左 → 右）：
+典型博客示例（左 → 右）：
 
 ```
 slug.current   →   slug
 description     →   description
 publishedAt     →   published
-tags            →   tags
-category        →   category
-image           →   image
+categories      →   categories
+series          →   series
+heroImage       →   heroImage
 ```
 
-拉取时这些字段会写入每篇笔记的 frontmatter（图片引用会自动转换为 Sanity CDN URL）；发布时同样的 frontmatter 字段会写回 Sanity（CDN URL 会还原为资源引用）。全部留空则只同步标题与正文。
+全部留空则只同步标题与正文。
 
-## 发布到 Sanity
+### Custom API base URL（反代 / 翻墙）
 
-打开一篇文档，在命令面板运行 **`Publish to Sanity`**。这会在你的 Sanity Studio 中创建或更新一篇草稿文档，并把 `sanity_id` 写入笔记的 frontmatter，使后续更新始终关联到同一个 Sanity 文档。
+插件默认访问 `https://<projectId>.api.sanity.io`。在部分网络（如中国大陆）下该域名无法连通，而 Sanity CDN（`cdn.sanity.io`）仍可访问。在此填入反代地址（例如 `https://sanity-api.your-domain.com`），**所有** API 调用（query / mutate / upload）都会走该代理，代理之后的路径保持不变，其余逻辑无需改动。留空则用默认域名。
 
-在嵌入图片上右键选择 **`Upload to Sanity`** 可将其上传到 Sanity CDN。发布时也会自动上传所有嵌入图片。
+## 笔记 frontmatter —— 插件读写哪些属性
 
-使用 **Content Divider（内容分隔符）** 设置，可以只发布标记线**以上**的内容。
+| frontmatter 键 | 由谁写 | 含义 / 怎么用 |
+|---|---|---|
+| `sanity_id` | 插件（自动） | 文档的 Sanity `_id`，往返同步的钥匙。之后对该笔记点发布会更新**同一个** Sanity 文档。**勿手填**。若指向 `drafts.x`，发布会落到对应正式文档 `x` 并删除草稿。 |
+| `sanity_draft` | 插件（自动） | `true`/`false`，标记来源是否为草稿。由 Pull 写入；发布逻辑不消费。 |
+| 标题字段（如 `title`） | 你 / 插件 | 标题。发布优先取它，缺失回退文件名。 |
+| 正文字段（如 `body`） | 插件 | 文档正文（原始 Markdown）。 |
+| sync 字段键（如 `series`、`categories`、`slug`、`heroImage`） | 你 / 插件 | 由「Additional fields to sync」映射。发布写回 Sanity，拉取填回。 |
+| `heroImage`（封面） | 你 | 本地图片路径（`[[ ]]` 可包裹）或 `cdn.sanity.io` URL。自动上传 / 还原引用。 |
 
-## 从 Sanity 拉取
+> 正文图片（`![[图]]` / `![alt](图)`）在发布时自动上传并替换为 CDN URL，无需 frontmatter 键。
 
-在命令面板运行 **`Pull from Sanity (sync all posts)`** 即可把 Sanity 文档同步进 Obsidian。该命令不需要打开任何文档。
+## 命令
 
-- 拉取配置类型下的**全部**文档，**包含草稿**。
-- 每篇笔记的 frontmatter 包含：
-  - `sanity_id` —— 该文档的 Sanity `_id`，是往返同步的钥匙。之后对该笔记点「发布」会更新**同一个** Sanity 文档。
-  - `sanity_draft: true | false` —— 标记来源是草稿（`drafts.*`）还是正式文档（`post.*`），一眼即可区分。
-  - **标题** —— 配置好的标题字段会写入 frontmatter，因此拉回的笔记显示的是真实标题（发布时也会保留，而不会被文件名覆盖）。
-  - **Additional fields** —— 在「Additional fields to sync」中列出的字段也会写入 frontmatter，并在发布时写回。
-- 已存在的笔记（按 `sanity_id` 匹配）会原地更新，并保留你自行添加的其他 frontmatter 字段；新文档则新建，文件名依次取 **Filename field**（留空时取标题字段）。插件不会用 Sanity `_id` 当文件名。
-- 若设置了 **Pull folder**，笔记保存到此文件夹；否则保存到仓库根目录。
+打开命令面板（Ctrl/Cmd + P），搜索 **Sanity**：
 
-由于插件写入了 `sanity_id`，整个工作流是完全往返的：拉取一篇文档、在 Obsidian 中编辑、再点发布，改动会推送回同一个 Sanity 文档。
+- **Publish to Sanity** —— 为当前笔记创建或更新 Sanity 文档。成功后把 `sanity_id` 写入笔记。发布生成的是**正式文档**，并删除同名的草稿。
+- **Pull from Sanity (sync all posts)** —— 把配置类型下的**全部正式文档**拉进 Obsidian（**不含草稿**）。无需打开文档。
+- **Publish announcement to Sanity** —— 把「网站公告」设置推送到 `siteSettings` 单例。
 
-## 说明
+## 工作流
 
-- 插件直接从 Obsidian 内部调用 Sanity HTTP API，因此无需在你的 Sanity 项目中额外配置 CORS。
-- 拉取需要具有**读**权限的 Token；发布需要**写**权限。
+### 发布一篇笔记
+
+1. 填好 frontmatter（标题，以及任意 sync 字段如 `heroImage`、`categories`）。
+2. 正文里用 `![[图]]` 或 `![alt](路径)` 放图。
+3. 运行 **Publish to Sanity**。
+4. 插件上传图片、把文档作为**正式文档**发出，并把 `sanity_id` 写回 frontmatter。
+
+### 从 Sanity 拉取全部
+
+1. 运行 **Pull from Sanity (sync all posts)**。
+2. 笔记在 **Pull folder**（或库根）创建/更新，每篇带 `sanity_id`、`sanity_draft`、标题及所有配置的 sync 字段。
+3. 编辑拉回的笔记再点 **Publish to Sanity**，改动会推回同一个 Sanity 文档。
+
+## 说明与注意
+
+- 插件直接从 Obsidian 内部调用 Sanity HTTP API，因此**无需在 Sanity 项目里配置 CORS**。
+- API token 需要 **Editor（或 Admin）角色**——只读 token 会在发布时导致 `403 insufficientPermissions (update)`。
+- 发布生成**正式文档**并**删除草稿**（若存在），避免草稿/正式重复。
+- **Pull 不含草稿**（`drafts.*` 已排除），只把正式文档拉进 Obsidian。
+- 移动端（iOS/Android）完整支持：插件只用 Obsidian 自带 YAML API，无任何依赖 Node 全局的 npm 包。
+- 用 **Content divider** 可只发布标记线以上的内容。
 
 ## 参与贡献
 
