@@ -571,7 +571,9 @@ export default class SanityPublishPlugin extends Plugin {
 		const bodyField = this.settings.sanityBodyField || "body";
 		const filenameField = this.settings.filenameField;
 
-		// 只拉取正式文档（排除 drafts.*）：避免 Obsidian 里草稿与正式并存导致重复。
+		// 拉取「正式文档 + 草稿」两者：必须带 perspective=raw 才会返回 drafts.*；
+		// GROQ 里用 "_id in path("drafts.**")" 标记 isDraft 并写回 frontmatter 的 sanity_draft。
+		// 草稿文件在 vault 里以「<原名>-draft」命名，避免与同 slug 的正式文件撞名。
 		// 类型/字段名内联进 GROQ（并做标识符清洗），不使用 $param，避免请求 400。
 		// 标题、正文、文件名、额外字段全部由用户在设置里指定，插件不再硬编码任何 schema 字段。
 		const safeType = String(type).replace(/[^a-zA-Z0-9_]/g, "");
@@ -592,13 +594,13 @@ export default class SanityPublishPlugin extends Plugin {
 		for (const f of extraFields) {
 			parts.push(`"${f.key}": ${f.expr}`);
 		}
-		const query = `*[_type == "${safeType}" && !(_id in path("drafts.**"))]{ ${parts.join(", ")} }`;
+		const query = `*[_type == "${safeType}"]{ ${parts.join(", ")} }`;
 
 		let docs: any[] = [];
 		try {
 			const url =
 				`${apiBaseFor(this.settings)}/${QUERY_API_VERSION}/data/query/` +
-				`${dataset}?query=${encodeURIComponent(query)}`;
+				`${dataset}?query=${encodeURIComponent(query)}&perspective=raw`;
 			const res = await requestUrl({
 				url,
 				method: "GET",
@@ -644,11 +646,13 @@ export default class SanityPublishPlugin extends Plugin {
 			const isDraft = !!doc.isDraft;
 			// 文件名来源回退：Filename field > Title field > slug.current > sanity_id
 			// 填了 Filename field 时它优先；未填时才回退 Title → slug.current(_syncFilename) → sanity_id
-			const baseName = this.sanitizeFilename(
+			let baseName = this.sanitizeFilename(
 				filenameField
 					? doc._syncFilename || "untitled"
 					: doc._syncTitle || doc._syncFilename || doc._id || "untitled"
 			);
+			// 草稿文件名追加 -draft 后缀，避免与同 slug 的正式文档在 vault 里撞名产生混乱
+			if (isDraft) baseName = baseName + "-draft";
 			const frontmatter: any = {
 				sanity_id: doc._id,
 				sanity_draft: isDraft,

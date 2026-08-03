@@ -6913,10 +6913,10 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     for (const f2 of extraFields) {
       parts.push(`"${f2.key}": ${f2.expr}`);
     }
-    const query = `*[_type == "${safeType}" && !(_id in path("drafts.**"))]{ ${parts.join(", ")} }`;
+    const query = `*[_type == "${safeType}"]{ ${parts.join(", ")} }`;
     let docs = [];
     try {
-      const url = `${apiBaseFor(this.settings)}/${QUERY_API_VERSION}/data/query/${dataset2}?query=${encodeURIComponent(query)}`;
+      const url = `${apiBaseFor(this.settings)}/${QUERY_API_VERSION}/data/query/${dataset2}?query=${encodeURIComponent(query)}&perspective=raw`;
       const res = await (0, import_obsidian2.requestUrl)({
         url,
         method: "GET",
@@ -6952,9 +6952,11 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     let updated = 0;
     for (const doc of docs) {
       const isDraft = !!doc.isDraft;
-      const baseName = this.sanitizeFilename(
+      let baseName = this.sanitizeFilename(
         filenameField ? doc._syncFilename || "untitled" : doc._syncTitle || doc._syncFilename || doc._id || "untitled"
       );
+      if (isDraft)
+        baseName = baseName + "-draft";
       const frontmatter = {
         sanity_id: doc._id,
         sanity_draft: isDraft
