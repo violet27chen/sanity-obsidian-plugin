@@ -10,6 +10,7 @@ import {
 import {
 	FileSystemAdapter,
 	MarkdownView,
+	Modal,
 	Notice,
 	parseYaml,
 	Plugin,
@@ -191,6 +192,61 @@ function parseFrontmatter(raw: string): { data: any; content: string } {
 	return { data, content: m[2] };
 }
 
+/**
+ * 轻量进度弹窗：上传图片 / 拉取文章时给用户可见的进度条与计数。
+ * 非阻塞——后台任务在 Promise 里跑，本弹窗只负责展示进度。
+ */
+class ProgressModal extends Modal {
+	private bar!: HTMLProgressElement;
+	private statusEl!: HTMLElement;
+	private total = 0;
+	private failures: string[] = [];
+
+	openProgress(total: number, title: string) {
+		this.total = total;
+		this.failures = [];
+		this.titleEl.setText(title);
+		this.contentEl.empty();
+		this.bar = this.contentEl.createEl("progress", {
+			cls: "sanity-progress",
+		});
+		this.bar.max = Math.max(total, 1);
+		this.bar.value = 0;
+		this.bar.style.cssText =
+			"width:100%; height:8px; margin:6px 0; accent-color: var(--interactive-accent);";
+		this.statusEl = this.contentEl.createEl("p", {
+			cls: "sanity-progress-status",
+			text: "准备中…",
+		});
+		this.statusEl.style.cssText = "margin:4px 0 0; color:var(--text-muted);";
+		this.open();
+	}
+
+	/** current 从 1 开始计；label 为当前项的可读名称（文件名 / 文章标题）。 */
+	update(current: number, label?: string) {
+		this.bar.value = current;
+		const txt = `${current} / ${this.total}`;
+		this.statusEl.setText(label ? `${txt} — ${label}` : txt);
+	}
+
+	addFailure(name: string) {
+		this.failures.push(name);
+	}
+
+	finish(message: string, autoCloseMs = 1500) {
+		this.bar.value = this.total;
+		this.statusEl.setText(message);
+		if (this.failures.length) {
+			const failEl = this.contentEl.createEl("p", {
+				cls: "sanity-progress-fail",
+				text: `失败 ${this.failures.length} 项：${this.failures.join("、")}`,
+			});
+			failEl.style.cssText = "margin:4px 0 0; color:var(--text-error);";
+		}
+		if (autoCloseMs > 0) window.setTimeout(() => this.close(), autoCloseMs);
+	}
+}
+
 export default class SanityPublishPlugin extends Plugin {
 	settings: SanityPluginSettings;
 	client: SanityClient;
@@ -367,7 +423,10 @@ export default class SanityPublishPlugin extends Plugin {
 			);
 		if (targets.length === 0) return;
 
-		new Notice("Uploading files in document...");
+		const modal = new ProgressModal(this.app);
+		modal.openProgress(targets.length, "上传图片到 Sanity");
+		let done = 0;
+		let okCount = 0;
 
 		await Promise.all(
 			targets.map(async ({ lineNumber, filePath }) => {
@@ -377,7 +436,11 @@ export default class SanityPublishPlugin extends Plugin {
 						filePath,
 						file.path
 					);
-				if (!fileMetaData) return;
+				if (!fileMetaData) {
+					done++;
+					modal.update(done);
+					return;
+				}
 
 				// 有编辑器时给出「上传中」的即时反馈
 				if (editor) {
@@ -391,16 +454,25 @@ export default class SanityPublishPlugin extends Plugin {
 					lines[
 						lineNumber
 					] = `![${value.originalFilename}](${value.url})`;
+					okCount++;
 				} catch (e) {
 					console.error("Upload to Sanity failed", e);
 					lines[lineNumber] = `![Couldn't upload file](${filePath})`;
+					modal.addFailure(fileMetaData.name);
 				}
 				if (editor) editor.setLine(lineNumber, lines[lineNumber]);
+				done++;
+				modal.update(done, fileMetaData.name);
 			})
 		);
 
 		// 无编辑器（命令面板触发 / 手机端焦点丢失）时直接写回文件
 		if (!editor) await this.app.vault.modify(file, lines.join("\n"));
+		const failed = targets.length - okCount;
+		modal.finish(
+			`上传完成：${okCount}/${targets.length} 成功` +
+				(failed ? `，${failed} 失败` : "")
+		);
 	}
 
 	async publishToSanity(activeFile: TFile) {
@@ -629,6 +701,9 @@ export default class SanityPublishPlugin extends Plugin {
 			return;
 		}
 
+		const modal = new ProgressModal(this.app);
+		modal.openProgress(docs.length, "从 Sanity 拉取文章");
+
 		// 用 sanity_id 索引现有 vault 文件，便于去重 / 更新
 		const existingById = new Map<string, TFile>();
 		for (const f of this.app.vault.getMarkdownFiles()) {
@@ -642,6 +717,7 @@ export default class SanityPublishPlugin extends Plugin {
 
 		let created = 0;
 		let updated = 0;
+		let i = 0;
 		for (const doc of docs) {
 			const isDraft = !!doc.isDraft;
 			// 文件名来源回退：Filename field > Title field > slug.current > sanity_id
@@ -677,6 +753,10 @@ export default class SanityPublishPlugin extends Plugin {
 			}
 			const body: string = doc._syncBody || "";
 
+			const label =
+				String(doc._syncTitle || doc._syncFilename || doc._id || "untitled") +
+				(isDraft ? " (草稿)" : "");
+
 			const existing = existingById.get(doc._id);
 			if (existing) {
 				// 已存在：原地更新正文与 frontmatter（保留用户新增的其他字段）
@@ -688,6 +768,8 @@ export default class SanityPublishPlugin extends Plugin {
 				`---\n${stringifyYaml(mergedFm).trimEnd()}\n---\n\n${body}`
 			);
 				updated++;
+				i++;
+				modal.update(i, label);
 				continue;
 			}
 
@@ -703,11 +785,12 @@ export default class SanityPublishPlugin extends Plugin {
 			`---\n${stringifyYaml(frontmatter).trimEnd()}\n---\n\n${body}`
 		);
 			created++;
+			i++;
+			modal.update(i, label);
 		}
 
-		new Notice(
-			`Pulled from Sanity: ${created} created, ${updated} updated ` +
-				`(${docs.length} total; drafts flagged with sanity_draft: true).`
+		modal.finish(
+			`拉取完成：${created} 新建，${updated} 更新（共 ${docs.length} 篇）`
 		);
 	}
 

@@ -9,6 +9,7 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __esm = (fn, res) => function __init() {
   return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
@@ -36,2992 +37,113 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var __publicField = (obj, key, value) => {
+  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+  return value;
+};
+var __accessCheck = (obj, member, msg) => {
+  if (!member.has(obj))
+    throw TypeError("Cannot " + msg);
+};
+var __privateGet = (obj, member, getter) => {
+  __accessCheck(obj, member, "read from private field");
+  return getter ? getter.call(obj) : member.get(obj);
+};
+var __privateAdd = (obj, member, value) => {
+  if (member.has(obj))
+    throw TypeError("Cannot add the same private member more than once");
+  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+};
+var __privateSet = (obj, member, value, setter) => {
+  __accessCheck(obj, member, "write to private field");
+  setter ? setter.call(obj, value) : member.set(obj, value);
+  return value;
+};
 
-// node_modules/get-it/dist/_chunks/defaultOptionsValidator-N21NGwyb.js
-function normalizeTimeout(time) {
-  if (time === false || time === 0) {
-    return false;
-  }
-  if (time.connect || time.socket) {
-    return time;
-  }
-  const delay = Number(time);
-  if (isNaN(delay)) {
-    return normalizeTimeout(defaultOptions.timeout);
-  }
-  return { connect: delay, socket: delay };
+// node_modules/@sanity/client/dist/_chunks-es/stegaClean.js
+function E2(t2) {
+  let e2 = JSON.stringify(t2);
+  return `${u3}${Array.from(e2).map((r2) => {
+    let n4 = r2.charCodeAt(0);
+    if (n4 > 255)
+      throw new Error(`Only ASCII edit info can be encoded. Error attempting to encode ${e2} on character ${r2} (${n4})`);
+    return Array.from(n4.toString(4).padStart(4, "0")).map((o3) => String.fromCodePoint(c4[o3])).join("");
+  }).join("")}`;
 }
-var isReactNative, defaultOptions, processOptions, validUrl, validateOptions;
-var init_defaultOptionsValidator_N21NGwyb = __esm({
-  "node_modules/get-it/dist/_chunks/defaultOptionsValidator-N21NGwyb.js"() {
-    isReactNative = typeof navigator === "undefined" ? false : navigator.product === "ReactNative";
-    defaultOptions = { timeout: isReactNative ? 6e4 : 12e4 };
-    processOptions = function processOptions2(opts) {
-      const options = {
-        ...defaultOptions,
-        ...typeof opts === "string" ? { url: opts } : opts
-      };
-      const { searchParams } = new URL(options.url, "http://localhost");
-      options.timeout = normalizeTimeout(options.timeout);
-      if (options.query) {
-        for (const [key, value] of Object.entries(options.query)) {
-          if (value !== void 0) {
-            if (Array.isArray(value)) {
-              for (const v of value) {
-                searchParams.append(key, v);
-              }
-            } else {
-              searchParams.append(key, value);
-            }
-          }
-        }
-      }
-      const [url] = options.url.split("?");
-      const search = searchParams.toString();
-      if (search) {
-        options.url = "".concat(url, "?").concat(search);
-      }
-      options.method = options.body && !options.method ? "POST" : (options.method || "GET").toUpperCase();
-      return options;
-    };
-    validUrl = /^https?:\/\//i;
-    validateOptions = function validateOptions2(options) {
-      if (!validUrl.test(options.url)) {
-        throw new Error('"'.concat(options.url, '" is not a valid URL'));
-      }
-    };
-  }
-});
-
-// node_modules/parse-headers/parse-headers.js
-var require_parse_headers = __commonJS({
-  "node_modules/parse-headers/parse-headers.js"(exports, module2) {
-    var trim = function(string) {
-      return string.replace(/^\s+|\s+$/g, "");
-    };
-    var isArray4 = function(arg) {
-      return Object.prototype.toString.call(arg) === "[object Array]";
-    };
-    module2.exports = function(headers) {
-      if (!headers)
-        return {};
-      var result = {};
-      var headersArr = trim(headers).split("\n");
-      for (var i = 0; i < headersArr.length; i++) {
-        var row = headersArr[i];
-        var index = row.indexOf(":"), key = trim(row.slice(0, index)).toLowerCase(), value = trim(row.slice(index + 1));
-        if (typeof result[key] === "undefined") {
-          result[key] = value;
-        } else if (isArray4(result[key])) {
-          result[key].push(value);
-        } else {
-          result[key] = [result[key], value];
-        }
-      }
-      return result;
-    };
-  }
-});
-
-// node_modules/get-it/dist/index.browser.js
-function createPubSub() {
-  const subscribers = /* @__PURE__ */ Object.create(null);
-  let nextId = 0;
-  function subscribe(subscriber) {
-    const id = nextId++;
-    subscribers[id] = subscriber;
-    return function unsubscribe() {
-      delete subscribers[id];
-    };
-  }
-  function publish(event) {
-    for (const id in subscribers) {
-      subscribers[id](event);
-    }
-  }
-  return {
-    publish,
-    subscribe
-  };
+function I2(t2) {
+  return !Number.isNaN(Number(t2)) || /[a-z]/i.test(t2) && !/\d+(?:[-:\/]\d+){2}(?:T\d+(?:[-:\/]\d+){1,2}(\.\d+)?Z?)?/.test(t2) ? false : !!Date.parse(t2);
 }
-function createRequester(initMiddleware, httpRequest) {
-  const loadedMiddleware = [];
-  const middleware = middlehooks.reduce(
-    (ware, name) => {
-      ware[name] = ware[name] || [];
-      return ware;
-    },
-    {
-      processOptions: [processOptions],
-      validateOptions: [validateOptions]
-    }
-  );
-  function request(opts) {
-    const onResponse = (reqErr, res, ctx) => {
-      let error = reqErr;
-      let response = res;
-      if (!error) {
-        try {
-          response = applyMiddleware("onResponse", res, ctx);
-        } catch (err) {
-          response = null;
-          error = err;
-        }
-      }
-      error = error && applyMiddleware("onError", error, ctx);
-      if (error) {
-        channels.error.publish(error);
-      } else if (response) {
-        channels.response.publish(response);
-      }
-    };
-    const channels = channelNames.reduce((target, name) => {
-      target[name] = createPubSub();
-      return target;
-    }, {});
-    const applyMiddleware = middlewareReducer(middleware);
-    const options = applyMiddleware("processOptions", opts);
-    applyMiddleware("validateOptions", options);
-    const context2 = { options, channels, applyMiddleware };
-    let ongoingRequest;
-    const unsubscribe = channels.request.subscribe((ctx) => {
-      ongoingRequest = httpRequest(ctx, (err, res) => onResponse(err, res, ctx));
-    });
-    channels.abort.subscribe(() => {
-      unsubscribe();
-      if (ongoingRequest) {
-        ongoingRequest.abort();
-      }
-    });
-    const returnValue = applyMiddleware("onReturn", channels, context2);
-    if (returnValue === channels) {
-      channels.request.publish(context2);
-    }
-    return returnValue;
-  }
-  request.use = function use(newMiddleware) {
-    if (!newMiddleware) {
-      throw new Error("Tried to add middleware that resolved to falsey value");
-    }
-    if (typeof newMiddleware === "function") {
-      throw new Error(
-        "Tried to add middleware that was a function. It probably expects you to pass options to it."
-      );
-    }
-    if (newMiddleware.onReturn && middleware.onReturn.length > 0) {
-      throw new Error(
-        "Tried to add new middleware with `onReturn` handler, but another handler has already been registered for this event"
-      );
-    }
-    middlehooks.forEach((key) => {
-      if (newMiddleware[key]) {
-        middleware[key].push(newMiddleware[key]);
-      }
-    });
-    loadedMiddleware.push(newMiddleware);
-    return request;
-  };
-  request.clone = () => createRequester(loadedMiddleware, httpRequest);
-  initMiddleware.forEach(request.use);
-  return request;
-}
-var import_parse_headers, middlewareReducer, channelNames, middlehooks, __accessCheck, __privateGet, __privateAdd, __privateSet, _method, _url, _resHeaders, _headers, _controller, _init, _useAbortSignal, FetchXhr, adapter, XmlHttpRequest, httpRequester, getIt;
-var init_index_browser = __esm({
-  "node_modules/get-it/dist/index.browser.js"() {
-    init_defaultOptionsValidator_N21NGwyb();
-    import_parse_headers = __toESM(require_parse_headers(), 1);
-    middlewareReducer = (middleware) => function applyMiddleware(hook, defaultValue, ...args) {
-      const bailEarly = hook === "onError";
-      let value = defaultValue;
-      for (let i = 0; i < middleware[hook].length; i++) {
-        const handler = middleware[hook][i];
-        value = handler(value, ...args);
-        if (bailEarly && !value) {
-          break;
-        }
-      }
-      return value;
-    };
-    channelNames = [
-      "request",
-      "response",
-      "progress",
-      "error",
-      "abort"
-    ];
-    middlehooks = [
-      "processOptions",
-      "validateOptions",
-      "interceptRequest",
-      "finalizeOptions",
-      "onRequest",
-      "onResponse",
-      "onError",
-      "onReturn",
-      "onHeaders"
-    ];
-    __accessCheck = (obj, member, msg) => {
-      if (!member.has(obj))
-        throw TypeError("Cannot " + msg);
-    };
-    __privateGet = (obj, member, getter) => {
-      __accessCheck(obj, member, "read from private field");
-      return getter ? getter.call(obj) : member.get(obj);
-    };
-    __privateAdd = (obj, member, value) => {
-      if (member.has(obj))
-        throw TypeError("Cannot add the same private member more than once");
-      member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-    };
-    __privateSet = (obj, member, value, setter) => {
-      __accessCheck(obj, member, "write to private field");
-      setter ? setter.call(obj, value) : member.set(obj, value);
-      return value;
-    };
-    FetchXhr = class {
-      constructor() {
-        this.readyState = 0;
-        this.responseType = "";
-        __privateAdd(this, _method, void 0);
-        __privateAdd(this, _url, void 0);
-        __privateAdd(this, _resHeaders, void 0);
-        __privateAdd(this, _headers, {});
-        __privateAdd(this, _controller, void 0);
-        __privateAdd(this, _init, {});
-        __privateAdd(this, _useAbortSignal, void 0);
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- _async is only declared for typings compatibility
-      open(method, url, _async) {
-        __privateSet(this, _method, method);
-        __privateSet(this, _url, url);
-        __privateSet(this, _resHeaders, "");
-        this.readyState = 1;
-        this.onreadystatechange();
-        __privateSet(this, _controller, void 0);
-      }
-      abort() {
-        if (__privateGet(this, _controller)) {
-          __privateGet(this, _controller).abort();
-        }
-      }
-      getAllResponseHeaders() {
-        return __privateGet(this, _resHeaders);
-      }
-      setRequestHeader(name, value) {
-        __privateGet(this, _headers)[name] = value;
-      }
-      // Allow setting extra fetch init options, needed for runtimes such as Vercel Edge to set `cache` and other options in React Server Components
-      setInit(init, useAbortSignal = true) {
-        __privateSet(this, _init, init);
-        __privateSet(this, _useAbortSignal, useAbortSignal);
-      }
-      send(body) {
-        const textBody = this.responseType !== "arraybuffer";
-        const options = {
-          ...__privateGet(this, _init),
-          method: __privateGet(this, _method),
-          headers: __privateGet(this, _headers),
-          body
-        };
-        if (typeof AbortController === "function" && __privateGet(this, _useAbortSignal)) {
-          __privateSet(this, _controller, new AbortController());
-          if (typeof EventTarget !== "undefined" && __privateGet(this, _controller).signal instanceof EventTarget) {
-            options.signal = __privateGet(this, _controller).signal;
-          }
-        }
-        if (typeof document !== "undefined") {
-          options.credentials = this.withCredentials ? "include" : "omit";
-        }
-        fetch(__privateGet(this, _url), options).then((res) => {
-          res.headers.forEach((value, key) => {
-            __privateSet(this, _resHeaders, __privateGet(this, _resHeaders) + "".concat(key, ": ").concat(value, "\r\n"));
-          });
-          this.status = res.status;
-          this.statusText = res.statusText;
-          this.readyState = 3;
-          return textBody ? res.text() : res.arrayBuffer();
-        }).then((resBody) => {
-          if (typeof resBody === "string") {
-            this.responseText = resBody;
-          } else {
-            this.response = resBody;
-          }
-          this.readyState = 4;
-          this.onreadystatechange();
-        }).catch((err) => {
-          var _a;
-          if (err.name === "AbortError") {
-            this.onabort();
-            return;
-          }
-          (_a = this.onerror) == null ? void 0 : _a.call(this, err);
-        });
-      }
-    };
-    _method = /* @__PURE__ */ new WeakMap();
-    _url = /* @__PURE__ */ new WeakMap();
-    _resHeaders = /* @__PURE__ */ new WeakMap();
-    _headers = /* @__PURE__ */ new WeakMap();
-    _controller = /* @__PURE__ */ new WeakMap();
-    _init = /* @__PURE__ */ new WeakMap();
-    _useAbortSignal = /* @__PURE__ */ new WeakMap();
-    adapter = typeof XMLHttpRequest === "function" ? "xhr" : "fetch";
-    XmlHttpRequest = adapter === "xhr" ? XMLHttpRequest : FetchXhr;
-    httpRequester = (context2, callback) => {
-      var _a;
-      const opts = context2.options;
-      const options = context2.applyMiddleware("finalizeOptions", opts);
-      const timers = {};
-      const injectedResponse = context2.applyMiddleware("interceptRequest", void 0, {
-        adapter,
-        context: context2
-      });
-      if (injectedResponse) {
-        const cbTimer = setTimeout(callback, 0, null, injectedResponse);
-        const cancel = () => clearTimeout(cbTimer);
-        return { abort: cancel };
-      }
-      let xhr = new XmlHttpRequest();
-      if (xhr instanceof FetchXhr && typeof options.fetch === "object") {
-        xhr.setInit(options.fetch, (_a = options.useAbortSignal) != null ? _a : true);
-      }
-      const headers = options.headers;
-      const delays = options.timeout;
-      let aborted = false;
-      let loaded = false;
-      let timedOut = false;
-      xhr.onerror = (event) => {
-        onError(
-          new Error(
-            "Request error while attempting to reach ".concat(options.url).concat(event.lengthComputable ? "(".concat(event.loaded, " of ").concat(event.total, " bytes transferred)") : "")
-          )
-        );
-      };
-      xhr.ontimeout = (event) => {
-        onError(
-          new Error(
-            "Request timeout while attempting to reach ".concat(options.url).concat(event.lengthComputable ? "(".concat(event.loaded, " of ").concat(event.total, " bytes transferred)") : "")
-          )
-        );
-      };
-      xhr.onabort = () => {
-        stopTimers(true);
-        aborted = true;
-      };
-      xhr.onreadystatechange = () => {
-        resetTimers();
-        if (aborted || xhr.readyState !== 4) {
-          return;
-        }
-        if (xhr.status === 0) {
-          return;
-        }
-        onLoad();
-      };
-      xhr.open(
-        options.method,
-        options.url,
-        true
-        // Always async
-      );
-      xhr.withCredentials = !!options.withCredentials;
-      if (headers && xhr.setRequestHeader) {
-        for (const key in headers) {
-          if (headers.hasOwnProperty(key)) {
-            xhr.setRequestHeader(key, headers[key]);
-          }
-        }
-      }
-      if (options.rawBody) {
-        xhr.responseType = "arraybuffer";
-      }
-      context2.applyMiddleware("onRequest", { options, adapter, request: xhr, context: context2 });
-      xhr.send(options.body || null);
-      if (delays) {
-        timers.connect = setTimeout(() => timeoutRequest("ETIMEDOUT"), delays.connect);
-      }
-      return { abort };
-      function abort() {
-        aborted = true;
-        if (xhr) {
-          xhr.abort();
-        }
-      }
-      function timeoutRequest(code) {
-        timedOut = true;
-        xhr.abort();
-        const error = new Error(
-          code === "ESOCKETTIMEDOUT" ? "Socket timed out on request to ".concat(options.url) : "Connection timed out on request to ".concat(options.url)
-        );
-        error.code = code;
-        context2.channels.error.publish(error);
-      }
-      function resetTimers() {
-        if (!delays) {
-          return;
-        }
-        stopTimers();
-        timers.socket = setTimeout(() => timeoutRequest("ESOCKETTIMEDOUT"), delays.socket);
-      }
-      function stopTimers(force) {
-        if (force || aborted || xhr.readyState >= 2 && timers.connect) {
-          clearTimeout(timers.connect);
-        }
-        if (timers.socket) {
-          clearTimeout(timers.socket);
-        }
-      }
-      function onError(error) {
-        if (loaded) {
-          return;
-        }
-        stopTimers(true);
-        loaded = true;
-        xhr = null;
-        const err = error || new Error("Network error while attempting to reach ".concat(options.url));
-        err.isNetworkError = true;
-        err.request = options;
-        callback(err);
-      }
-      function reduceResponse() {
-        return {
-          body: xhr.response || (xhr.responseType === "" || xhr.responseType === "text" ? xhr.responseText : ""),
-          url: options.url,
-          method: options.method,
-          headers: (0, import_parse_headers.default)(xhr.getAllResponseHeaders()),
-          statusCode: xhr.status,
-          statusMessage: xhr.statusText
-        };
-      }
-      function onLoad() {
-        if (aborted || loaded || timedOut) {
-          return;
-        }
-        if (xhr.status === 0) {
-          onError(new Error("Unknown XHR error"));
-          return;
-        }
-        stopTimers();
-        loaded = true;
-        callback(null, reduceResponse());
-      }
-    };
-    getIt = (initMiddleware = [], httpRequest = httpRequester) => createRequester(initMiddleware, httpRequest);
-  }
-});
-
-// node_modules/ms/index.js
-var require_ms = __commonJS({
-  "node_modules/ms/index.js"(exports, module2) {
-    var s2 = 1e3;
-    var m = s2 * 60;
-    var h = m * 60;
-    var d2 = h * 24;
-    var w = d2 * 7;
-    var y = d2 * 365.25;
-    module2.exports = function(val, options) {
-      options = options || {};
-      var type = typeof val;
-      if (type === "string" && val.length > 0) {
-        return parse(val);
-      } else if (type === "number" && isFinite(val)) {
-        return options.long ? fmtLong(val) : fmtShort(val);
-      }
-      throw new Error(
-        "val is not a non-empty string or a valid number. val=" + JSON.stringify(val)
-      );
-    };
-    function parse(str) {
-      str = String(str);
-      if (str.length > 100) {
-        return;
-      }
-      var match = /^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(
-        str
-      );
-      if (!match) {
-        return;
-      }
-      var n = parseFloat(match[1]);
-      var type = (match[2] || "ms").toLowerCase();
-      switch (type) {
-        case "years":
-        case "year":
-        case "yrs":
-        case "yr":
-        case "y":
-          return n * y;
-        case "weeks":
-        case "week":
-        case "w":
-          return n * w;
-        case "days":
-        case "day":
-        case "d":
-          return n * d2;
-        case "hours":
-        case "hour":
-        case "hrs":
-        case "hr":
-        case "h":
-          return n * h;
-        case "minutes":
-        case "minute":
-        case "mins":
-        case "min":
-        case "m":
-          return n * m;
-        case "seconds":
-        case "second":
-        case "secs":
-        case "sec":
-        case "s":
-          return n * s2;
-        case "milliseconds":
-        case "millisecond":
-        case "msecs":
-        case "msec":
-        case "ms":
-          return n;
-        default:
-          return void 0;
-      }
-    }
-    function fmtShort(ms) {
-      var msAbs = Math.abs(ms);
-      if (msAbs >= d2) {
-        return Math.round(ms / d2) + "d";
-      }
-      if (msAbs >= h) {
-        return Math.round(ms / h) + "h";
-      }
-      if (msAbs >= m) {
-        return Math.round(ms / m) + "m";
-      }
-      if (msAbs >= s2) {
-        return Math.round(ms / s2) + "s";
-      }
-      return ms + "ms";
-    }
-    function fmtLong(ms) {
-      var msAbs = Math.abs(ms);
-      if (msAbs >= d2) {
-        return plural(ms, msAbs, d2, "day");
-      }
-      if (msAbs >= h) {
-        return plural(ms, msAbs, h, "hour");
-      }
-      if (msAbs >= m) {
-        return plural(ms, msAbs, m, "minute");
-      }
-      if (msAbs >= s2) {
-        return plural(ms, msAbs, s2, "second");
-      }
-      return ms + " ms";
-    }
-    function plural(ms, msAbs, n, name) {
-      var isPlural = msAbs >= n * 1.5;
-      return Math.round(ms / n) + " " + name + (isPlural ? "s" : "");
-    }
-  }
-});
-
-// node_modules/debug/src/common.js
-var require_common = __commonJS({
-  "node_modules/debug/src/common.js"(exports, module2) {
-    function setup(env) {
-      createDebug.debug = createDebug;
-      createDebug.default = createDebug;
-      createDebug.coerce = coerce;
-      createDebug.disable = disable;
-      createDebug.enable = enable;
-      createDebug.enabled = enabled;
-      createDebug.humanize = require_ms();
-      createDebug.destroy = destroy;
-      Object.keys(env).forEach((key) => {
-        createDebug[key] = env[key];
-      });
-      createDebug.names = [];
-      createDebug.skips = [];
-      createDebug.formatters = {};
-      function selectColor(namespace) {
-        let hash = 0;
-        for (let i = 0; i < namespace.length; i++) {
-          hash = (hash << 5) - hash + namespace.charCodeAt(i);
-          hash |= 0;
-        }
-        return createDebug.colors[Math.abs(hash) % createDebug.colors.length];
-      }
-      createDebug.selectColor = selectColor;
-      function createDebug(namespace) {
-        let prevTime;
-        let enableOverride = null;
-        let namespacesCache;
-        let enabledCache;
-        function debug(...args) {
-          if (!debug.enabled) {
-            return;
-          }
-          const self2 = debug;
-          const curr = Number(new Date());
-          const ms = curr - (prevTime || curr);
-          self2.diff = ms;
-          self2.prev = prevTime;
-          self2.curr = curr;
-          prevTime = curr;
-          args[0] = createDebug.coerce(args[0]);
-          if (typeof args[0] !== "string") {
-            args.unshift("%O");
-          }
-          let index = 0;
-          args[0] = args[0].replace(/%([a-zA-Z%])/g, (match, format) => {
-            if (match === "%%") {
-              return "%";
-            }
-            index++;
-            const formatter = createDebug.formatters[format];
-            if (typeof formatter === "function") {
-              const val = args[index];
-              match = formatter.call(self2, val);
-              args.splice(index, 1);
-              index--;
-            }
-            return match;
-          });
-          createDebug.formatArgs.call(self2, args);
-          const logFn = self2.log || createDebug.log;
-          logFn.apply(self2, args);
-        }
-        debug.namespace = namespace;
-        debug.useColors = createDebug.useColors();
-        debug.color = createDebug.selectColor(namespace);
-        debug.extend = extend;
-        debug.destroy = createDebug.destroy;
-        Object.defineProperty(debug, "enabled", {
-          enumerable: true,
-          configurable: false,
-          get: () => {
-            if (enableOverride !== null) {
-              return enableOverride;
-            }
-            if (namespacesCache !== createDebug.namespaces) {
-              namespacesCache = createDebug.namespaces;
-              enabledCache = createDebug.enabled(namespace);
-            }
-            return enabledCache;
-          },
-          set: (v) => {
-            enableOverride = v;
-          }
-        });
-        if (typeof createDebug.init === "function") {
-          createDebug.init(debug);
-        }
-        return debug;
-      }
-      function extend(namespace, delimiter) {
-        const newDebug = createDebug(this.namespace + (typeof delimiter === "undefined" ? ":" : delimiter) + namespace);
-        newDebug.log = this.log;
-        return newDebug;
-      }
-      function enable(namespaces) {
-        createDebug.save(namespaces);
-        createDebug.namespaces = namespaces;
-        createDebug.names = [];
-        createDebug.skips = [];
-        let i;
-        const split = (typeof namespaces === "string" ? namespaces : "").split(/[\s,]+/);
-        const len = split.length;
-        for (i = 0; i < len; i++) {
-          if (!split[i]) {
-            continue;
-          }
-          namespaces = split[i].replace(/\*/g, ".*?");
-          if (namespaces[0] === "-") {
-            createDebug.skips.push(new RegExp("^" + namespaces.slice(1) + "$"));
-          } else {
-            createDebug.names.push(new RegExp("^" + namespaces + "$"));
-          }
-        }
-      }
-      function disable() {
-        const namespaces = [
-          ...createDebug.names.map(toNamespace),
-          ...createDebug.skips.map(toNamespace).map((namespace) => "-" + namespace)
-        ].join(",");
-        createDebug.enable("");
-        return namespaces;
-      }
-      function enabled(name) {
-        if (name[name.length - 1] === "*") {
-          return true;
-        }
-        let i;
-        let len;
-        for (i = 0, len = createDebug.skips.length; i < len; i++) {
-          if (createDebug.skips[i].test(name)) {
-            return false;
-          }
-        }
-        for (i = 0, len = createDebug.names.length; i < len; i++) {
-          if (createDebug.names[i].test(name)) {
-            return true;
-          }
-        }
-        return false;
-      }
-      function toNamespace(regexp) {
-        return regexp.toString().substring(2, regexp.toString().length - 2).replace(/\.\*\?$/, "*");
-      }
-      function coerce(val) {
-        if (val instanceof Error) {
-          return val.stack || val.message;
-        }
-        return val;
-      }
-      function destroy() {
-        console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.");
-      }
-      createDebug.enable(createDebug.load());
-      return createDebug;
-    }
-    module2.exports = setup;
-  }
-});
-
-// node_modules/debug/src/browser.js
-var require_browser = __commonJS({
-  "node_modules/debug/src/browser.js"(exports, module2) {
-    exports.formatArgs = formatArgs;
-    exports.save = save;
-    exports.load = load;
-    exports.useColors = useColors;
-    exports.storage = localstorage();
-    exports.destroy = (() => {
-      let warned = false;
-      return () => {
-        if (!warned) {
-          warned = true;
-          console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.");
-        }
-      };
-    })();
-    exports.colors = [
-      "#0000CC",
-      "#0000FF",
-      "#0033CC",
-      "#0033FF",
-      "#0066CC",
-      "#0066FF",
-      "#0099CC",
-      "#0099FF",
-      "#00CC00",
-      "#00CC33",
-      "#00CC66",
-      "#00CC99",
-      "#00CCCC",
-      "#00CCFF",
-      "#3300CC",
-      "#3300FF",
-      "#3333CC",
-      "#3333FF",
-      "#3366CC",
-      "#3366FF",
-      "#3399CC",
-      "#3399FF",
-      "#33CC00",
-      "#33CC33",
-      "#33CC66",
-      "#33CC99",
-      "#33CCCC",
-      "#33CCFF",
-      "#6600CC",
-      "#6600FF",
-      "#6633CC",
-      "#6633FF",
-      "#66CC00",
-      "#66CC33",
-      "#9900CC",
-      "#9900FF",
-      "#9933CC",
-      "#9933FF",
-      "#99CC00",
-      "#99CC33",
-      "#CC0000",
-      "#CC0033",
-      "#CC0066",
-      "#CC0099",
-      "#CC00CC",
-      "#CC00FF",
-      "#CC3300",
-      "#CC3333",
-      "#CC3366",
-      "#CC3399",
-      "#CC33CC",
-      "#CC33FF",
-      "#CC6600",
-      "#CC6633",
-      "#CC9900",
-      "#CC9933",
-      "#CCCC00",
-      "#CCCC33",
-      "#FF0000",
-      "#FF0033",
-      "#FF0066",
-      "#FF0099",
-      "#FF00CC",
-      "#FF00FF",
-      "#FF3300",
-      "#FF3333",
-      "#FF3366",
-      "#FF3399",
-      "#FF33CC",
-      "#FF33FF",
-      "#FF6600",
-      "#FF6633",
-      "#FF9900",
-      "#FF9933",
-      "#FFCC00",
-      "#FFCC33"
-    ];
-    function useColors() {
-      if (typeof window !== "undefined" && window.process && (window.process.type === "renderer" || window.process.__nwjs)) {
-        return true;
-      }
-      if (typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/)) {
-        return false;
-      }
-      return typeof document !== "undefined" && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance || // Is firebug? http://stackoverflow.com/a/398120/376773
-      typeof window !== "undefined" && window.console && (window.console.firebug || window.console.exception && window.console.table) || // Is firefox >= v31?
-      // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
-      typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31 || // Double check webkit in userAgent just in case we are in a worker
-      typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/);
-    }
-    function formatArgs(args) {
-      args[0] = (this.useColors ? "%c" : "") + this.namespace + (this.useColors ? " %c" : " ") + args[0] + (this.useColors ? "%c " : " ") + "+" + module2.exports.humanize(this.diff);
-      if (!this.useColors) {
-        return;
-      }
-      const c2 = "color: " + this.color;
-      args.splice(1, 0, c2, "color: inherit");
-      let index = 0;
-      let lastC = 0;
-      args[0].replace(/%[a-zA-Z%]/g, (match) => {
-        if (match === "%%") {
-          return;
-        }
-        index++;
-        if (match === "%c") {
-          lastC = index;
-        }
-      });
-      args.splice(lastC, 0, c2);
-    }
-    exports.log = console.debug || console.log || (() => {
-    });
-    function save(namespaces) {
-      try {
-        if (namespaces) {
-          exports.storage.setItem("debug", namespaces);
-        } else {
-          exports.storage.removeItem("debug");
-        }
-      } catch (error) {
-      }
-    }
-    function load() {
-      let r;
-      try {
-        r = exports.storage.getItem("debug");
-      } catch (error) {
-      }
-      if (!r && typeof process !== "undefined" && "env" in process) {
-        r = process.env.DEBUG;
-      }
-      return r;
-    }
-    function localstorage() {
-      try {
-        return localStorage;
-      } catch (error) {
-      }
-    }
-    module2.exports = require_common()(exports);
-    var { formatters } = module2.exports;
-    formatters.j = function(v) {
-      try {
-        return JSON.stringify(v);
-      } catch (error) {
-        return "[UnexpectedJSONParseError]: " + error.message;
-      }
-    };
-  }
-});
-
-// node_modules/is-plain-object/dist/is-plain-object.mjs
-function isObject(o) {
-  return Object.prototype.toString.call(o) === "[object Object]";
-}
-function isPlainObject(o) {
-  var ctor, prot;
-  if (isObject(o) === false)
-    return false;
-  ctor = o.constructor;
-  if (ctor === void 0)
-    return true;
-  prot = ctor.prototype;
-  if (isObject(prot) === false)
-    return false;
-  if (prot.hasOwnProperty("isPrototypeOf") === false) {
+function T2(t2) {
+  try {
+    new URL(t2, t2.startsWith("/") ? "https://acme.com" : void 0);
+  } catch (e2) {
     return false;
   }
   return true;
 }
-var init_is_plain_object = __esm({
-  "node_modules/is-plain-object/dist/is-plain-object.mjs"() {
+function C(t2, e2, r2 = "auto") {
+  return r2 === true || r2 === "auto" && (I2(t2) || T2(t2)) ? t2 : `${t2}${E2(e2)}`;
+}
+function _2(t2) {
+  var e2;
+  return { cleaned: t2.replace(f2, ""), encoded: ((e2 = t2.match(f2)) == null ? void 0 : e2[0]) || "" };
+}
+function O2(t2) {
+  return t2 && JSON.parse(_2(JSON.stringify(t2)).cleaned);
+}
+function stegaClean(result) {
+  return O2(result);
+}
+var s3, c4, u3, S2, f2;
+var init_stegaClean = __esm({
+  "node_modules/@sanity/client/dist/_chunks-es/stegaClean.js"() {
+    s3 = { 0: 8203, 1: 8204, 2: 8205, 3: 8290, 4: 8291, 5: 8288, 6: 65279, 7: 8289, 8: 119155, 9: 119156, a: 119157, b: 119158, c: 119159, d: 119160, e: 119161, f: 119162 };
+    c4 = { 0: 8203, 1: 8204, 2: 8205, 3: 65279 };
+    u3 = new Array(4).fill(String.fromCodePoint(c4[0])).join("");
+    Object.fromEntries(Object.entries(c4).map((t2) => t2.reverse()));
+    Object.fromEntries(Object.entries(s3).map((t2) => t2.reverse()));
+    S2 = `${Object.values(s3).map((t2) => `\\u{${t2.toString(16)}}`).join("")}`;
+    f2 = new RegExp(`[${S2}]{4,}`, "gu");
   }
 });
 
-// node_modules/get-it/dist/middleware.browser.js
-function agent(opts) {
-  return {};
-}
-function jsonRequest() {
-  return {
-    processOptions: (options) => {
-      const body = options.body;
-      if (!body) {
-        return options;
-      }
-      const isStream2 = typeof body.pipe === "function";
-      const shouldSerialize = !isStream2 && !isBuffer(body) && (serializeTypes.indexOf(typeof body) !== -1 || Array.isArray(body) || isPlainObject(body));
-      if (!shouldSerialize) {
-        return options;
-      }
-      return Object.assign({}, options, {
-        body: JSON.stringify(options.body),
-        headers: Object.assign({}, options.headers, {
-          "Content-Type": "application/json"
-        })
-      });
-    }
-  };
-}
-function jsonResponse(opts) {
-  return {
-    onResponse: (response) => {
-      const contentType = response.headers["content-type"] || "";
-      const shouldDecode = opts && opts.force || contentType.indexOf("application/json") !== -1;
-      if (!response.body || !contentType || !shouldDecode) {
-        return response;
-      }
-      return Object.assign({}, response, { body: tryParse(response.body) });
-    },
-    processOptions: (options) => Object.assign({}, options, {
-      headers: Object.assign({ Accept: "application/json" }, options.headers)
-    })
-  };
-  function tryParse(body) {
-    try {
-      return JSON.parse(body);
-    } catch (err) {
-      err.message = "Failed to parsed response body as JSON: ".concat(err.message);
-      throw err;
-    }
-  }
-}
-function observable(opts = {}) {
-  const Observable2 = (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- @TODO consider dropping checking for a global Observable since it's not on a standards track
-    opts.implementation || global$1.Observable
-  );
-  if (!Observable2) {
-    throw new Error(
-      "`Observable` is not available in global scope, and no implementation was passed"
-    );
-  }
-  return {
-    onReturn: (channels, context2) => new Observable2((observer) => {
-      channels.error.subscribe((err) => observer.error(err));
-      channels.progress.subscribe(
-        (event) => observer.next(Object.assign({ type: "progress" }, event))
-      );
-      channels.response.subscribe((response) => {
-        observer.next(Object.assign({ type: "response" }, response));
-        observer.complete();
-      });
-      channels.request.publish(context2);
-      return () => channels.abort.publish();
-    })
-  };
-}
-function progress() {
-  return {
-    onRequest: (evt) => {
-      if (evt.adapter !== "xhr") {
-        return;
-      }
-      const xhr = evt.request;
-      const context2 = evt.context;
-      if ("upload" in xhr && "onprogress" in xhr.upload) {
-        xhr.upload.onprogress = handleProgress("upload");
-      }
-      if ("onprogress" in xhr) {
-        xhr.onprogress = handleProgress("download");
-      }
-      function handleProgress(stage) {
-        return (event) => {
-          const percent = event.lengthComputable ? event.loaded / event.total * 100 : -1;
-          context2.channels.progress.publish({
-            stage,
-            percent,
-            total: event.total,
-            loaded: event.loaded,
-            lengthComputable: event.lengthComputable
-          });
-        };
-      }
-    }
-  };
-}
-function getRetryDelay(attemptNum) {
-  return 100 * Math.pow(2, attemptNum) + Math.random() * 100;
-}
-function buildKeepAlive(agent2) {
-  return function keepAlive2(config2 = {}) {
-    const ms = config2.ms || 1e3;
-    const maxFree = config2.maxFree || 256;
-    const agentOptions = {
-      keepAlive: true,
-      keepAliveMsecs: ms,
-      maxFreeSockets: maxFree
-    };
-    return agent2(agentOptions);
-  };
-}
-var import_debug, isBuffer, serializeTypes, actualGlobal, global$1, promise, Cancel, _CancelToken, CancelToken, isCancel, defaultShouldRetry, isStream, sharedRetry, retry, keepAlive;
-var init_middleware_browser = __esm({
-  "node_modules/get-it/dist/middleware.browser.js"() {
-    import_debug = __toESM(require_browser(), 1);
-    init_is_plain_object();
-    isBuffer = typeof Buffer === "undefined" ? () => false : (obj) => Buffer.isBuffer(obj);
-    serializeTypes = ["boolean", "string", "number"];
-    actualGlobal = {};
-    if (typeof globalThis !== "undefined") {
-      actualGlobal = globalThis;
-    } else if (typeof window !== "undefined") {
-      actualGlobal = window;
-    } else if (typeof global !== "undefined") {
-      actualGlobal = global;
-    } else if (typeof self !== "undefined") {
-      actualGlobal = self;
-    }
-    global$1 = actualGlobal;
-    promise = (options = {}) => {
-      const PromiseImplementation = options.implementation || Promise;
-      if (!PromiseImplementation) {
-        throw new Error("`Promise` is not available in global scope, and no implementation was passed");
-      }
-      return {
-        onReturn: (channels, context2) => new PromiseImplementation((resolve, reject) => {
-          const cancel = context2.options.cancelToken;
-          if (cancel) {
-            cancel.promise.then((reason) => {
-              channels.abort.publish(reason);
-              reject(reason);
-            });
-          }
-          channels.error.subscribe(reject);
-          channels.response.subscribe((response) => {
-            resolve(options.onlyBody ? response.body : response);
-          });
-          setTimeout(() => {
-            try {
-              channels.request.publish(context2);
-            } catch (err) {
-              reject(err);
-            }
-          }, 0);
-        })
-      };
-    };
-    Cancel = class {
-      constructor(message) {
-        this.__CANCEL__ = true;
-        this.message = message;
-      }
-      toString() {
-        return "Cancel".concat(this.message ? ": ".concat(this.message) : "");
-      }
-    };
-    _CancelToken = class _CancelToken2 {
-      constructor(executor) {
-        if (typeof executor !== "function") {
-          throw new TypeError("executor must be a function.");
-        }
-        let resolvePromise = null;
-        this.promise = new Promise((resolve) => {
-          resolvePromise = resolve;
-        });
-        executor((message) => {
-          if (this.reason) {
-            return;
-          }
-          this.reason = new Cancel(message);
-          resolvePromise(this.reason);
-        });
-      }
-    };
-    _CancelToken.source = () => {
-      let cancel;
-      const token = new _CancelToken((can) => {
-        cancel = can;
-      });
-      return {
-        token,
-        cancel
-      };
-    };
-    CancelToken = _CancelToken;
-    isCancel = (value) => !!(value && (value == null ? void 0 : value.__CANCEL__));
-    promise.Cancel = Cancel;
-    promise.CancelToken = CancelToken;
-    promise.isCancel = isCancel;
-    defaultShouldRetry = (err, attempt, options) => {
-      if (options.method !== "GET" && options.method !== "HEAD") {
-        return false;
-      }
-      return err.isNetworkError || false;
-    };
-    isStream = (stream) => stream !== null && typeof stream === "object" && typeof stream.pipe === "function";
-    sharedRetry = (opts) => {
-      const maxRetries = opts.maxRetries || 5;
-      const retryDelay = opts.retryDelay || getRetryDelay;
-      const allowRetry = opts.shouldRetry;
-      return {
-        onError: (err, context2) => {
-          const options = context2.options;
-          const max = options.maxRetries || maxRetries;
-          const shouldRetry2 = options.shouldRetry || allowRetry;
-          const attemptNumber = options.attemptNumber || 0;
-          if (isStream(options.body)) {
-            return err;
-          }
-          if (!shouldRetry2(err, attemptNumber, options) || attemptNumber >= max) {
-            return err;
-          }
-          const newContext = Object.assign({}, context2, {
-            options: Object.assign({}, options, { attemptNumber: attemptNumber + 1 })
-          });
-          setTimeout(() => context2.channels.request.publish(newContext), retryDelay(attemptNumber));
-          return null;
-        }
-      };
-    };
-    retry = (opts = {}) => sharedRetry({ shouldRetry: defaultShouldRetry, ...opts });
-    retry.shouldRetry = defaultShouldRetry;
-    keepAlive = buildKeepAlive(agent);
-  }
-});
-
-// node_modules/tslib/tslib.es6.js
-function __extends(d2, b2) {
-  if (typeof b2 !== "function" && b2 !== null)
-    throw new TypeError("Class extends value " + String(b2) + " is not a constructor or null");
-  extendStatics(d2, b2);
-  function __() {
-    this.constructor = d2;
-  }
-  d2.prototype = b2 === null ? Object.create(b2) : (__.prototype = b2.prototype, new __());
-}
-function __awaiter(thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function(resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function(resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-}
-function __generator(thisArg, body) {
-  var _ = { label: 0, sent: function() {
-    if (t[0] & 1)
-      throw t[1];
-    return t[1];
-  }, trys: [], ops: [] }, f2, y, t, g;
-  return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() {
-    return this;
-  }), g;
-  function verb(n) {
-    return function(v) {
-      return step([n, v]);
-    };
-  }
-  function step(op) {
-    if (f2)
-      throw new TypeError("Generator is already executing.");
-    while (_)
-      try {
-        if (f2 = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done)
-          return t;
-        if (y = 0, t)
-          op = [op[0] & 2, t.value];
-        switch (op[0]) {
-          case 0:
-          case 1:
-            t = op;
-            break;
-          case 4:
-            _.label++;
-            return { value: op[1], done: false };
-          case 5:
-            _.label++;
-            y = op[1];
-            op = [0];
-            continue;
-          case 7:
-            op = _.ops.pop();
-            _.trys.pop();
-            continue;
-          default:
-            if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) {
-              _ = 0;
-              continue;
-            }
-            if (op[0] === 3 && (!t || op[1] > t[0] && op[1] < t[3])) {
-              _.label = op[1];
-              break;
-            }
-            if (op[0] === 6 && _.label < t[1]) {
-              _.label = t[1];
-              t = op;
-              break;
-            }
-            if (t && _.label < t[2]) {
-              _.label = t[2];
-              _.ops.push(op);
-              break;
-            }
-            if (t[2])
-              _.ops.pop();
-            _.trys.pop();
-            continue;
-        }
-        op = body.call(thisArg, _);
-      } catch (e) {
-        op = [6, e];
-        y = 0;
-      } finally {
-        f2 = t = 0;
-      }
-    if (op[0] & 5)
-      throw op[1];
-    return { value: op[0] ? op[1] : void 0, done: true };
-  }
-}
-function __values(o) {
-  var s2 = typeof Symbol === "function" && Symbol.iterator, m = s2 && o[s2], i = 0;
-  if (m)
-    return m.call(o);
-  if (o && typeof o.length === "number")
-    return {
-      next: function() {
-        if (o && i >= o.length)
-          o = void 0;
-        return { value: o && o[i++], done: !o };
-      }
-    };
-  throw new TypeError(s2 ? "Object is not iterable." : "Symbol.iterator is not defined.");
-}
-function __read(o, n) {
-  var m = typeof Symbol === "function" && o[Symbol.iterator];
-  if (!m)
-    return o;
-  var i = m.call(o), r, ar = [], e;
-  try {
-    while ((n === void 0 || n-- > 0) && !(r = i.next()).done)
-      ar.push(r.value);
-  } catch (error) {
-    e = { error };
-  } finally {
-    try {
-      if (r && !r.done && (m = i["return"]))
-        m.call(i);
-    } finally {
-      if (e)
-        throw e.error;
-    }
-  }
-  return ar;
-}
-function __spreadArray(to, from2, pack) {
-  if (pack || arguments.length === 2)
-    for (var i = 0, l = from2.length, ar; i < l; i++) {
-      if (ar || !(i in from2)) {
-        if (!ar)
-          ar = Array.prototype.slice.call(from2, 0, i);
-        ar[i] = from2[i];
-      }
-    }
-  return to.concat(ar || Array.prototype.slice.call(from2));
-}
-function __await(v) {
-  return this instanceof __await ? (this.v = v, this) : new __await(v);
-}
-function __asyncGenerator(thisArg, _arguments, generator) {
-  if (!Symbol.asyncIterator)
-    throw new TypeError("Symbol.asyncIterator is not defined.");
-  var g = generator.apply(thisArg, _arguments || []), i, q = [];
-  return i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function() {
-    return this;
-  }, i;
-  function verb(n) {
-    if (g[n])
-      i[n] = function(v) {
-        return new Promise(function(a, b2) {
-          q.push([n, v, a, b2]) > 1 || resume(n, v);
-        });
-      };
-  }
-  function resume(n, v) {
-    try {
-      step(g[n](v));
-    } catch (e) {
-      settle(q[0][3], e);
-    }
-  }
-  function step(r) {
-    r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r);
-  }
-  function fulfill(value) {
-    resume("next", value);
-  }
-  function reject(value) {
-    resume("throw", value);
-  }
-  function settle(f2, v) {
-    if (f2(v), q.shift(), q.length)
-      resume(q[0][0], q[0][1]);
-  }
-}
-function __asyncValues(o) {
-  if (!Symbol.asyncIterator)
-    throw new TypeError("Symbol.asyncIterator is not defined.");
-  var m = o[Symbol.asyncIterator], i;
-  return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function() {
-    return this;
-  }, i);
-  function verb(n) {
-    i[n] = o[n] && function(v) {
-      return new Promise(function(resolve, reject) {
-        v = o[n](v), settle(resolve, reject, v.done, v.value);
-      });
-    };
-  }
-  function settle(resolve, reject, d2, v) {
-    Promise.resolve(v).then(function(v2) {
-      resolve({ value: v2, done: d2 });
-    }, reject);
-  }
-}
-var extendStatics;
-var init_tslib_es6 = __esm({
-  "node_modules/tslib/tslib.es6.js"() {
-    extendStatics = function(d2, b2) {
-      extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d3, b3) {
-        d3.__proto__ = b3;
-      } || function(d3, b3) {
-        for (var p in b3)
-          if (Object.prototype.hasOwnProperty.call(b3, p))
-            d3[p] = b3[p];
-      };
-      return extendStatics(d2, b2);
-    };
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/isFunction.js
-function isFunction(value) {
-  return typeof value === "function";
-}
-var init_isFunction = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/isFunction.js"() {
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/createErrorClass.js
-function createErrorClass(createImpl) {
-  var _super = function(instance) {
-    Error.call(instance);
-    instance.stack = new Error().stack;
-  };
-  var ctorFunc = createImpl(_super);
-  ctorFunc.prototype = Object.create(Error.prototype);
-  ctorFunc.prototype.constructor = ctorFunc;
-  return ctorFunc;
-}
-var init_createErrorClass = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/createErrorClass.js"() {
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/UnsubscriptionError.js
-var UnsubscriptionError;
-var init_UnsubscriptionError = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/UnsubscriptionError.js"() {
-    init_createErrorClass();
-    UnsubscriptionError = createErrorClass(function(_super) {
-      return function UnsubscriptionErrorImpl(errors) {
-        _super(this);
-        this.message = errors ? errors.length + " errors occurred during unsubscription:\n" + errors.map(function(err, i) {
-          return i + 1 + ") " + err.toString();
-        }).join("\n  ") : "";
-        this.name = "UnsubscriptionError";
-        this.errors = errors;
-      };
-    });
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/arrRemove.js
-function arrRemove(arr, item) {
-  if (arr) {
-    var index = arr.indexOf(item);
-    0 <= index && arr.splice(index, 1);
-  }
-}
-var init_arrRemove = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/arrRemove.js"() {
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/Subscription.js
-function isSubscription(value) {
-  return value instanceof Subscription || value && "closed" in value && isFunction(value.remove) && isFunction(value.add) && isFunction(value.unsubscribe);
-}
-function execFinalizer(finalizer) {
-  if (isFunction(finalizer)) {
-    finalizer();
-  } else {
-    finalizer.unsubscribe();
-  }
-}
-var Subscription, EMPTY_SUBSCRIPTION;
-var init_Subscription = __esm({
-  "node_modules/rxjs/dist/esm5/internal/Subscription.js"() {
-    init_tslib_es6();
-    init_isFunction();
-    init_UnsubscriptionError();
-    init_arrRemove();
-    Subscription = function() {
-      function Subscription2(initialTeardown) {
-        this.initialTeardown = initialTeardown;
-        this.closed = false;
-        this._parentage = null;
-        this._finalizers = null;
-      }
-      Subscription2.prototype.unsubscribe = function() {
-        var e_1, _a, e_2, _b;
-        var errors;
-        if (!this.closed) {
-          this.closed = true;
-          var _parentage = this._parentage;
-          if (_parentage) {
-            this._parentage = null;
-            if (Array.isArray(_parentage)) {
-              try {
-                for (var _parentage_1 = __values(_parentage), _parentage_1_1 = _parentage_1.next(); !_parentage_1_1.done; _parentage_1_1 = _parentage_1.next()) {
-                  var parent_1 = _parentage_1_1.value;
-                  parent_1.remove(this);
-                }
-              } catch (e_1_1) {
-                e_1 = { error: e_1_1 };
-              } finally {
-                try {
-                  if (_parentage_1_1 && !_parentage_1_1.done && (_a = _parentage_1.return))
-                    _a.call(_parentage_1);
-                } finally {
-                  if (e_1)
-                    throw e_1.error;
-                }
-              }
-            } else {
-              _parentage.remove(this);
-            }
-          }
-          var initialFinalizer = this.initialTeardown;
-          if (isFunction(initialFinalizer)) {
-            try {
-              initialFinalizer();
-            } catch (e) {
-              errors = e instanceof UnsubscriptionError ? e.errors : [e];
-            }
-          }
-          var _finalizers = this._finalizers;
-          if (_finalizers) {
-            this._finalizers = null;
-            try {
-              for (var _finalizers_1 = __values(_finalizers), _finalizers_1_1 = _finalizers_1.next(); !_finalizers_1_1.done; _finalizers_1_1 = _finalizers_1.next()) {
-                var finalizer = _finalizers_1_1.value;
-                try {
-                  execFinalizer(finalizer);
-                } catch (err) {
-                  errors = errors !== null && errors !== void 0 ? errors : [];
-                  if (err instanceof UnsubscriptionError) {
-                    errors = __spreadArray(__spreadArray([], __read(errors)), __read(err.errors));
-                  } else {
-                    errors.push(err);
-                  }
-                }
-              }
-            } catch (e_2_1) {
-              e_2 = { error: e_2_1 };
-            } finally {
-              try {
-                if (_finalizers_1_1 && !_finalizers_1_1.done && (_b = _finalizers_1.return))
-                  _b.call(_finalizers_1);
-              } finally {
-                if (e_2)
-                  throw e_2.error;
-              }
-            }
-          }
-          if (errors) {
-            throw new UnsubscriptionError(errors);
-          }
-        }
-      };
-      Subscription2.prototype.add = function(teardown) {
-        var _a;
-        if (teardown && teardown !== this) {
-          if (this.closed) {
-            execFinalizer(teardown);
-          } else {
-            if (teardown instanceof Subscription2) {
-              if (teardown.closed || teardown._hasParent(this)) {
-                return;
-              }
-              teardown._addParent(this);
-            }
-            (this._finalizers = (_a = this._finalizers) !== null && _a !== void 0 ? _a : []).push(teardown);
-          }
-        }
-      };
-      Subscription2.prototype._hasParent = function(parent) {
-        var _parentage = this._parentage;
-        return _parentage === parent || Array.isArray(_parentage) && _parentage.includes(parent);
-      };
-      Subscription2.prototype._addParent = function(parent) {
-        var _parentage = this._parentage;
-        this._parentage = Array.isArray(_parentage) ? (_parentage.push(parent), _parentage) : _parentage ? [_parentage, parent] : parent;
-      };
-      Subscription2.prototype._removeParent = function(parent) {
-        var _parentage = this._parentage;
-        if (_parentage === parent) {
-          this._parentage = null;
-        } else if (Array.isArray(_parentage)) {
-          arrRemove(_parentage, parent);
-        }
-      };
-      Subscription2.prototype.remove = function(teardown) {
-        var _finalizers = this._finalizers;
-        _finalizers && arrRemove(_finalizers, teardown);
-        if (teardown instanceof Subscription2) {
-          teardown._removeParent(this);
-        }
-      };
-      Subscription2.EMPTY = function() {
-        var empty = new Subscription2();
-        empty.closed = true;
-        return empty;
-      }();
-      return Subscription2;
-    }();
-    EMPTY_SUBSCRIPTION = Subscription.EMPTY;
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/config.js
-var config;
-var init_config = __esm({
-  "node_modules/rxjs/dist/esm5/internal/config.js"() {
-    config = {
-      onUnhandledError: null,
-      onStoppedNotification: null,
-      Promise: void 0,
-      useDeprecatedSynchronousErrorHandling: false,
-      useDeprecatedNextContext: false
-    };
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/scheduler/timeoutProvider.js
-var timeoutProvider;
-var init_timeoutProvider = __esm({
-  "node_modules/rxjs/dist/esm5/internal/scheduler/timeoutProvider.js"() {
-    init_tslib_es6();
-    timeoutProvider = {
-      setTimeout: function(handler, timeout) {
-        var args = [];
-        for (var _i = 2; _i < arguments.length; _i++) {
-          args[_i - 2] = arguments[_i];
-        }
-        var delegate = timeoutProvider.delegate;
-        if (delegate === null || delegate === void 0 ? void 0 : delegate.setTimeout) {
-          return delegate.setTimeout.apply(delegate, __spreadArray([handler, timeout], __read(args)));
-        }
-        return setTimeout.apply(void 0, __spreadArray([handler, timeout], __read(args)));
-      },
-      clearTimeout: function(handle) {
-        var delegate = timeoutProvider.delegate;
-        return ((delegate === null || delegate === void 0 ? void 0 : delegate.clearTimeout) || clearTimeout)(handle);
-      },
-      delegate: void 0
-    };
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/reportUnhandledError.js
-function reportUnhandledError(err) {
-  timeoutProvider.setTimeout(function() {
-    var onUnhandledError = config.onUnhandledError;
-    if (onUnhandledError) {
-      onUnhandledError(err);
-    } else {
-      throw err;
-    }
-  });
-}
-var init_reportUnhandledError = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/reportUnhandledError.js"() {
-    init_config();
-    init_timeoutProvider();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/noop.js
-function noop() {
-}
-var init_noop = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/noop.js"() {
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/NotificationFactories.js
-function errorNotification(error) {
-  return createNotification("E", void 0, error);
-}
-function nextNotification(value) {
-  return createNotification("N", value, void 0);
-}
-function createNotification(kind, value, error) {
-  return {
-    kind,
-    value,
-    error
-  };
-}
-var COMPLETE_NOTIFICATION;
-var init_NotificationFactories = __esm({
-  "node_modules/rxjs/dist/esm5/internal/NotificationFactories.js"() {
-    COMPLETE_NOTIFICATION = function() {
-      return createNotification("C", void 0, void 0);
-    }();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/errorContext.js
-function errorContext(cb) {
-  if (config.useDeprecatedSynchronousErrorHandling) {
-    var isRoot = !context;
-    if (isRoot) {
-      context = { errorThrown: false, error: null };
-    }
-    cb();
-    if (isRoot) {
-      var _a = context, errorThrown = _a.errorThrown, error = _a.error;
-      context = null;
-      if (errorThrown) {
-        throw error;
-      }
-    }
-  } else {
-    cb();
-  }
-}
-function captureError(err) {
-  if (config.useDeprecatedSynchronousErrorHandling && context) {
-    context.errorThrown = true;
-    context.error = err;
-  }
-}
-var context;
-var init_errorContext = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/errorContext.js"() {
-    init_config();
-    context = null;
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/Subscriber.js
-function bind(fn, thisArg) {
-  return _bind.call(fn, thisArg);
-}
-function handleUnhandledError(error) {
-  if (config.useDeprecatedSynchronousErrorHandling) {
-    captureError(error);
-  } else {
-    reportUnhandledError(error);
-  }
-}
-function defaultErrorHandler(err) {
-  throw err;
-}
-function handleStoppedNotification(notification, subscriber) {
-  var onStoppedNotification = config.onStoppedNotification;
-  onStoppedNotification && timeoutProvider.setTimeout(function() {
-    return onStoppedNotification(notification, subscriber);
-  });
-}
-var Subscriber, _bind, ConsumerObserver, SafeSubscriber, EMPTY_OBSERVER;
-var init_Subscriber = __esm({
-  "node_modules/rxjs/dist/esm5/internal/Subscriber.js"() {
-    init_tslib_es6();
-    init_isFunction();
-    init_Subscription();
-    init_config();
-    init_reportUnhandledError();
-    init_noop();
-    init_NotificationFactories();
-    init_timeoutProvider();
-    init_errorContext();
-    Subscriber = function(_super) {
-      __extends(Subscriber2, _super);
-      function Subscriber2(destination) {
-        var _this = _super.call(this) || this;
-        _this.isStopped = false;
-        if (destination) {
-          _this.destination = destination;
-          if (isSubscription(destination)) {
-            destination.add(_this);
-          }
-        } else {
-          _this.destination = EMPTY_OBSERVER;
-        }
-        return _this;
-      }
-      Subscriber2.create = function(next, error, complete) {
-        return new SafeSubscriber(next, error, complete);
-      };
-      Subscriber2.prototype.next = function(value) {
-        if (this.isStopped) {
-          handleStoppedNotification(nextNotification(value), this);
-        } else {
-          this._next(value);
-        }
-      };
-      Subscriber2.prototype.error = function(err) {
-        if (this.isStopped) {
-          handleStoppedNotification(errorNotification(err), this);
-        } else {
-          this.isStopped = true;
-          this._error(err);
-        }
-      };
-      Subscriber2.prototype.complete = function() {
-        if (this.isStopped) {
-          handleStoppedNotification(COMPLETE_NOTIFICATION, this);
-        } else {
-          this.isStopped = true;
-          this._complete();
-        }
-      };
-      Subscriber2.prototype.unsubscribe = function() {
-        if (!this.closed) {
-          this.isStopped = true;
-          _super.prototype.unsubscribe.call(this);
-          this.destination = null;
-        }
-      };
-      Subscriber2.prototype._next = function(value) {
-        this.destination.next(value);
-      };
-      Subscriber2.prototype._error = function(err) {
-        try {
-          this.destination.error(err);
-        } finally {
-          this.unsubscribe();
-        }
-      };
-      Subscriber2.prototype._complete = function() {
-        try {
-          this.destination.complete();
-        } finally {
-          this.unsubscribe();
-        }
-      };
-      return Subscriber2;
-    }(Subscription);
-    _bind = Function.prototype.bind;
-    ConsumerObserver = function() {
-      function ConsumerObserver2(partialObserver) {
-        this.partialObserver = partialObserver;
-      }
-      ConsumerObserver2.prototype.next = function(value) {
-        var partialObserver = this.partialObserver;
-        if (partialObserver.next) {
-          try {
-            partialObserver.next(value);
-          } catch (error) {
-            handleUnhandledError(error);
-          }
-        }
-      };
-      ConsumerObserver2.prototype.error = function(err) {
-        var partialObserver = this.partialObserver;
-        if (partialObserver.error) {
-          try {
-            partialObserver.error(err);
-          } catch (error) {
-            handleUnhandledError(error);
-          }
-        } else {
-          handleUnhandledError(err);
-        }
-      };
-      ConsumerObserver2.prototype.complete = function() {
-        var partialObserver = this.partialObserver;
-        if (partialObserver.complete) {
-          try {
-            partialObserver.complete();
-          } catch (error) {
-            handleUnhandledError(error);
-          }
-        }
-      };
-      return ConsumerObserver2;
-    }();
-    SafeSubscriber = function(_super) {
-      __extends(SafeSubscriber2, _super);
-      function SafeSubscriber2(observerOrNext, error, complete) {
-        var _this = _super.call(this) || this;
-        var partialObserver;
-        if (isFunction(observerOrNext) || !observerOrNext) {
-          partialObserver = {
-            next: observerOrNext !== null && observerOrNext !== void 0 ? observerOrNext : void 0,
-            error: error !== null && error !== void 0 ? error : void 0,
-            complete: complete !== null && complete !== void 0 ? complete : void 0
-          };
-        } else {
-          var context_1;
-          if (_this && config.useDeprecatedNextContext) {
-            context_1 = Object.create(observerOrNext);
-            context_1.unsubscribe = function() {
-              return _this.unsubscribe();
-            };
-            partialObserver = {
-              next: observerOrNext.next && bind(observerOrNext.next, context_1),
-              error: observerOrNext.error && bind(observerOrNext.error, context_1),
-              complete: observerOrNext.complete && bind(observerOrNext.complete, context_1)
-            };
-          } else {
-            partialObserver = observerOrNext;
-          }
-        }
-        _this.destination = new ConsumerObserver(partialObserver);
-        return _this;
-      }
-      return SafeSubscriber2;
-    }(Subscriber);
-    EMPTY_OBSERVER = {
-      closed: true,
-      next: noop,
-      error: defaultErrorHandler,
-      complete: noop
-    };
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/symbol/observable.js
-var observable2;
-var init_observable = __esm({
-  "node_modules/rxjs/dist/esm5/internal/symbol/observable.js"() {
-    observable2 = function() {
-      return typeof Symbol === "function" && Symbol.observable || "@@observable";
-    }();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/identity.js
-function identity(x2) {
-  return x2;
-}
-var init_identity = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/identity.js"() {
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/pipe.js
-function pipe() {
-  var fns = [];
-  for (var _i = 0; _i < arguments.length; _i++) {
-    fns[_i] = arguments[_i];
-  }
-  return pipeFromArray(fns);
-}
-function pipeFromArray(fns) {
-  if (fns.length === 0) {
-    return identity;
-  }
-  if (fns.length === 1) {
-    return fns[0];
-  }
-  return function piped(input) {
-    return fns.reduce(function(prev, fn) {
-      return fn(prev);
-    }, input);
-  };
-}
-var init_pipe = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/pipe.js"() {
-    init_identity();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/Observable.js
-function getPromiseCtor(promiseCtor) {
-  var _a;
-  return (_a = promiseCtor !== null && promiseCtor !== void 0 ? promiseCtor : config.Promise) !== null && _a !== void 0 ? _a : Promise;
-}
-function isObserver(value) {
-  return value && isFunction(value.next) && isFunction(value.error) && isFunction(value.complete);
-}
-function isSubscriber(value) {
-  return value && value instanceof Subscriber || isObserver(value) && isSubscription(value);
-}
-var Observable;
-var init_Observable = __esm({
-  "node_modules/rxjs/dist/esm5/internal/Observable.js"() {
-    init_Subscriber();
-    init_Subscription();
-    init_observable();
-    init_pipe();
-    init_config();
-    init_isFunction();
-    init_errorContext();
-    Observable = function() {
-      function Observable2(subscribe) {
-        if (subscribe) {
-          this._subscribe = subscribe;
-        }
-      }
-      Observable2.prototype.lift = function(operator) {
-        var observable3 = new Observable2();
-        observable3.source = this;
-        observable3.operator = operator;
-        return observable3;
-      };
-      Observable2.prototype.subscribe = function(observerOrNext, error, complete) {
-        var _this = this;
-        var subscriber = isSubscriber(observerOrNext) ? observerOrNext : new SafeSubscriber(observerOrNext, error, complete);
-        errorContext(function() {
-          var _a = _this, operator = _a.operator, source = _a.source;
-          subscriber.add(operator ? operator.call(subscriber, source) : source ? _this._subscribe(subscriber) : _this._trySubscribe(subscriber));
-        });
-        return subscriber;
-      };
-      Observable2.prototype._trySubscribe = function(sink) {
-        try {
-          return this._subscribe(sink);
-        } catch (err) {
-          sink.error(err);
-        }
-      };
-      Observable2.prototype.forEach = function(next, promiseCtor) {
-        var _this = this;
-        promiseCtor = getPromiseCtor(promiseCtor);
-        return new promiseCtor(function(resolve, reject) {
-          var subscriber = new SafeSubscriber({
-            next: function(value) {
-              try {
-                next(value);
-              } catch (err) {
-                reject(err);
-                subscriber.unsubscribe();
-              }
-            },
-            error: reject,
-            complete: resolve
-          });
-          _this.subscribe(subscriber);
-        });
-      };
-      Observable2.prototype._subscribe = function(subscriber) {
-        var _a;
-        return (_a = this.source) === null || _a === void 0 ? void 0 : _a.subscribe(subscriber);
-      };
-      Observable2.prototype[observable2] = function() {
-        return this;
-      };
-      Observable2.prototype.pipe = function() {
-        var operations = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-          operations[_i] = arguments[_i];
-        }
-        return pipeFromArray(operations)(this);
-      };
-      Observable2.prototype.toPromise = function(promiseCtor) {
-        var _this = this;
-        promiseCtor = getPromiseCtor(promiseCtor);
-        return new promiseCtor(function(resolve, reject) {
-          var value;
-          _this.subscribe(function(x2) {
-            return value = x2;
-          }, function(err) {
-            return reject(err);
-          }, function() {
-            return resolve(value);
-          });
-        });
-      };
-      Observable2.create = function(subscribe) {
-        return new Observable2(subscribe);
-      };
-      return Observable2;
-    }();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/lift.js
-function hasLift(source) {
-  return isFunction(source === null || source === void 0 ? void 0 : source.lift);
-}
-function operate(init) {
-  return function(source) {
-    if (hasLift(source)) {
-      return source.lift(function(liftedSource) {
-        try {
-          return init(liftedSource, this);
-        } catch (err) {
-          this.error(err);
-        }
-      });
-    }
-    throw new TypeError("Unable to lift unknown Observable type");
-  };
-}
-var init_lift = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/lift.js"() {
-    init_isFunction();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/operators/OperatorSubscriber.js
-function createOperatorSubscriber(destination, onNext, onComplete, onError, onFinalize) {
-  return new OperatorSubscriber(destination, onNext, onComplete, onError, onFinalize);
-}
-var OperatorSubscriber;
-var init_OperatorSubscriber = __esm({
-  "node_modules/rxjs/dist/esm5/internal/operators/OperatorSubscriber.js"() {
-    init_tslib_es6();
-    init_Subscriber();
-    OperatorSubscriber = function(_super) {
-      __extends(OperatorSubscriber2, _super);
-      function OperatorSubscriber2(destination, onNext, onComplete, onError, onFinalize, shouldUnsubscribe) {
-        var _this = _super.call(this, destination) || this;
-        _this.onFinalize = onFinalize;
-        _this.shouldUnsubscribe = shouldUnsubscribe;
-        _this._next = onNext ? function(value) {
-          try {
-            onNext(value);
-          } catch (err) {
-            destination.error(err);
-          }
-        } : _super.prototype._next;
-        _this._error = onError ? function(err) {
-          try {
-            onError(err);
-          } catch (err2) {
-            destination.error(err2);
-          } finally {
-            this.unsubscribe();
-          }
-        } : _super.prototype._error;
-        _this._complete = onComplete ? function() {
-          try {
-            onComplete();
-          } catch (err) {
-            destination.error(err);
-          } finally {
-            this.unsubscribe();
-          }
-        } : _super.prototype._complete;
-        return _this;
-      }
-      OperatorSubscriber2.prototype.unsubscribe = function() {
-        var _a;
-        if (!this.shouldUnsubscribe || this.shouldUnsubscribe()) {
-          var closed_1 = this.closed;
-          _super.prototype.unsubscribe.call(this);
-          !closed_1 && ((_a = this.onFinalize) === null || _a === void 0 ? void 0 : _a.call(this));
-        }
-      };
-      return OperatorSubscriber2;
-    }(Subscriber);
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/args.js
-function last(arr) {
-  return arr[arr.length - 1];
-}
-function popResultSelector(args) {
-  return isFunction(last(args)) ? args.pop() : void 0;
-}
-var init_args = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/args.js"() {
-    init_isFunction();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/isArrayLike.js
-var isArrayLike;
-var init_isArrayLike = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/isArrayLike.js"() {
-    isArrayLike = function(x2) {
-      return x2 && typeof x2.length === "number" && typeof x2 !== "function";
-    };
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/isPromise.js
-function isPromise(value) {
-  return isFunction(value === null || value === void 0 ? void 0 : value.then);
-}
-var init_isPromise = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/isPromise.js"() {
-    init_isFunction();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/isInteropObservable.js
-function isInteropObservable(input) {
-  return isFunction(input[observable2]);
-}
-var init_isInteropObservable = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/isInteropObservable.js"() {
-    init_observable();
-    init_isFunction();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/isAsyncIterable.js
-function isAsyncIterable(obj) {
-  return Symbol.asyncIterator && isFunction(obj === null || obj === void 0 ? void 0 : obj[Symbol.asyncIterator]);
-}
-var init_isAsyncIterable = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/isAsyncIterable.js"() {
-    init_isFunction();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/throwUnobservableError.js
-function createInvalidObservableTypeError(input) {
-  return new TypeError("You provided " + (input !== null && typeof input === "object" ? "an invalid object" : "'" + input + "'") + " where a stream was expected. You can provide an Observable, Promise, ReadableStream, Array, AsyncIterable, or Iterable.");
-}
-var init_throwUnobservableError = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/throwUnobservableError.js"() {
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/symbol/iterator.js
-function getSymbolIterator() {
-  if (typeof Symbol !== "function" || !Symbol.iterator) {
-    return "@@iterator";
-  }
-  return Symbol.iterator;
-}
-var iterator;
-var init_iterator = __esm({
-  "node_modules/rxjs/dist/esm5/internal/symbol/iterator.js"() {
-    iterator = getSymbolIterator();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/isIterable.js
-function isIterable(input) {
-  return isFunction(input === null || input === void 0 ? void 0 : input[iterator]);
-}
-var init_isIterable = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/isIterable.js"() {
-    init_iterator();
-    init_isFunction();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/isReadableStreamLike.js
-function readableStreamLikeToAsyncGenerator(readableStream) {
-  return __asyncGenerator(this, arguments, function readableStreamLikeToAsyncGenerator_1() {
-    var reader, _a, value, done;
-    return __generator(this, function(_b) {
-      switch (_b.label) {
-        case 0:
-          reader = readableStream.getReader();
-          _b.label = 1;
-        case 1:
-          _b.trys.push([1, , 9, 10]);
-          _b.label = 2;
-        case 2:
-          if (false)
-            return [3, 8];
-          return [4, __await(reader.read())];
-        case 3:
-          _a = _b.sent(), value = _a.value, done = _a.done;
-          if (!done)
-            return [3, 5];
-          return [4, __await(void 0)];
-        case 4:
-          return [2, _b.sent()];
-        case 5:
-          return [4, __await(value)];
-        case 6:
-          return [4, _b.sent()];
-        case 7:
-          _b.sent();
-          return [3, 2];
-        case 8:
-          return [3, 10];
-        case 9:
-          reader.releaseLock();
-          return [7];
-        case 10:
-          return [2];
-      }
-    });
-  });
-}
-function isReadableStreamLike(obj) {
-  return isFunction(obj === null || obj === void 0 ? void 0 : obj.getReader);
-}
-var init_isReadableStreamLike = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/isReadableStreamLike.js"() {
-    init_tslib_es6();
-    init_isFunction();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/observable/innerFrom.js
-function innerFrom(input) {
-  if (input instanceof Observable) {
-    return input;
-  }
-  if (input != null) {
-    if (isInteropObservable(input)) {
-      return fromInteropObservable(input);
-    }
-    if (isArrayLike(input)) {
-      return fromArrayLike(input);
-    }
-    if (isPromise(input)) {
-      return fromPromise(input);
-    }
-    if (isAsyncIterable(input)) {
-      return fromAsyncIterable(input);
-    }
-    if (isIterable(input)) {
-      return fromIterable(input);
-    }
-    if (isReadableStreamLike(input)) {
-      return fromReadableStreamLike(input);
-    }
-  }
-  throw createInvalidObservableTypeError(input);
-}
-function fromInteropObservable(obj) {
-  return new Observable(function(subscriber) {
-    var obs = obj[observable2]();
-    if (isFunction(obs.subscribe)) {
-      return obs.subscribe(subscriber);
-    }
-    throw new TypeError("Provided object does not correctly implement Symbol.observable");
-  });
-}
-function fromArrayLike(array) {
-  return new Observable(function(subscriber) {
-    for (var i = 0; i < array.length && !subscriber.closed; i++) {
-      subscriber.next(array[i]);
-    }
-    subscriber.complete();
-  });
-}
-function fromPromise(promise2) {
-  return new Observable(function(subscriber) {
-    promise2.then(function(value) {
-      if (!subscriber.closed) {
-        subscriber.next(value);
-        subscriber.complete();
-      }
-    }, function(err) {
-      return subscriber.error(err);
-    }).then(null, reportUnhandledError);
-  });
-}
-function fromIterable(iterable) {
-  return new Observable(function(subscriber) {
-    var e_1, _a;
-    try {
-      for (var iterable_1 = __values(iterable), iterable_1_1 = iterable_1.next(); !iterable_1_1.done; iterable_1_1 = iterable_1.next()) {
-        var value = iterable_1_1.value;
-        subscriber.next(value);
-        if (subscriber.closed) {
-          return;
-        }
-      }
-    } catch (e_1_1) {
-      e_1 = { error: e_1_1 };
-    } finally {
-      try {
-        if (iterable_1_1 && !iterable_1_1.done && (_a = iterable_1.return))
-          _a.call(iterable_1);
-      } finally {
-        if (e_1)
-          throw e_1.error;
-      }
-    }
-    subscriber.complete();
-  });
-}
-function fromAsyncIterable(asyncIterable) {
-  return new Observable(function(subscriber) {
-    process2(asyncIterable, subscriber).catch(function(err) {
-      return subscriber.error(err);
-    });
-  });
-}
-function fromReadableStreamLike(readableStream) {
-  return fromAsyncIterable(readableStreamLikeToAsyncGenerator(readableStream));
-}
-function process2(asyncIterable, subscriber) {
-  var asyncIterable_1, asyncIterable_1_1;
-  var e_2, _a;
-  return __awaiter(this, void 0, void 0, function() {
-    var value, e_2_1;
-    return __generator(this, function(_b) {
-      switch (_b.label) {
-        case 0:
-          _b.trys.push([0, 5, 6, 11]);
-          asyncIterable_1 = __asyncValues(asyncIterable);
-          _b.label = 1;
-        case 1:
-          return [4, asyncIterable_1.next()];
-        case 2:
-          if (!(asyncIterable_1_1 = _b.sent(), !asyncIterable_1_1.done))
-            return [3, 4];
-          value = asyncIterable_1_1.value;
-          subscriber.next(value);
-          if (subscriber.closed) {
-            return [2];
-          }
-          _b.label = 3;
-        case 3:
-          return [3, 1];
-        case 4:
-          return [3, 11];
-        case 5:
-          e_2_1 = _b.sent();
-          e_2 = { error: e_2_1 };
-          return [3, 11];
-        case 6:
-          _b.trys.push([6, , 9, 10]);
-          if (!(asyncIterable_1_1 && !asyncIterable_1_1.done && (_a = asyncIterable_1.return)))
-            return [3, 8];
-          return [4, _a.call(asyncIterable_1)];
-        case 7:
-          _b.sent();
-          _b.label = 8;
-        case 8:
-          return [3, 10];
-        case 9:
-          if (e_2)
-            throw e_2.error;
-          return [7];
-        case 10:
-          return [7];
-        case 11:
-          subscriber.complete();
-          return [2];
-      }
-    });
-  });
-}
-var init_innerFrom = __esm({
-  "node_modules/rxjs/dist/esm5/internal/observable/innerFrom.js"() {
-    init_tslib_es6();
-    init_isArrayLike();
-    init_isPromise();
-    init_Observable();
-    init_isInteropObservable();
-    init_isAsyncIterable();
-    init_throwUnobservableError();
-    init_isIterable();
-    init_isReadableStreamLike();
-    init_isFunction();
-    init_reportUnhandledError();
-    init_observable();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/executeSchedule.js
-function executeSchedule(parentSubscription, scheduler, work, delay, repeat) {
-  if (delay === void 0) {
-    delay = 0;
-  }
-  if (repeat === void 0) {
-    repeat = false;
-  }
-  var scheduleSubscription = scheduler.schedule(function() {
-    work();
-    if (repeat) {
-      parentSubscription.add(this.schedule(null, delay));
-    } else {
-      this.unsubscribe();
-    }
-  }, delay);
-  parentSubscription.add(scheduleSubscription);
-  if (!repeat) {
-    return scheduleSubscription;
-  }
-}
-var init_executeSchedule = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/executeSchedule.js"() {
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/operators/observeOn.js
-function observeOn(scheduler, delay) {
-  if (delay === void 0) {
-    delay = 0;
-  }
-  return operate(function(source, subscriber) {
-    source.subscribe(createOperatorSubscriber(subscriber, function(value) {
-      return executeSchedule(subscriber, scheduler, function() {
-        return subscriber.next(value);
-      }, delay);
-    }, function() {
-      return executeSchedule(subscriber, scheduler, function() {
-        return subscriber.complete();
-      }, delay);
-    }, function(err) {
-      return executeSchedule(subscriber, scheduler, function() {
-        return subscriber.error(err);
-      }, delay);
-    }));
-  });
-}
-var init_observeOn = __esm({
-  "node_modules/rxjs/dist/esm5/internal/operators/observeOn.js"() {
-    init_executeSchedule();
-    init_lift();
-    init_OperatorSubscriber();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/operators/subscribeOn.js
-function subscribeOn(scheduler, delay) {
-  if (delay === void 0) {
-    delay = 0;
-  }
-  return operate(function(source, subscriber) {
-    subscriber.add(scheduler.schedule(function() {
-      return source.subscribe(subscriber);
-    }, delay));
-  });
-}
-var init_subscribeOn = __esm({
-  "node_modules/rxjs/dist/esm5/internal/operators/subscribeOn.js"() {
-    init_lift();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/scheduled/scheduleObservable.js
-function scheduleObservable(input, scheduler) {
-  return innerFrom(input).pipe(subscribeOn(scheduler), observeOn(scheduler));
-}
-var init_scheduleObservable = __esm({
-  "node_modules/rxjs/dist/esm5/internal/scheduled/scheduleObservable.js"() {
-    init_innerFrom();
-    init_observeOn();
-    init_subscribeOn();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/scheduled/schedulePromise.js
-function schedulePromise(input, scheduler) {
-  return innerFrom(input).pipe(subscribeOn(scheduler), observeOn(scheduler));
-}
-var init_schedulePromise = __esm({
-  "node_modules/rxjs/dist/esm5/internal/scheduled/schedulePromise.js"() {
-    init_innerFrom();
-    init_observeOn();
-    init_subscribeOn();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/scheduled/scheduleArray.js
-function scheduleArray(input, scheduler) {
-  return new Observable(function(subscriber) {
-    var i = 0;
-    return scheduler.schedule(function() {
-      if (i === input.length) {
-        subscriber.complete();
-      } else {
-        subscriber.next(input[i++]);
-        if (!subscriber.closed) {
-          this.schedule();
-        }
-      }
-    });
-  });
-}
-var init_scheduleArray = __esm({
-  "node_modules/rxjs/dist/esm5/internal/scheduled/scheduleArray.js"() {
-    init_Observable();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/scheduled/scheduleIterable.js
-function scheduleIterable(input, scheduler) {
-  return new Observable(function(subscriber) {
-    var iterator2;
-    executeSchedule(subscriber, scheduler, function() {
-      iterator2 = input[iterator]();
-      executeSchedule(subscriber, scheduler, function() {
-        var _a;
-        var value;
-        var done;
-        try {
-          _a = iterator2.next(), value = _a.value, done = _a.done;
-        } catch (err) {
-          subscriber.error(err);
-          return;
-        }
-        if (done) {
-          subscriber.complete();
-        } else {
-          subscriber.next(value);
-        }
-      }, 0, true);
-    });
-    return function() {
-      return isFunction(iterator2 === null || iterator2 === void 0 ? void 0 : iterator2.return) && iterator2.return();
-    };
-  });
-}
-var init_scheduleIterable = __esm({
-  "node_modules/rxjs/dist/esm5/internal/scheduled/scheduleIterable.js"() {
-    init_Observable();
-    init_iterator();
-    init_isFunction();
-    init_executeSchedule();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/scheduled/scheduleAsyncIterable.js
-function scheduleAsyncIterable(input, scheduler) {
-  if (!input) {
-    throw new Error("Iterable cannot be null");
-  }
-  return new Observable(function(subscriber) {
-    executeSchedule(subscriber, scheduler, function() {
-      var iterator2 = input[Symbol.asyncIterator]();
-      executeSchedule(subscriber, scheduler, function() {
-        iterator2.next().then(function(result) {
-          if (result.done) {
-            subscriber.complete();
-          } else {
-            subscriber.next(result.value);
-          }
-        });
-      }, 0, true);
-    });
-  });
-}
-var init_scheduleAsyncIterable = __esm({
-  "node_modules/rxjs/dist/esm5/internal/scheduled/scheduleAsyncIterable.js"() {
-    init_Observable();
-    init_executeSchedule();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/scheduled/scheduleReadableStreamLike.js
-function scheduleReadableStreamLike(input, scheduler) {
-  return scheduleAsyncIterable(readableStreamLikeToAsyncGenerator(input), scheduler);
-}
-var init_scheduleReadableStreamLike = __esm({
-  "node_modules/rxjs/dist/esm5/internal/scheduled/scheduleReadableStreamLike.js"() {
-    init_scheduleAsyncIterable();
-    init_isReadableStreamLike();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/scheduled/scheduled.js
-function scheduled(input, scheduler) {
-  if (input != null) {
-    if (isInteropObservable(input)) {
-      return scheduleObservable(input, scheduler);
-    }
-    if (isArrayLike(input)) {
-      return scheduleArray(input, scheduler);
-    }
-    if (isPromise(input)) {
-      return schedulePromise(input, scheduler);
-    }
-    if (isAsyncIterable(input)) {
-      return scheduleAsyncIterable(input, scheduler);
-    }
-    if (isIterable(input)) {
-      return scheduleIterable(input, scheduler);
-    }
-    if (isReadableStreamLike(input)) {
-      return scheduleReadableStreamLike(input, scheduler);
-    }
-  }
-  throw createInvalidObservableTypeError(input);
-}
-var init_scheduled = __esm({
-  "node_modules/rxjs/dist/esm5/internal/scheduled/scheduled.js"() {
-    init_scheduleObservable();
-    init_schedulePromise();
-    init_scheduleArray();
-    init_scheduleIterable();
-    init_scheduleAsyncIterable();
-    init_isInteropObservable();
-    init_isPromise();
-    init_isArrayLike();
-    init_isIterable();
-    init_isAsyncIterable();
-    init_throwUnobservableError();
-    init_isReadableStreamLike();
-    init_scheduleReadableStreamLike();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/observable/from.js
-function from(input, scheduler) {
-  return scheduler ? scheduled(input, scheduler) : innerFrom(input);
-}
-var init_from = __esm({
-  "node_modules/rxjs/dist/esm5/internal/observable/from.js"() {
-    init_scheduled();
-    init_innerFrom();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/EmptyError.js
-var EmptyError;
-var init_EmptyError = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/EmptyError.js"() {
-    init_createErrorClass();
-    EmptyError = createErrorClass(function(_super) {
-      return function EmptyErrorImpl() {
-        _super(this);
-        this.name = "EmptyError";
-        this.message = "no elements in sequence";
-      };
-    });
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/lastValueFrom.js
-function lastValueFrom(source, config2) {
-  var hasConfig = typeof config2 === "object";
-  return new Promise(function(resolve, reject) {
-    var _hasValue = false;
-    var _value;
-    source.subscribe({
-      next: function(value) {
-        _value = value;
-        _hasValue = true;
-      },
-      error: reject,
-      complete: function() {
-        if (_hasValue) {
-          resolve(_value);
-        } else if (hasConfig) {
-          resolve(config2.defaultValue);
-        } else {
-          reject(new EmptyError());
-        }
-      }
-    });
-  });
-}
-var init_lastValueFrom = __esm({
-  "node_modules/rxjs/dist/esm5/internal/lastValueFrom.js"() {
-    init_EmptyError();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/operators/map.js
-function map(project, thisArg) {
-  return operate(function(source, subscriber) {
-    var index = 0;
-    source.subscribe(createOperatorSubscriber(subscriber, function(value) {
-      subscriber.next(project.call(thisArg, value, index++));
-    }));
-  });
-}
-var init_map = __esm({
-  "node_modules/rxjs/dist/esm5/internal/operators/map.js"() {
-    init_lift();
-    init_OperatorSubscriber();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/mapOneOrManyArgs.js
-function callOrApply(fn, args) {
-  return isArray(args) ? fn.apply(void 0, __spreadArray([], __read(args))) : fn(args);
-}
-function mapOneOrManyArgs(fn) {
-  return map(function(args) {
-    return callOrApply(fn, args);
-  });
-}
-var isArray;
-var init_mapOneOrManyArgs = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/mapOneOrManyArgs.js"() {
-    init_tslib_es6();
-    init_map();
-    isArray = Array.isArray;
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/observable/combineLatest.js
-function combineLatestInit(observables, scheduler, valueTransform) {
-  if (valueTransform === void 0) {
-    valueTransform = identity;
-  }
-  return function(subscriber) {
-    maybeSchedule(scheduler, function() {
-      var length = observables.length;
-      var values = new Array(length);
-      var active = length;
-      var remainingFirstValues = length;
-      var _loop_1 = function(i2) {
-        maybeSchedule(scheduler, function() {
-          var source = from(observables[i2], scheduler);
-          var hasFirstValue = false;
-          source.subscribe(createOperatorSubscriber(subscriber, function(value) {
-            values[i2] = value;
-            if (!hasFirstValue) {
-              hasFirstValue = true;
-              remainingFirstValues--;
-            }
-            if (!remainingFirstValues) {
-              subscriber.next(valueTransform(values.slice()));
-            }
-          }, function() {
-            if (!--active) {
-              subscriber.complete();
-            }
-          }));
-        }, subscriber);
-      };
-      for (var i = 0; i < length; i++) {
-        _loop_1(i);
-      }
-    }, subscriber);
-  };
-}
-function maybeSchedule(scheduler, execute, subscription) {
-  if (scheduler) {
-    executeSchedule(subscription, scheduler, execute);
-  } else {
-    execute();
-  }
-}
-var init_combineLatest = __esm({
-  "node_modules/rxjs/dist/esm5/internal/observable/combineLatest.js"() {
-    init_from();
-    init_identity();
-    init_OperatorSubscriber();
-    init_executeSchedule();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/util/argsOrArgArray.js
-function argsOrArgArray(args) {
-  return args.length === 1 && isArray2(args[0]) ? args[0] : args;
-}
-var isArray2;
-var init_argsOrArgArray = __esm({
-  "node_modules/rxjs/dist/esm5/internal/util/argsOrArgArray.js"() {
-    isArray2 = Array.isArray;
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/operators/filter.js
-function filter(predicate, thisArg) {
-  return operate(function(source, subscriber) {
-    var index = 0;
-    source.subscribe(createOperatorSubscriber(subscriber, function(value) {
-      return predicate.call(thisArg, value, index++) && subscriber.next(value);
-    }));
-  });
-}
-var init_filter = __esm({
-  "node_modules/rxjs/dist/esm5/internal/operators/filter.js"() {
-    init_lift();
-    init_OperatorSubscriber();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/types.js
-var init_types = __esm({
-  "node_modules/rxjs/dist/esm5/internal/types.js"() {
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/operators/combineLatest.js
-function combineLatest() {
-  var args = [];
-  for (var _i = 0; _i < arguments.length; _i++) {
-    args[_i] = arguments[_i];
-  }
-  var resultSelector = popResultSelector(args);
-  return resultSelector ? pipe(combineLatest.apply(void 0, __spreadArray([], __read(args))), mapOneOrManyArgs(resultSelector)) : operate(function(source, subscriber) {
-    combineLatestInit(__spreadArray([source], __read(argsOrArgArray(args))))(subscriber);
-  });
-}
-var init_combineLatest2 = __esm({
-  "node_modules/rxjs/dist/esm5/internal/operators/combineLatest.js"() {
-    init_tslib_es6();
-    init_combineLatest();
-    init_lift();
-    init_argsOrArgArray();
-    init_mapOneOrManyArgs();
-    init_pipe();
-    init_args();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/internal/operators/combineLatestWith.js
-function combineLatestWith() {
-  var otherSources = [];
-  for (var _i = 0; _i < arguments.length; _i++) {
-    otherSources[_i] = arguments[_i];
-  }
-  return combineLatest.apply(void 0, __spreadArray([], __read(otherSources)));
-}
-var init_combineLatestWith = __esm({
-  "node_modules/rxjs/dist/esm5/internal/operators/combineLatestWith.js"() {
-    init_tslib_es6();
-    init_combineLatest2();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/index.js
-var init_esm5 = __esm({
-  "node_modules/rxjs/dist/esm5/index.js"() {
-    init_Observable();
-    init_lastValueFrom();
-    init_from();
-    init_types();
-  }
-});
-
-// node_modules/rxjs/dist/esm5/operators/index.js
-var init_operators = __esm({
-  "node_modules/rxjs/dist/esm5/operators/index.js"() {
-    init_combineLatestWith();
-    init_filter();
-    init_map();
-  }
-});
-
-// node_modules/@sanity/client/dist/_chunks/stegaEncodeSourceMap-gZIRaYar.js
-var stegaEncodeSourceMap_gZIRaYar_exports = {};
-__export(stegaEncodeSourceMap_gZIRaYar_exports, {
+// node_modules/@sanity/client/dist/_chunks-es/stegaEncodeSourceMap.js
+var stegaEncodeSourceMap_exports = {};
+__export(stegaEncodeSourceMap_exports, {
   encodeIntoResult: () => encodeIntoResult,
   stegaEncodeSourceMap: () => stegaEncodeSourceMap,
   stegaEncodeSourceMap$1: () => stegaEncodeSourceMap$1
 });
 function isKeySegment(segment) {
-  if (typeof segment === "string") {
-    return reKeySegment.test(segment.trim());
-  }
-  return typeof segment === "object" && "_key" in segment;
+  return typeof segment == "string" ? reKeySegment.test(segment.trim()) : typeof segment == "object" && "_key" in segment;
 }
 function toString(path) {
-  if (!Array.isArray(path)) {
+  if (!Array.isArray(path))
     throw new Error("Path is not an array");
-  }
-  return path.reduce((target, segment, i) => {
+  return path.reduce((target, segment, i2) => {
     const segmentType = typeof segment;
-    if (segmentType === "number") {
-      return "".concat(target, "[").concat(segment, "]");
-    }
-    if (segmentType === "string") {
-      const separator = i === 0 ? "" : ".";
-      return "".concat(target).concat(separator).concat(segment);
-    }
-    if (isKeySegment(segment) && segment._key) {
-      return "".concat(target, '[_key=="').concat(segment._key, '"]');
-    }
+    if (segmentType === "number")
+      return `${target}[${segment}]`;
+    if (segmentType === "string")
+      return `${target}${i2 === 0 ? "" : "."}${segment}`;
+    if (isKeySegment(segment) && segment._key)
+      return `${target}[_key=="${segment._key}"]`;
     if (Array.isArray(segment)) {
       const [from2, to] = segment;
-      return "".concat(target, "[").concat(from2, ":").concat(to, "]");
+      return `${target}[${from2}:${to}]`;
     }
-    throw new Error("Unsupported path segment `".concat(JSON.stringify(segment), "`"));
+    throw new Error(`Unsupported path segment \`${JSON.stringify(segment)}\``);
   }, "");
 }
 function jsonPath(path) {
-  return "$".concat(path.map((segment) => {
-    if (typeof segment === "string") {
-      const escapedKey = segment.replace(/[\f\n\r\t'\\]/g, (match) => {
-        return ESCAPE[match];
-      });
-      return "['".concat(escapedKey, "']");
-    }
-    if (typeof segment === "number") {
-      return "[".concat(segment, "]");
-    }
-    if (segment._key !== "") {
-      const escapedKey = segment._key.replace(/['\\]/g, (match) => {
-        return ESCAPE[match];
-      });
-      return "[?(@._key=='".concat(escapedKey, "')]");
-    }
-    return "[".concat(segment._index, "]");
-  }).join(""));
+  return `$${path.map((segment) => typeof segment == "string" ? `['${segment.replace(/[\f\n\r\t'\\]/g, (match) => ESCAPE[match])}']` : typeof segment == "number" ? `[${segment}]` : segment._key !== "" ? `[?(@._key=='${segment._key.replace(/['\\]/g, (match) => ESCAPE[match])}')]` : `[${segment._index}]`).join("")}`;
 }
 function parseJsonPath(path) {
-  const parsed = [];
-  const parseRe = /\['(.*?)'\]|\[(\d+)\]|\[\?\(@\._key=='(.*?)'\)\]/g;
+  const parsed = [], parseRe = /\['(.*?)'\]|\[(\d+)\]|\[\?\(@\._key=='(.*?)'\)\]/g;
   let match;
-  while ((match = parseRe.exec(path)) !== null) {
+  for (; (match = parseRe.exec(path)) !== null; ) {
     if (match[1] !== void 0) {
-      const key = match[1].replace(/\\(\\|f|n|r|t|')/g, (m) => {
-        return UNESCAPE[m];
-      });
+      const key = match[1].replace(/\\(\\|f|n|r|t|')/g, (m) => UNESCAPE[m]);
       parsed.push(key);
       continue;
     }
@@ -3030,9 +152,7 @@ function parseJsonPath(path) {
       continue;
     }
     if (match[3] !== void 0) {
-      const _key = match[3].replace(/\\(\\')/g, (m) => {
-        return UNESCAPE[m];
-      });
+      const _key = match[3].replace(/\\(\\')/g, (m) => UNESCAPE[m]);
       parsed.push({
         _key,
         _index: -1
@@ -3044,101 +164,78 @@ function parseJsonPath(path) {
 }
 function jsonPathToStudioPath(path) {
   return path.map((segment) => {
-    if (typeof segment === "string") {
+    if (typeof segment == "string" || typeof segment == "number")
       return segment;
-    }
-    if (typeof segment === "number") {
-      return segment;
-    }
-    if (segment._key !== "") {
+    if (segment._key !== "")
       return { _key: segment._key };
-    }
-    if (segment._index !== -1) {
+    if (segment._index !== -1)
       return segment._index;
-    }
-    throw new Error("invalid segment:".concat(JSON.stringify(segment)));
+    throw new Error(`invalid segment:${JSON.stringify(segment)}`);
   });
 }
 function jsonPathToMappingPath(path) {
   return path.map((segment) => {
-    if (typeof segment === "string") {
+    if (typeof segment == "string" || typeof segment == "number")
       return segment;
-    }
-    if (typeof segment === "number") {
-      return segment;
-    }
-    if (segment._index !== -1) {
+    if (segment._index !== -1)
       return segment._index;
-    }
-    throw new Error("invalid segment:".concat(JSON.stringify(segment)));
+    throw new Error(`invalid segment:${JSON.stringify(segment)}`);
   });
 }
 function resolveMapping(resultPath, csm) {
-  if (!(csm == null ? void 0 : csm.mappings)) {
-    return void 0;
-  }
+  if (!(csm == null ? void 0 : csm.mappings))
+    return;
   const resultMappingPath = jsonPath(jsonPathToMappingPath(resultPath));
-  if (csm.mappings[resultMappingPath] !== void 0) {
+  if (csm.mappings[resultMappingPath] !== void 0)
     return {
       mapping: csm.mappings[resultMappingPath],
       matchedPath: resultMappingPath,
       pathSuffix: ""
     };
-  }
   const mappings = Object.entries(csm.mappings).filter(([key]) => resultMappingPath.startsWith(key)).sort(([key1], [key2]) => key2.length - key1.length);
-  if (mappings.length == 0) {
-    return void 0;
-  }
-  const [matchedPath, mapping] = mappings[0];
-  const pathSuffix = resultMappingPath.substring(matchedPath.length);
+  if (mappings.length == 0)
+    return;
+  const [matchedPath, mapping] = mappings[0], pathSuffix = resultMappingPath.substring(matchedPath.length);
   return { mapping, matchedPath, pathSuffix };
 }
 function isArray3(value) {
   return value !== null && Array.isArray(value);
 }
 function isRecord(value) {
-  return typeof value === "object" && value !== null;
+  return typeof value == "object" && value !== null;
 }
 function walkMap(value, mappingFn, path = []) {
-  if (isArray3(value)) {
-    return value.map((v, idx) => {
-      if (isRecord(v)) {
-        const _key = v["_key"];
-        if (typeof _key === "string") {
-          return walkMap(v, mappingFn, path.concat({ _key, _index: idx }));
-        }
+  if (isArray3(value))
+    return value.map((v2, idx) => {
+      if (isRecord(v2)) {
+        const _key = v2._key;
+        if (typeof _key == "string")
+          return walkMap(v2, mappingFn, path.concat({ _key, _index: idx }));
       }
-      return walkMap(v, mappingFn, path.concat(idx));
+      return walkMap(v2, mappingFn, path.concat(idx));
     });
-  }
   if (isRecord(value)) {
+    if (value._type === "block" || value._type === "span") {
+      const result = { ...value };
+      return value._type === "block" ? result.children = walkMap(value.children, mappingFn, path.concat("children")) : value._type === "span" && (result.text = walkMap(value.text, mappingFn, path.concat("text"))), result;
+    }
     return Object.fromEntries(
-      Object.entries(value).map(([k, v]) => [k, walkMap(v, mappingFn, path.concat(k))])
+      Object.entries(value).map(([k, v2]) => [k, walkMap(v2, mappingFn, path.concat(k))])
     );
   }
   return mappingFn(value, path);
 }
 function encodeIntoResult(result, csm, encoder) {
   return walkMap(result, (value, path) => {
-    if (typeof value !== "string") {
+    if (typeof value != "string")
       return value;
-    }
     const resolveMappingResult = resolveMapping(path, csm);
-    if (!resolveMappingResult) {
+    if (!resolveMappingResult)
       return value;
-    }
     const { mapping, matchedPath } = resolveMappingResult;
-    if (mapping.type !== "value") {
+    if (mapping.type !== "value" || mapping.source.type !== "documentValue")
       return value;
-    }
-    if (mapping.source.type !== "documentValue") {
-      return value;
-    }
-    const sourceDocument = csm.documents[mapping.source.document];
-    const sourcePath = csm.paths[mapping.source.path];
-    const matchPathSegments = parseJsonPath(matchedPath);
-    const sourcePathSegments = parseJsonPath(sourcePath);
-    const fullSourceSegments = sourcePathSegments.concat(path.slice(matchPathSegments.length));
+    const sourceDocument = csm.documents[mapping.source.document], sourcePath = csm.paths[mapping.source.path], matchPathSegments = parseJsonPath(matchedPath), fullSourceSegments = parseJsonPath(sourcePath).concat(path.slice(matchPathSegments.length));
     return encoder({
       sourcePath: fullSourceSegments,
       sourceDocument,
@@ -3147,11 +244,23 @@ function encodeIntoResult(result, csm, encoder) {
     });
   });
 }
+function isDraftId(id) {
+  return id.startsWith(DRAFTS_PREFIX);
+}
+function isVersionId(id) {
+  return id.startsWith(VERSION_PREFIX);
+}
+function isPublishedId(id) {
+  return !isDraftId(id) && !isVersionId(id);
+}
+function getVersionFromId(id) {
+  if (!isVersionId(id))
+    return;
+  const [_versionPrefix, versionId, ..._publishedId] = id.split(PATH_SEPARATOR);
+  return versionId;
+}
 function getPublishedId(id) {
-  if (id.startsWith(DRAFTS_PREFIX)) {
-    return id.slice(DRAFTS_PREFIX.length);
-  }
-  return id;
+  return isVersionId(id) ? id.split(PATH_SEPARATOR).slice(2).join(PATH_SEPARATOR) : isDraftId(id) ? id.slice(DRAFTS_PREFIX.length) : id;
 }
 function createEditUrl(options) {
   const {
@@ -3160,126 +269,100 @@ function createEditUrl(options) {
     tool: _tool = "default",
     id: _id,
     type,
-    path
+    path,
+    projectId: projectId2,
+    dataset: dataset2
   } = options;
-  if (!baseUrl) {
+  if (!baseUrl)
     throw new Error("baseUrl is required");
-  }
-  if (!path) {
+  if (!path)
     throw new Error("path is required");
-  }
-  if (!_id) {
+  if (!_id)
     throw new Error("id is required");
-  }
-  if (baseUrl !== "/" && baseUrl.endsWith("/")) {
+  if (baseUrl !== "/" && baseUrl.endsWith("/"))
     throw new Error("baseUrl must not end with a slash");
-  }
-  const workspace = _workspace === "default" ? void 0 : _workspace;
-  const tool = _tool === "default" ? void 0 : _tool;
-  const id = getPublishedId(_id);
-  const stringifiedPath = Array.isArray(path) ? toString(jsonPathToStudioPath(path)) : path;
-  const searchParams = new URLSearchParams({
+  const workspace = _workspace === "default" ? void 0 : _workspace, tool = _tool === "default" ? void 0 : _tool, id = getPublishedId(_id), stringifiedPath = Array.isArray(path) ? toString(jsonPathToStudioPath(path)) : path, searchParams = new URLSearchParams({
     baseUrl,
     id,
     type,
     path: stringifiedPath
   });
-  if (workspace) {
-    searchParams.set("workspace", workspace);
-  }
-  if (tool) {
-    searchParams.set("tool", tool);
+  if (workspace && searchParams.set("workspace", workspace), tool && searchParams.set("tool", tool), projectId2 && searchParams.set("projectId", projectId2), dataset2 && searchParams.set("dataset", dataset2), isPublishedId(_id))
+    searchParams.set("perspective", "published");
+  else if (isVersionId(_id)) {
+    const versionId = getVersionFromId(_id);
+    searchParams.set("perspective", versionId);
   }
   const segments = [baseUrl === "/" ? "" : baseUrl];
-  if (workspace) {
-    segments.push(workspace);
-  }
+  workspace && segments.push(workspace);
   const routerParams = [
     "mode=presentation",
-    "id=".concat(id),
-    "type=".concat(type),
-    "path=".concat(encodeURIComponent(stringifiedPath))
+    `id=${id}`,
+    `type=${type}`,
+    `path=${encodeURIComponent(stringifiedPath)}`
   ];
-  if (tool) {
-    routerParams.push("tool=".concat(tool));
-  }
-  segments.push("intent", "edit", "".concat(routerParams.join(";"), "?").concat(searchParams));
-  return segments.join("/");
+  return tool && routerParams.push(`tool=${tool}`), segments.push("intent", "edit", `${routerParams.join(";")}?${searchParams}`), segments.join("/");
 }
 function resolveStudioBaseRoute(studioUrl) {
-  let baseUrl = typeof studioUrl === "string" ? studioUrl : studioUrl.baseUrl;
-  if (baseUrl !== "/") {
-    baseUrl = baseUrl.replace(/\/$/, "");
-  }
-  if (typeof studioUrl === "string") {
-    return { baseUrl };
-  }
-  return { ...studioUrl, baseUrl };
+  let baseUrl = typeof studioUrl == "string" ? studioUrl : studioUrl.baseUrl;
+  return baseUrl !== "/" && (baseUrl = baseUrl.replace(/\/$/, "")), typeof studioUrl == "string" ? { baseUrl } : { ...studioUrl, baseUrl };
 }
-function isValidDate(dateString) {
-  return /^\d{4}-\d{2}-\d{2}/.test(dateString) ? Boolean(Date.parse(dateString)) : false;
+function isValidDate2(dateString) {
+  return /^\d{4}-\d{2}-\d{2}/.test(dateString) ? !!Date.parse(dateString) : false;
 }
 function isValidURL(url) {
   try {
     new URL(url, url.startsWith("/") ? "https://acme.com" : void 0);
-  } catch (e) {
+  } catch (e2) {
     return false;
   }
   return true;
 }
+function hasTypeLike(path) {
+  return path.some((segment) => typeof segment == "string" && segment.match(/type/i) !== null);
+}
 function stegaEncodeSourceMap(result, resultSourceMap, config2) {
-  var _a, _b, _c, _d, _e, _f, _g, _h, _i;
+  var _a, _b, _c, _d, _e2, _f, _g, _h, _i2;
   const { filter: filter2, logger, enabled } = config2;
   if (!enabled) {
     const msg = "config.enabled must be true, don't call this function otherwise";
-    (_a = logger == null ? void 0 : logger.error) == null ? void 0 : _a.call(logger, "[@sanity/client/stega]: ".concat(msg), { result, resultSourceMap, config: config2 });
-    throw new TypeError(msg);
+    throw (_a = logger == null ? void 0 : logger.error) == null ? void 0 : _a.call(logger, `[@sanity/client]: ${msg}`, { result, resultSourceMap, config: config2 }), new TypeError(msg);
   }
-  if (!resultSourceMap) {
-    (_b = logger == null ? void 0 : logger.error) == null ? void 0 : _b.call(logger, "[@sanity/client/stega]: Missing Content Source Map from response body", {
+  if (!resultSourceMap)
+    return (_b = logger == null ? void 0 : logger.error) == null ? void 0 : _b.call(logger, "[@sanity/client]: Missing Content Source Map from response body", {
       result,
       resultSourceMap,
       config: config2
-    });
-    return result;
-  }
+    }), result;
   if (!config2.studioUrl) {
     const msg = "config.studioUrl must be defined";
-    (_c = logger == null ? void 0 : logger.error) == null ? void 0 : _c.call(logger, "[@sanity/client/stega]: ".concat(msg), { result, resultSourceMap, config: config2 });
-    throw new TypeError(msg);
+    throw (_c = logger == null ? void 0 : logger.error) == null ? void 0 : _c.call(logger, `[@sanity/client]: ${msg}`, { result, resultSourceMap, config: config2 }), new TypeError(msg);
   }
   const report = {
     encoded: [],
     skipped: []
-  };
-  const resultWithStega = encodeIntoResult(
+  }, resultWithStega = encodeIntoResult(
     result,
     resultSourceMap,
     ({ sourcePath, sourceDocument, resultPath, value }) => {
-      if ((typeof filter2 === "function" ? filter2({ sourcePath, resultPath, filterDefault, sourceDocument, value }) : filterDefault({ sourcePath, resultPath, filterDefault, sourceDocument, value })) === false) {
-        if (logger) {
-          report.skipped.push({
-            path: prettyPathForLogging(sourcePath),
-            value: "".concat(value.slice(0, TRUNCATE_LENGTH)).concat(value.length > TRUNCATE_LENGTH ? "..." : ""),
-            length: value.length
-          });
-        }
-        return value;
-      }
-      if (logger) {
-        report.encoded.push({
+      if ((typeof filter2 == "function" ? filter2({ sourcePath, resultPath, filterDefault, sourceDocument, value }) : filterDefault({ sourcePath, resultPath, value })) === false)
+        return logger && report.skipped.push({
           path: prettyPathForLogging(sourcePath),
-          value: "".concat(value.slice(0, TRUNCATE_LENGTH)).concat(value.length > TRUNCATE_LENGTH ? "..." : ""),
+          value: `${value.slice(0, TRUNCATE_LENGTH)}${value.length > TRUNCATE_LENGTH ? "..." : ""}`,
           length: value.length
-        });
-      }
+        }), value;
+      logger && report.encoded.push({
+        path: prettyPathForLogging(sourcePath),
+        value: `${value.slice(0, TRUNCATE_LENGTH)}${value.length > TRUNCATE_LENGTH ? "..." : ""}`,
+        length: value.length
+      });
       const { baseUrl, workspace, tool } = resolveStudioBaseRoute(
-        typeof config2.studioUrl === "function" ? config2.studioUrl(sourceDocument) : config2.studioUrl
+        typeof config2.studioUrl == "function" ? config2.studioUrl(sourceDocument) : config2.studioUrl
       );
       if (!baseUrl)
         return value;
-      const { _id: id, _type: type } = sourceDocument;
-      return b(
+      const { _id: id, _type: type, _projectId: projectId2, _dataset: dataset2 } = sourceDocument;
+      return C(
         value,
         {
           origin: "sanity.io",
@@ -3289,7 +372,8 @@ function stegaEncodeSourceMap(result, resultSourceMap, config2) {
             tool,
             id,
             type,
-            path: sourcePath
+            path: sourcePath,
+            ...!config2.omitCrossDatasetReferenceData && { dataset: dataset2, projectId: projectId2 }
           })
         },
         // We use custom logic to determine if we should skip encoding
@@ -3298,41 +382,27 @@ function stegaEncodeSourceMap(result, resultSourceMap, config2) {
     }
   );
   if (logger) {
-    const isSkipping = report.skipped.length;
-    const isEncoding = report.encoded.length;
-    if (isSkipping || isEncoding) {
-      (_d = (logger == null ? void 0 : logger.groupCollapsed) || logger.log) == null ? void 0 : _d(
-        "[@sanity/client/stega]: Encoding source map into result"
-      );
-      (_e = logger.log) == null ? void 0 : _e.call(
-        logger,
-        "[@sanity/client/stega]: Paths encoded: ".concat(report.encoded.length, ", skipped: ").concat(report.skipped.length)
-      );
-    }
-    if (report.encoded.length > 0) {
-      (_f = logger == null ? void 0 : logger.log) == null ? void 0 : _f.call(logger, "[@sanity/client/stega]: Table of encoded paths");
-      (_g = (logger == null ? void 0 : logger.table) || logger.log) == null ? void 0 : _g(report.encoded);
-    }
-    if (report.skipped.length > 0) {
+    const isSkipping = report.skipped.length, isEncoding = report.encoded.length;
+    if ((isSkipping || isEncoding) && ((_d = (logger == null ? void 0 : logger.groupCollapsed) || logger.log) == null ? void 0 : _d("[@sanity/client]: Encoding source map into result"), (_e2 = logger.log) == null ? void 0 : _e2.call(
+      logger,
+      `[@sanity/client]: Paths encoded: ${report.encoded.length}, skipped: ${report.skipped.length}`
+    )), report.encoded.length > 0 && ((_f = logger == null ? void 0 : logger.log) == null ? void 0 : _f.call(logger, "[@sanity/client]: Table of encoded paths"), (_g = (logger == null ? void 0 : logger.table) || logger.log) == null ? void 0 : _g(report.encoded)), report.skipped.length > 0) {
       const skipped = /* @__PURE__ */ new Set();
-      for (const { path } of report.skipped) {
+      for (const { path } of report.skipped)
         skipped.add(path.replace(reKeySegment, "0").replace(/\[\d+\]/g, "[]"));
-      }
-      (_h = logger == null ? void 0 : logger.log) == null ? void 0 : _h.call(logger, "[@sanity/client/stega]: List of skipped paths", [...skipped.values()]);
+      (_h = logger == null ? void 0 : logger.log) == null ? void 0 : _h.call(logger, "[@sanity/client]: List of skipped paths", [...skipped.values()]);
     }
-    if (isSkipping || isEncoding) {
-      (_i = logger == null ? void 0 : logger.groupEnd) == null ? void 0 : _i.call(logger);
-    }
+    (isSkipping || isEncoding) && ((_i2 = logger == null ? void 0 : logger.groupEnd) == null ? void 0 : _i2.call(logger));
   }
   return resultWithStega;
 }
 function prettyPathForLogging(path) {
   return toString(jsonPathToStudioPath(path));
 }
-var reKeySegment, ESCAPE, UNESCAPE, DRAFTS_PREFIX, filterDefault, denylist, TRUNCATE_LENGTH, stegaEncodeSourceMap$1;
-var init_stegaEncodeSourceMap_gZIRaYar = __esm({
-  "node_modules/@sanity/client/dist/_chunks/stegaEncodeSourceMap-gZIRaYar.js"() {
-    init_browserMiddleware_zDVeirri();
+var reKeySegment, ESCAPE, UNESCAPE, DRAFTS_FOLDER, VERSION_FOLDER, PATH_SEPARATOR, DRAFTS_PREFIX, VERSION_PREFIX, filterDefault, denylist, TRUNCATE_LENGTH, stegaEncodeSourceMap$1;
+var init_stegaEncodeSourceMap = __esm({
+  "node_modules/@sanity/client/dist/_chunks-es/stegaEncodeSourceMap.js"() {
+    init_stegaClean();
     reKeySegment = /_key\s*==\s*['"](.*)['"]/;
     ESCAPE = {
       "\f": "\\f",
@@ -3344,42 +414,25 @@ var init_stegaEncodeSourceMap_gZIRaYar = __esm({
     };
     UNESCAPE = {
       "\\f": "\f",
-      "\\n": "\n",
+      "\\n": `
+`,
       "\\r": "\r",
       "\\t": "	",
       "\\'": "'",
       "\\\\": "\\"
     };
-    DRAFTS_PREFIX = "drafts.";
-    filterDefault = ({ sourcePath, value }) => {
-      if (isValidDate(value) || isValidURL(value)) {
+    DRAFTS_FOLDER = "drafts";
+    VERSION_FOLDER = "versions";
+    PATH_SEPARATOR = ".";
+    DRAFTS_PREFIX = `${DRAFTS_FOLDER}${PATH_SEPARATOR}`;
+    VERSION_PREFIX = `${VERSION_FOLDER}${PATH_SEPARATOR}`;
+    filterDefault = ({ sourcePath, resultPath, value }) => {
+      if (isValidDate2(value) || isValidURL(value))
         return false;
-      }
       const endPath = sourcePath.at(-1);
-      if (sourcePath.at(-2) === "slug" && endPath === "current") {
-        return false;
-      }
-      if (typeof endPath === "string" && endPath.startsWith("_")) {
-        return false;
-      }
-      if (typeof endPath === "number" && sourcePath.at(-2) === "marks") {
-        return false;
-      }
-      if (endPath === "href" && typeof sourcePath.at(-2) === "number" && sourcePath.at(-3) === "markDefs") {
-        return false;
-      }
-      if (endPath === "style" || endPath === "listItem") {
-        return false;
-      }
-      if (sourcePath.some(
+      return !(sourcePath.at(-2) === "slug" && endPath === "current" || typeof endPath == "string" && (endPath.startsWith("_") || endPath.endsWith("Id")) || sourcePath.some(
         (path) => path === "meta" || path === "metadata" || path === "openGraph" || path === "seo"
-      )) {
-        return false;
-      }
-      if (typeof endPath === "string" && denylist.has(endPath)) {
-        return false;
-      }
-      return true;
+      ) || hasTypeLike(sourcePath) || hasTypeLike(resultPath) || typeof endPath == "string" && denylist.has(endPath));
     };
     denylist = /* @__PURE__ */ new Set([
       "color",
@@ -3415,6 +468,7 @@ var init_stegaEncodeSourceMap_gZIRaYar = __esm({
       "template",
       "theme",
       "type",
+      "textTheme",
       "unit",
       "url",
       "username",
@@ -3459,11 +513,11 @@ var require_eventsource = __commonJS({
         };
       }
       if (Object.create == void 0) {
-        Object.create = function(C) {
-          function F() {
+        Object.create = function(C2) {
+          function F2() {
           }
-          F.prototype = C;
-          return new F();
+          F2.prototype = C2;
+          return new F2();
         };
       }
       if (!Date.now) {
@@ -3539,8 +593,8 @@ var require_eventsource = __commonJS({
         var string = "";
         var bitsNeeded = this.bitsNeeded;
         var codePoint = this.codePoint;
-        for (var i = 0; i < octets.length; i += 1) {
-          var octet = octets[i];
+        for (var i2 = 0; i2 < octets.length; i2 += 1) {
+          var octet = octets[i2];
           if (bitsNeeded !== 0) {
             if (octet < 128 || octet > 191 || !valid(codePoint << 6 | octet & 63, bitsNeeded - 6, octetsCount(bitsNeeded, codePoint))) {
               bitsNeeded = 0;
@@ -3806,15 +860,15 @@ var require_eventsource = __commonJS({
         }
       };
       function toLowerCase(name) {
-        return name.replace(/[A-Z]/g, function(c2) {
-          return String.fromCharCode(c2.charCodeAt(0) + 32);
+        return name.replace(/[A-Z]/g, function(c5) {
+          return String.fromCharCode(c5.charCodeAt(0) + 32);
         });
       }
       function HeadersPolyfill(all) {
         var map2 = /* @__PURE__ */ Object.create(null);
         var array = all.split("\r\n");
-        for (var i = 0; i < array.length; i += 1) {
-          var line = array[i];
+        for (var i2 = 0; i2 < array.length; i2 += 1) {
+          var line = array[i2];
           var parts = line.split(": ");
           var name = parts.shift();
           var value = parts.join(": ");
@@ -3925,9 +979,9 @@ var require_eventsource = __commonJS({
       function EventTarget2() {
         this._listeners = /* @__PURE__ */ Object.create(null);
       }
-      function throwError(e) {
+      function throwError2(e2) {
         setTimeout2(function() {
-          throw e;
+          throw e2;
         }, 0);
       }
       EventTarget2.prototype.dispatchEvent = function(event) {
@@ -3935,16 +989,16 @@ var require_eventsource = __commonJS({
         var typeListeners = this._listeners[event.type];
         if (typeListeners != void 0) {
           var length = typeListeners.length;
-          for (var i = 0; i < length; i += 1) {
-            var listener = typeListeners[i];
+          for (var i2 = 0; i2 < length; i2 += 1) {
+            var listener = typeListeners[i2];
             try {
               if (typeof listener.handleEvent === "function") {
                 listener.handleEvent(event);
               } else {
                 listener.call(this, event);
               }
-            } catch (e) {
-              throwError(e);
+            } catch (e2) {
+              throwError2(e2);
             }
           }
         }
@@ -3958,8 +1012,8 @@ var require_eventsource = __commonJS({
           listeners[type] = typeListeners;
         }
         var found = false;
-        for (var i = 0; i < typeListeners.length; i += 1) {
-          if (typeListeners[i] === listener) {
+        for (var i2 = 0; i2 < typeListeners.length; i2 += 1) {
+          if (typeListeners[i2] === listener) {
             found = true;
           }
         }
@@ -3973,9 +1027,9 @@ var require_eventsource = __commonJS({
         var typeListeners = listeners[type];
         if (typeListeners != void 0) {
           var filtered = [];
-          for (var i = 0; i < typeListeners.length; i += 1) {
-            if (typeListeners[i] !== listener) {
-              filtered.push(typeListeners[i]);
+          for (var i2 = 0; i2 < typeListeners.length; i2 += 1) {
+            if (typeListeners[i2] !== listener) {
+              filtered.push(typeListeners[i2]);
             }
           }
           if (filtered.length === 0) {
@@ -4020,25 +1074,25 @@ var require_eventsource = __commonJS({
       var MINIMUM_DURATION = 1e3;
       var MAXIMUM_DURATION = 18e6;
       var parseDuration = function(value, def) {
-        var n = value == null ? def : parseInt(value, 10);
-        if (n !== n) {
-          n = def;
+        var n4 = value == null ? def : parseInt(value, 10);
+        if (n4 !== n4) {
+          n4 = def;
         }
-        return clampDuration(n);
+        return clampDuration(n4);
       };
-      var clampDuration = function(n) {
-        return Math.min(Math.max(n, MINIMUM_DURATION), MAXIMUM_DURATION);
+      var clampDuration = function(n4) {
+        return Math.min(Math.max(n4, MINIMUM_DURATION), MAXIMUM_DURATION);
       };
-      var fire = function(that, f2, event) {
+      var fire = function(that, f3, event) {
         try {
-          if (typeof f2 === "function") {
-            f2.call(that, event);
+          if (typeof f3 === "function") {
+            f3.call(that, event);
           }
-        } catch (e) {
-          throwError(e);
+        } catch (e2) {
+          throwError2(e2);
         }
       };
-      function EventSourcePolyfill(url, options) {
+      function EventSourcePolyfill2(url, options) {
         EventTarget2.call(this);
         options = options || {};
         this.onopen = void 0;
@@ -4062,7 +1116,7 @@ var require_eventsource = __commonJS({
         var initialRetry = clampDuration(1e3);
         var heartbeatTimeout = parseDuration(options.heartbeatTimeout, 45e3);
         var lastEventId = "";
-        var retry2 = initialRetry;
+        var retry = initialRetry;
         var wasActivity = false;
         var textLength = 0;
         var headers = options.headers || {};
@@ -4084,7 +1138,7 @@ var require_eventsource = __commonJS({
             if (status === 200 && contentType != void 0 && contentTypeRegExp.test(contentType)) {
               currentState = OPEN;
               wasActivity = Date.now();
-              retry2 = initialRetry;
+              retry = initialRetry;
               es.readyState = OPEN;
               var event = new ConnectionEvent("open", {
                 status,
@@ -4117,28 +1171,28 @@ var require_eventsource = __commonJS({
         };
         var onProgress = function(textChunk) {
           if (currentState === OPEN) {
-            var n = -1;
-            for (var i = 0; i < textChunk.length; i += 1) {
-              var c2 = textChunk.charCodeAt(i);
-              if (c2 === "\n".charCodeAt(0) || c2 === "\r".charCodeAt(0)) {
-                n = i;
+            var n4 = -1;
+            for (var i2 = 0; i2 < textChunk.length; i2 += 1) {
+              var c5 = textChunk.charCodeAt(i2);
+              if (c5 === "\n".charCodeAt(0) || c5 === "\r".charCodeAt(0)) {
+                n4 = i2;
               }
             }
-            var chunk = (n !== -1 ? textBuffer : "") + textChunk.slice(0, n + 1);
-            textBuffer = (n === -1 ? textBuffer : "") + textChunk.slice(n + 1);
+            var chunk = (n4 !== -1 ? textBuffer : "") + textChunk.slice(0, n4 + 1);
+            textBuffer = (n4 === -1 ? textBuffer : "") + textChunk.slice(n4 + 1);
             if (textChunk !== "") {
               wasActivity = Date.now();
               textLength += textChunk.length;
             }
             for (var position = 0; position < chunk.length; position += 1) {
-              var c2 = chunk.charCodeAt(position);
-              if (state === AFTER_CR && c2 === "\n".charCodeAt(0)) {
+              var c5 = chunk.charCodeAt(position);
+              if (state === AFTER_CR && c5 === "\n".charCodeAt(0)) {
                 state = FIELD_START;
               } else {
                 if (state === AFTER_CR) {
                   state = FIELD_START;
                 }
-                if (c2 === "\r".charCodeAt(0) || c2 === "\n".charCodeAt(0)) {
+                if (c5 === "\r".charCodeAt(0) || c5 === "\n".charCodeAt(0)) {
                   if (state !== FIELD_START) {
                     if (state === FIELD) {
                       valueStart = position + 1;
@@ -4154,7 +1208,7 @@ var require_eventsource = __commonJS({
                       eventTypeBuffer = value;
                     } else if (field === "retry") {
                       initialRetry = parseDuration(value, initialRetry);
-                      retry2 = initialRetry;
+                      retry = initialRetry;
                     } else if (field === "heartbeatTimeout") {
                       heartbeatTimeout = parseDuration(value, heartbeatTimeout);
                       if (timeout !== 0) {
@@ -4190,14 +1244,14 @@ var require_eventsource = __commonJS({
                     dataBuffer = "";
                     eventTypeBuffer = "";
                   }
-                  state = c2 === "\r".charCodeAt(0) ? AFTER_CR : FIELD_START;
+                  state = c5 === "\r".charCodeAt(0) ? AFTER_CR : FIELD_START;
                 } else {
                   if (state === FIELD_START) {
                     fieldStart = position;
                     state = FIELD;
                   }
                   if (state === FIELD) {
-                    if (c2 === ":".charCodeAt(0)) {
+                    if (c5 === ":".charCodeAt(0)) {
                       valueStart = position + 1;
                       state = VALUE_START;
                     }
@@ -4218,8 +1272,8 @@ var require_eventsource = __commonJS({
             }
             timeout = setTimeout2(function() {
               onTimeout();
-            }, retry2);
-            retry2 = clampDuration(Math.min(initialRetry * 16, retry2 * 2));
+            }, retry);
+            retry = clampDuration(Math.min(initialRetry * 16, retry * 2));
             es.readyState = CONNECTING;
             var event = new ErrorEvent("error", { error });
             es.dispatchEvent(event);
@@ -4275,9 +1329,9 @@ var require_eventsource = __commonJS({
           var requestURL = url;
           if (url.slice(0, 5) !== "data:" && url.slice(0, 5) !== "blob:") {
             if (lastEventId !== "") {
-              var i = url.indexOf("?");
-              requestURL = i === -1 ? url : url.slice(0, i + 1) + url.slice(i + 1).replace(/(?:^|&)([^=&]*)(?:=[^&]*)?/g, function(p, paramName) {
-                return paramName === lastEventIdQueryParameterName ? "" : p;
+              var i2 = url.indexOf("?");
+              requestURL = i2 === -1 ? url : url.slice(0, i2 + 1) + url.slice(i2 + 1).replace(/(?:^|&)([^=&]*)(?:=[^&]*)?/g, function(p3, paramName) {
+                return paramName === lastEventIdQueryParameterName ? "" : p3;
               });
               requestURL += (url.indexOf("?") === -1 ? "?" : "&") + lastEventIdQueryParameterName + "=" + encodeURIComponent(lastEventId);
             }
@@ -4307,246 +1361,3682 @@ var require_eventsource = __commonJS({
         es._close = close;
         onTimeout();
       }
-      EventSourcePolyfill.prototype = Object.create(EventTarget2.prototype);
-      EventSourcePolyfill.prototype.CONNECTING = CONNECTING;
-      EventSourcePolyfill.prototype.OPEN = OPEN;
-      EventSourcePolyfill.prototype.CLOSED = CLOSED;
-      EventSourcePolyfill.prototype.close = function() {
+      EventSourcePolyfill2.prototype = Object.create(EventTarget2.prototype);
+      EventSourcePolyfill2.prototype.CONNECTING = CONNECTING;
+      EventSourcePolyfill2.prototype.OPEN = OPEN;
+      EventSourcePolyfill2.prototype.CLOSED = CLOSED;
+      EventSourcePolyfill2.prototype.close = function() {
         this._close();
       };
-      EventSourcePolyfill.CONNECTING = CONNECTING;
-      EventSourcePolyfill.OPEN = OPEN;
-      EventSourcePolyfill.CLOSED = CLOSED;
-      EventSourcePolyfill.prototype.withCredentials = void 0;
-      var R = NativeEventSource;
+      EventSourcePolyfill2.CONNECTING = CONNECTING;
+      EventSourcePolyfill2.OPEN = OPEN;
+      EventSourcePolyfill2.CLOSED = CLOSED;
+      EventSourcePolyfill2.prototype.withCredentials = void 0;
+      var R2 = NativeEventSource;
       if (XMLHttpRequest2 != void 0 && (NativeEventSource == void 0 || !("withCredentials" in NativeEventSource.prototype))) {
-        R = EventSourcePolyfill;
+        R2 = EventSourcePolyfill2;
       }
       (function(factory) {
         if (typeof module2 === "object" && typeof module2.exports === "object") {
-          var v = factory(exports);
-          if (v !== void 0)
-            module2.exports = v;
+          var v2 = factory(exports);
+          if (v2 !== void 0)
+            module2.exports = v2;
         } else if (typeof define === "function" && define.amd) {
           define(["exports"], factory);
         } else {
           factory(global2);
         }
       })(function(exports2) {
-        exports2.EventSourcePolyfill = EventSourcePolyfill;
+        exports2.EventSourcePolyfill = EventSourcePolyfill2;
         exports2.NativeEventSource = NativeEventSource;
-        exports2.EventSource = R;
+        exports2.EventSource = R2;
       });
     })(typeof globalThis === "undefined" ? typeof window !== "undefined" ? window : typeof self !== "undefined" ? self : exports : globalThis);
   }
 });
 
 // node_modules/@sanity/eventsource/browser.js
-var require_browser2 = __commonJS({
+var require_browser = __commonJS({
   "node_modules/@sanity/eventsource/browser.js"(exports, module2) {
     module2.exports = require_eventsource().EventSourcePolyfill;
   }
 });
 
-// node_modules/@sanity/client/dist/_chunks/browserMiddleware-zDVeirri.js
+// node_modules/@sanity/eventsource/browser.mjs
+var browser_exports = {};
+__export(browser_exports, {
+  default: () => browser_default
+});
+var import_browser, browser_default;
+var init_browser = __esm({
+  "node_modules/@sanity/eventsource/browser.mjs"() {
+    import_browser = __toESM(require_browser(), 1);
+    browser_default = import_browser.default;
+  }
+});
+
+// main.ts
+var main_exports = {};
+__export(main_exports, {
+  default: () => SanityPublishPlugin
+});
+module.exports = __toCommonJS(main_exports);
+
+// node_modules/get-it/dist/_chunks-es/_commonjsHelpers.js
+var e = !(typeof navigator > "u") && "ReactNative" === navigator.product;
+var t = { timeout: e ? 6e4 : 12e4 };
+var r = function(r2) {
+  const a4 = { ...t, ..."string" == typeof r2 ? { url: r2 } : r2 };
+  if (a4.timeout = n(a4.timeout), a4.query) {
+    const { url: t2, searchParams: r3 } = function(t3) {
+      const r4 = t3.indexOf("?");
+      if (-1 === r4)
+        return { url: t3, searchParams: new URLSearchParams() };
+      const n4 = t3.slice(0, r4), a5 = t3.slice(r4 + 1);
+      if (!e)
+        return { url: n4, searchParams: new URLSearchParams(a5) };
+      if ("function" != typeof decodeURIComponent)
+        throw new Error("Broken `URLSearchParams` implementation, and `decodeURIComponent` is not defined");
+      const s4 = new URLSearchParams();
+      for (const e2 of a5.split("&")) {
+        const [t4, r5] = e2.split("=");
+        t4 && s4.append(o(t4), o(r5 || ""));
+      }
+      return { url: n4, searchParams: s4 };
+    }(a4.url);
+    for (const [e2, o3] of Object.entries(a4.query)) {
+      if (void 0 !== o3)
+        if (Array.isArray(o3))
+          for (const t3 of o3)
+            r3.append(e2, t3);
+        else
+          r3.append(e2, o3);
+      const n4 = r3.toString();
+      n4 && (a4.url = `${t2}?${n4}`);
+    }
+  }
+  return a4.method = a4.body && !a4.method ? "POST" : (a4.method || "GET").toUpperCase(), a4;
+};
+function o(e2) {
+  return decodeURIComponent(e2.replace(/\+/g, " "));
+}
+function n(e2) {
+  if (false === e2 || 0 === e2)
+    return false;
+  if (e2.connect || e2.socket)
+    return e2;
+  const r2 = Number(e2);
+  return isNaN(r2) ? n(t.timeout) : { connect: r2, socket: r2 };
+}
+var a = /^https?:\/\//i;
+var s = function(e2) {
+  if (!a.test(e2.url))
+    throw new Error(`"${e2.url}" is not a valid URL`);
+};
+function c(e2) {
+  return e2 && e2.__esModule && Object.prototype.hasOwnProperty.call(e2, "default") ? e2.default : e2;
+}
+
+// node_modules/get-it/dist/index.browser.js
+var o2 = ["request", "response", "progress", "error", "abort"];
+var n2 = ["processOptions", "validateOptions", "interceptRequest", "finalizeOptions", "onRequest", "onResponse", "onError", "onReturn", "onHeaders"];
+function s2(r2, i2) {
+  const a4 = [], u4 = n2.reduce((e2, t2) => (e2[t2] = e2[t2] || [], e2), { processOptions: [r], validateOptions: [s] });
+  function c5(e2) {
+    const t2 = "object" == typeof e2 && e2.callSiteStack ? e2.callSiteStack : void 0, r3 = t2 ? void 0 : new Error(), n4 = o2.reduce((e3, t3) => (e3[t3] = function() {
+      const e4 = /* @__PURE__ */ Object.create(null);
+      let t4 = 0;
+      return { publish: function(t5) {
+        for (const r4 in e4)
+          e4[r4](t5);
+      }, subscribe: function(r4) {
+        const o3 = t4++;
+        return e4[o3] = r4, function() {
+          delete e4[o3];
+        };
+      } };
+    }(), e3), {}), s4 = ((e3) => function(t3, r4, ...o3) {
+      const n5 = "onError" === t3;
+      let s5 = r4;
+      for (let r5 = 0; r5 < e3[t3].length && (s5 = (0, e3[t3][r5])(s5, ...o3), !n5 || s5); r5++)
+        ;
+      return s5;
+    })(u4), a5 = s4("processOptions", e2);
+    s4("validateOptions", a5);
+    const c6 = { options: a5, channels: n4, applyMiddleware: s4 };
+    let l3;
+    const h2 = n4.request.subscribe((e3) => {
+      l3 = i2(e3, (o3, i3) => ((e4, o4, i4) => {
+        let a6 = e4, u5 = o4;
+        if (!a6)
+          try {
+            u5 = s4("onResponse", o4, i4);
+          } catch (e5) {
+            u5 = null, a6 = e5;
+          }
+        if (a6 = a6 && s4("onError", a6, i4), a6) {
+          if (a6 instanceof Error) {
+            const e5 = (t2 == null ? void 0 : t2.stack) || (r3 == null ? void 0 : r3.stack);
+            if ("string" == typeof e5) {
+              const r4 = e5.split("\n").slice(t2 ? 1 : 2);
+              r4.length > 0 && (a6.stack += "\n" + r4.join("\n"));
+            }
+          }
+          n4.error.publish(a6);
+        } else
+          u5 && n4.response.publish(u5);
+      })(o3, i3, e3));
+    });
+    n4.abort.subscribe(() => {
+      h2(), l3 && l3.abort();
+    });
+    const d3 = s4("onReturn", n4, c6);
+    return d3 === n4 && n4.request.publish(c6), d3;
+  }
+  return c5.use = function(e2) {
+    if (!e2)
+      throw new Error("Tried to add middleware that resolved to falsey value");
+    if ("function" == typeof e2)
+      throw new Error("Tried to add middleware that was a function. It probably expects you to pass options to it.");
+    if (e2.onReturn && u4.onReturn.length > 0)
+      throw new Error("Tried to add new middleware with `onReturn` handler, but another handler has already been registered for this event");
+    return n2.forEach((t2) => {
+      e2[t2] && u4[t2].push(e2[t2]);
+    }), a4.push(e2), c5;
+  }, c5.clone = () => s2(a4, i2), r2.forEach(c5.use), c5;
+}
+var i;
+var a2;
+var u = /* @__PURE__ */ c(function() {
+  if (a2)
+    return i;
+  a2 = 1;
+  var e2 = function(e3) {
+    return e3.replace(/^\s+|\s+$/g, "");
+  }, t2 = function(e3) {
+    return "[object Array]" === Object.prototype.toString.call(e3);
+  };
+  return i = function(r2) {
+    if (!r2)
+      return {};
+    for (var o3 = /* @__PURE__ */ Object.create(null), n4 = e2(r2).split("\n"), s4 = 0; s4 < n4.length; s4++) {
+      var i2 = n4[s4], a4 = i2.indexOf(":"), u4 = e2(i2.slice(0, a4)).toLowerCase(), c5 = e2(i2.slice(a4 + 1));
+      typeof o3[u4] > "u" ? o3[u4] = c5 : t2(o3[u4]) ? o3[u4].push(c5) : o3[u4] = [o3[u4], c5];
+    }
+    return o3;
+  };
+}());
+var _e, _t, _r, _o, _n, _s, _i;
+var c2 = class {
+  constructor() {
+    __publicField(this, "onabort");
+    __publicField(this, "onerror");
+    __publicField(this, "onreadystatechange");
+    __publicField(this, "ontimeout");
+    __publicField(this, "readyState", 0);
+    __publicField(this, "response");
+    __publicField(this, "responseText", "");
+    __publicField(this, "responseType", "");
+    __publicField(this, "status");
+    __publicField(this, "statusText");
+    __publicField(this, "withCredentials");
+    __privateAdd(this, _e, void 0);
+    __privateAdd(this, _t, void 0);
+    __privateAdd(this, _r, void 0);
+    __privateAdd(this, _o, {});
+    __privateAdd(this, _n, void 0);
+    __privateAdd(this, _s, {});
+    __privateAdd(this, _i, void 0);
+  }
+  open(e2, t2, r2) {
+    var _a;
+    __privateSet(this, _e, e2), __privateSet(this, _t, t2), __privateSet(this, _r, ""), this.readyState = 1, (_a = this.onreadystatechange) == null ? void 0 : _a.call(this), __privateSet(this, _n, void 0);
+  }
+  abort() {
+    __privateGet(this, _n) && __privateGet(this, _n).abort();
+  }
+  getAllResponseHeaders() {
+    return __privateGet(this, _r);
+  }
+  setRequestHeader(e2, t2) {
+    __privateGet(this, _o)[e2] = t2;
+  }
+  setInit(e2, t2 = true) {
+    __privateSet(this, _s, e2), __privateSet(this, _i, t2);
+  }
+  send(e2) {
+    const t2 = "arraybuffer" !== this.responseType, r2 = { ...__privateGet(this, _s), method: __privateGet(this, _e), headers: __privateGet(this, _o), body: e2 };
+    "function" == typeof AbortController && __privateGet(this, _i) && (__privateSet(this, _n, new AbortController()), typeof EventTarget < "u" && __privateGet(this, _n).signal instanceof EventTarget && (r2.signal = __privateGet(this, _n).signal)), typeof document < "u" && (r2.credentials = this.withCredentials ? "include" : "omit"), fetch(__privateGet(this, _t), r2).then((e3) => {
+      var _a;
+      return e3.headers.forEach((e4, t3) => {
+        __privateSet(this, _r, __privateGet(this, _r) + `${t3}: ${e4}\r
+`);
+      }), this.status = e3.status, this.statusText = e3.statusText, this.readyState = 3, (_a = this.onreadystatechange) == null ? void 0 : _a.call(this), t2 ? e3.text() : e3.arrayBuffer();
+    }).then((e3) => {
+      var _a;
+      "string" == typeof e3 ? this.responseText = e3 : this.response = e3, this.readyState = 4, (_a = this.onreadystatechange) == null ? void 0 : _a.call(this);
+    }).catch((e3) => {
+      var _a, _b;
+      "AbortError" !== e3.name ? (_a = this.onerror) == null ? void 0 : _a.call(this, e3) : (_b = this.onabort) == null ? void 0 : _b.call(this);
+    });
+  }
+};
+_e = new WeakMap();
+_t = new WeakMap();
+_r = new WeakMap();
+_o = new WeakMap();
+_n = new WeakMap();
+_s = new WeakMap();
+_i = new WeakMap();
+var l = "function" == typeof XMLHttpRequest ? "xhr" : "fetch";
+var h = "xhr" === l ? XMLHttpRequest : c2;
+var d = (e2, t2) => {
+  var _a;
+  const r2 = e2.options, o3 = e2.applyMiddleware("finalizeOptions", r2), n4 = {}, s4 = e2.applyMiddleware("interceptRequest", void 0, { adapter: l, context: e2 });
+  if (s4) {
+    const e3 = setTimeout(t2, 0, null, s4);
+    return { abort: () => clearTimeout(e3) };
+  }
+  let i2 = new h();
+  i2 instanceof c2 && "object" == typeof o3.fetch && i2.setInit(o3.fetch, (_a = o3.useAbortSignal) != null ? _a : true);
+  const a4 = o3.headers, d3 = o3.timeout;
+  let p3 = false, f3 = false, b = false;
+  if (i2.onerror = (e3) => {
+    m(i2 instanceof c2 ? e3 instanceof Error ? e3 : new Error(`Request error while attempting to reach ${o3.url}`, { cause: e3 }) : new Error(`Request error while attempting to reach is ${o3.url}${e3.lengthComputable ? `(${e3.loaded} of ${e3.total} bytes transferred)` : ""}`));
+  }, i2.ontimeout = (e3) => {
+    m(new Error(`Request timeout while attempting to reach ${o3.url}${e3.lengthComputable ? `(${e3.loaded} of ${e3.total} bytes transferred)` : ""}`));
+  }, i2.onabort = () => {
+    w(true), p3 = true;
+  }, i2.onreadystatechange = function() {
+    d3 && (w(), n4.socket = setTimeout(() => y("ESOCKETTIMEDOUT"), d3.socket)), !p3 && i2 && 4 === i2.readyState && 0 !== i2.status && function() {
+      if (!(p3 || f3 || b)) {
+        if (0 === i2.status)
+          return void m(new Error("Unknown XHR error"));
+        w(), f3 = true, t2(null, { body: i2.response || ("" === i2.responseType || "text" === i2.responseType ? i2.responseText : ""), url: o3.url, method: o3.method, headers: u(i2.getAllResponseHeaders()), statusCode: i2.status, statusMessage: i2.statusText });
+      }
+    }();
+  }, i2.open(o3.method, o3.url, true), i2.withCredentials = !!o3.withCredentials, a4 && i2.setRequestHeader)
+    for (const e3 in a4)
+      a4.hasOwnProperty(e3) && i2.setRequestHeader(e3, a4[e3]);
+  return o3.rawBody && (i2.responseType = "arraybuffer"), e2.applyMiddleware("onRequest", { options: o3, adapter: l, request: i2, context: e2 }), i2.send(o3.body || null), d3 && (n4.connect = setTimeout(() => y("ETIMEDOUT"), d3.connect)), { abort: function() {
+    p3 = true, i2 && i2.abort();
+  } };
+  function y(t3) {
+    b = true, i2.abort();
+    const r3 = new Error("ESOCKETTIMEDOUT" === t3 ? `Socket timed out on request to ${o3.url}` : `Connection timed out on request to ${o3.url}`);
+    r3.code = t3, e2.channels.error.publish(r3);
+  }
+  function w(e3) {
+    (e3 || p3 || i2 && i2.readyState >= 2 && n4.connect) && clearTimeout(n4.connect), n4.socket && clearTimeout(n4.socket);
+  }
+  function m(e3) {
+    if (f3)
+      return;
+    w(true), f3 = true, i2 = null;
+    const r3 = e3 || new Error(`Network error while attempting to reach ${o3.url}`);
+    r3.isNetworkError = true, r3.request = o3, t2(r3);
+  }
+};
+var p = (e2 = [], t2 = d) => s2(e2, t2);
+
+// node_modules/get-it/dist/middleware.browser.js
+function n3(e2) {
+  return {};
+}
+var a3;
+var c3;
+var u2;
+var l2;
+var p2;
+var d2 = { exports: {} };
+var f = /* @__PURE__ */ c((p2 || (p2 = 1, function(e2, t2) {
+  t2.formatArgs = function(t3) {
+    if (t3[0] = (this.useColors ? "%c" : "") + this.namespace + (this.useColors ? " %c" : " ") + t3[0] + (this.useColors ? "%c " : " ") + "+" + e2.exports.humanize(this.diff), !this.useColors)
+      return;
+    const s5 = "color: " + this.color;
+    t3.splice(1, 0, s5, "color: inherit");
+    let n4 = 0, r2 = 0;
+    t3[0].replace(/%[a-zA-Z%]/g, (e3) => {
+      "%%" !== e3 && (n4++, "%c" === e3 && (r2 = n4));
+    }), t3.splice(r2, 0, s5);
+  }, t2.save = function(e3) {
+    try {
+      e3 ? t2.storage.setItem("debug", e3) : t2.storage.removeItem("debug");
+    } catch (e4) {
+    }
+  }, t2.load = function() {
+    let e3;
+    try {
+      e3 = t2.storage.getItem("debug") || t2.storage.getItem("DEBUG");
+    } catch (e4) {
+    }
+    return !e3 && typeof process < "u" && "env" in process && (e3 = process.env.DEBUG), e3;
+  }, t2.useColors = function() {
+    if (typeof window < "u" && window.process && ("renderer" === window.process.type || window.process.__nwjs))
+      return true;
+    if (typeof navigator < "u" && navigator.userAgent && navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/))
+      return false;
+    let e3;
+    return typeof document < "u" && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance || typeof window < "u" && window.console && (window.console.firebug || window.console.exception && window.console.table) || typeof navigator < "u" && navigator.userAgent && (e3 = navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/)) && parseInt(e3[1], 10) >= 31 || typeof navigator < "u" && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/);
+  }, t2.storage = function() {
+    try {
+      return localStorage;
+    } catch (e3) {
+    }
+  }(), t2.destroy = /* @__PURE__ */ (() => {
+    let e3 = false;
+    return () => {
+      e3 || (e3 = true, console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`."));
+    };
+  })(), t2.colors = ["#0000CC", "#0000FF", "#0033CC", "#0033FF", "#0066CC", "#0066FF", "#0099CC", "#0099FF", "#00CC00", "#00CC33", "#00CC66", "#00CC99", "#00CCCC", "#00CCFF", "#3300CC", "#3300FF", "#3333CC", "#3333FF", "#3366CC", "#3366FF", "#3399CC", "#3399FF", "#33CC00", "#33CC33", "#33CC66", "#33CC99", "#33CCCC", "#33CCFF", "#6600CC", "#6600FF", "#6633CC", "#6633FF", "#66CC00", "#66CC33", "#9900CC", "#9900FF", "#9933CC", "#9933FF", "#99CC00", "#99CC33", "#CC0000", "#CC0033", "#CC0066", "#CC0099", "#CC00CC", "#CC00FF", "#CC3300", "#CC3333", "#CC3366", "#CC3399", "#CC33CC", "#CC33FF", "#CC6600", "#CC6633", "#CC9900", "#CC9933", "#CCCC00", "#CCCC33", "#FF0000", "#FF0033", "#FF0066", "#FF0099", "#FF00CC", "#FF00FF", "#FF3300", "#FF3333", "#FF3366", "#FF3399", "#FF33CC", "#FF33FF", "#FF6600", "#FF6633", "#FF9900", "#FF9933", "#FFCC00", "#FFCC33"], t2.log = console.debug || console.log || (() => {
+  }), e2.exports = (l2 ? u2 : (l2 = 1, u2 = function(e3) {
+    function t3(e4) {
+      let n5, r2, o3, i2 = null;
+      function a4(...e5) {
+        if (!a4.enabled)
+          return;
+        const s6 = a4, r3 = Number(/* @__PURE__ */ new Date()), o4 = r3 - (n5 || r3);
+        s6.diff = o4, s6.prev = n5, s6.curr = r3, n5 = r3, e5[0] = t3.coerce(e5[0]), "string" != typeof e5[0] && e5.unshift("%O");
+        let i3 = 0;
+        e5[0] = e5[0].replace(/%([a-zA-Z%])/g, (n6, r4) => {
+          if ("%%" === n6)
+            return "%";
+          i3++;
+          const o5 = t3.formatters[r4];
+          if ("function" == typeof o5) {
+            const t4 = e5[i3];
+            n6 = o5.call(s6, t4), e5.splice(i3, 1), i3--;
+          }
+          return n6;
+        }), t3.formatArgs.call(s6, e5), (s6.log || t3.log).apply(s6, e5);
+      }
+      return a4.namespace = e4, a4.useColors = t3.useColors(), a4.color = t3.selectColor(e4), a4.extend = s5, a4.destroy = t3.destroy, Object.defineProperty(a4, "enabled", { enumerable: true, configurable: false, get: () => null !== i2 ? i2 : (r2 !== t3.namespaces && (r2 = t3.namespaces, o3 = t3.enabled(e4)), o3), set: (e5) => {
+        i2 = e5;
+      } }), "function" == typeof t3.init && t3.init(a4), a4;
+    }
+    function s5(e4, s6) {
+      const n5 = t3(this.namespace + (typeof s6 > "u" ? ":" : s6) + e4);
+      return n5.log = this.log, n5;
+    }
+    function n4(e4, t4) {
+      let s6 = 0, n5 = 0, r2 = -1, o3 = 0;
+      for (; s6 < e4.length; )
+        if (n5 < t4.length && (t4[n5] === e4[s6] || "*" === t4[n5]))
+          "*" === t4[n5] ? (r2 = n5, o3 = s6, n5++) : (s6++, n5++);
+        else {
+          if (-1 === r2)
+            return false;
+          n5 = r2 + 1, o3++, s6 = o3;
+        }
+      for (; n5 < t4.length && "*" === t4[n5]; )
+        n5++;
+      return n5 === t4.length;
+    }
+    return t3.debug = t3, t3.default = t3, t3.coerce = function(e4) {
+      return e4 instanceof Error ? e4.stack || e4.message : e4;
+    }, t3.disable = function() {
+      const e4 = [...t3.names, ...t3.skips.map((e5) => "-" + e5)].join(",");
+      return t3.enable(""), e4;
+    }, t3.enable = function(e4) {
+      t3.save(e4), t3.namespaces = e4, t3.names = [], t3.skips = [];
+      const s6 = ("string" == typeof e4 ? e4 : "").trim().replace(/\s+/g, ",").split(",").filter(Boolean);
+      for (const e5 of s6)
+        "-" === e5[0] ? t3.skips.push(e5.slice(1)) : t3.names.push(e5);
+    }, t3.enabled = function(e4) {
+      for (const s6 of t3.skips)
+        if (n4(e4, s6))
+          return false;
+      for (const s6 of t3.names)
+        if (n4(e4, s6))
+          return true;
+      return false;
+    }, t3.humanize = function() {
+      if (c3)
+        return a3;
+      c3 = 1;
+      var e4 = 1e3, t4 = 60 * e4, s6 = 60 * t4, n5 = 24 * s6, r2 = 7 * n5;
+      function o3(e5, t5, s7, n6) {
+        var r3 = t5 >= 1.5 * s7;
+        return Math.round(e5 / s7) + " " + n6 + (r3 ? "s" : "");
+      }
+      return a3 = function(i2, a4) {
+        a4 = a4 || {};
+        var c5, u4, l3 = typeof i2;
+        if ("string" === l3 && i2.length > 0)
+          return function(o4) {
+            if (!((o4 = String(o4)).length > 100)) {
+              var i3 = /^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(o4);
+              if (i3) {
+                var a5 = parseFloat(i3[1]);
+                switch ((i3[2] || "ms").toLowerCase()) {
+                  case "years":
+                  case "year":
+                  case "yrs":
+                  case "yr":
+                  case "y":
+                    return 315576e5 * a5;
+                  case "weeks":
+                  case "week":
+                  case "w":
+                    return a5 * r2;
+                  case "days":
+                  case "day":
+                  case "d":
+                    return a5 * n5;
+                  case "hours":
+                  case "hour":
+                  case "hrs":
+                  case "hr":
+                  case "h":
+                    return a5 * s6;
+                  case "minutes":
+                  case "minute":
+                  case "mins":
+                  case "min":
+                  case "m":
+                    return a5 * t4;
+                  case "seconds":
+                  case "second":
+                  case "secs":
+                  case "sec":
+                  case "s":
+                    return a5 * e4;
+                  case "milliseconds":
+                  case "millisecond":
+                  case "msecs":
+                  case "msec":
+                  case "ms":
+                    return a5;
+                  default:
+                    return;
+                }
+              }
+            }
+          }(i2);
+        if ("number" === l3 && isFinite(i2))
+          return a4.long ? (c5 = i2, (u4 = Math.abs(c5)) >= n5 ? o3(c5, u4, n5, "day") : u4 >= s6 ? o3(c5, u4, s6, "hour") : u4 >= t4 ? o3(c5, u4, t4, "minute") : u4 >= e4 ? o3(c5, u4, e4, "second") : c5 + " ms") : function(r3) {
+            var o4 = Math.abs(r3);
+            return o4 >= n5 ? Math.round(r3 / n5) + "d" : o4 >= s6 ? Math.round(r3 / s6) + "h" : o4 >= t4 ? Math.round(r3 / t4) + "m" : o4 >= e4 ? Math.round(r3 / e4) + "s" : r3 + "ms";
+          }(i2);
+        throw new Error("val is not a non-empty string or a valid number. val=" + JSON.stringify(i2));
+      };
+    }(), t3.destroy = function() {
+      console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.");
+    }, Object.keys(e3).forEach((s6) => {
+      t3[s6] = e3[s6];
+    }), t3.names = [], t3.skips = [], t3.formatters = {}, t3.selectColor = function(e4) {
+      let s6 = 0;
+      for (let t4 = 0; t4 < e4.length; t4++)
+        s6 = (s6 << 5) - s6 + e4.charCodeAt(t4), s6 |= 0;
+      return t3.colors[Math.abs(s6) % t3.colors.length];
+    }, t3.enable(t3.load()), t3;
+  }))(t2);
+  const { formatters: s4 } = e2.exports;
+  s4.j = function(e3) {
+    try {
+      return JSON.stringify(e3);
+    } catch (e4) {
+      return "[UnexpectedJSONParseError]: " + e4.message;
+    }
+  };
+}(d2, d2.exports)), d2.exports));
+var F = typeof Buffer > "u" ? () => false : (e2) => Buffer.isBuffer(e2);
+function O(e2) {
+  return "[object Object]" === Object.prototype.toString.call(e2);
+}
+function j(e2) {
+  if (false === O(e2))
+    return false;
+  const t2 = e2.constructor;
+  if (void 0 === t2)
+    return true;
+  const s4 = t2.prototype;
+  return !(false === O(s4) || false === s4.hasOwnProperty("isPrototypeOf"));
+}
+var v = ["boolean", "string", "number"];
+function x() {
+  return { processOptions: (e2) => {
+    const t2 = e2.body;
+    return !t2 || "function" == typeof t2.pipe || F(t2) || -1 === v.indexOf(typeof t2) && !Array.isArray(t2) && !j(t2) ? e2 : Object.assign({}, e2, { body: JSON.stringify(e2.body), headers: Object.assign({}, e2.headers, { "Content-Type": "application/json" }) });
+  } };
+}
+function E(e2) {
+  return { onResponse: (s4) => {
+    const n4 = s4.headers["content-type"] || "", r2 = e2 && e2.force || -1 !== n4.indexOf("application/json");
+    return s4.body && n4 && r2 ? Object.assign({}, s4, { body: t2(s4.body) }) : s4;
+  }, processOptions: (e3) => Object.assign({}, e3, { headers: Object.assign({ Accept: "application/json" }, e3.headers) }) };
+  function t2(e3) {
+    try {
+      return JSON.parse(e3);
+    } catch (e4) {
+      throw e4.message = `Failed to parsed response body as JSON: ${e4.message}`, e4;
+    }
+  }
+}
+var R = {};
+typeof globalThis < "u" ? R = globalThis : typeof window < "u" ? R = window : typeof global < "u" ? R = global : typeof self < "u" && (R = self);
+var q = R;
+function A(e2 = {}) {
+  const t2 = e2.implementation || q.Observable;
+  if (!t2)
+    throw new Error("`Observable` is not available in global scope, and no implementation was passed");
+  return { onReturn: (e3, s4) => new t2((t3) => (e3.error.subscribe((e4) => t3.error(e4)), e3.progress.subscribe((e4) => t3.next(Object.assign({ type: "progress" }, e4))), e3.response.subscribe((e4) => {
+    t3.next(Object.assign({ type: "response" }, e4)), t3.complete();
+  }), e3.request.publish(s4), () => e3.abort.publish())) };
+}
+function S() {
+  return { onRequest: (e2) => {
+    if ("xhr" !== e2.adapter)
+      return;
+    const t2 = e2.request, s4 = e2.context;
+    function n4(e3) {
+      return (t3) => {
+        const n5 = t3.lengthComputable ? t3.loaded / t3.total * 100 : -1;
+        s4.channels.progress.publish({ stage: e3, percent: n5, total: t3.total, loaded: t3.loaded, lengthComputable: t3.lengthComputable });
+      };
+    }
+    "upload" in t2 && "onprogress" in t2.upload && (t2.upload.onprogress = n4("upload")), "onprogress" in t2 && (t2.onprogress = n4("download"));
+  } };
+}
+var N = (e2 = {}) => {
+  const t2 = e2.implementation || Promise;
+  if (!t2)
+    throw new Error("`Promise` is not available in global scope, and no implementation was passed");
+  return { onReturn: (s4, n4) => new t2((t3, r2) => {
+    const o3 = n4.options.cancelToken;
+    o3 && o3.promise.then((e3) => {
+      s4.abort.publish(e3), r2(e3);
+    }), s4.error.subscribe(r2), s4.response.subscribe((s5) => {
+      t3(e2.onlyBody ? s5.body : s5);
+    }), setTimeout(() => {
+      try {
+        s4.request.publish(n4);
+      } catch (e3) {
+        r2(e3);
+      }
+    }, 0);
+  }) };
+};
+var I = class {
+  constructor(e2) {
+    __publicField(this, "__CANCEL__", true);
+    __publicField(this, "message");
+    this.message = e2;
+  }
+  toString() {
+    return "Cancel" + (this.message ? `: ${this.message}` : "");
+  }
+};
+var _T = class {
+  constructor(e2) {
+    __publicField(this, "promise");
+    __publicField(this, "reason");
+    if ("function" != typeof e2)
+      throw new TypeError("executor must be a function.");
+    let t2 = null;
+    this.promise = new Promise((e3) => {
+      t2 = e3;
+    }), e2((e3) => {
+      this.reason || (this.reason = new I(e3), t2(this.reason));
+    });
+  }
+};
+var T = _T;
+__publicField(T, "source", () => {
+  let e2;
+  return { token: new _T((t2) => {
+    e2 = t2;
+  }), cancel: e2 };
+});
+N.Cancel = I, N.CancelToken = T, N.isCancel = (e2) => !(!e2 || !(e2 == null ? void 0 : e2.__CANCEL__));
+var $ = (e2, t2, s4) => ("GET" === s4.method || "HEAD" === s4.method) && (e2.isNetworkError || false);
+function _(e2) {
+  return 100 * Math.pow(2, e2) + 100 * Math.random();
+}
+var P = (e2 = {}) => ((e3) => {
+  const t2 = e3.maxRetries || 5, s4 = e3.retryDelay || _, n4 = e3.shouldRetry;
+  return { onError: (e4, r2) => {
+    const o3 = r2.options, i2 = o3.maxRetries || t2, a4 = o3.retryDelay || s4, c5 = o3.shouldRetry || n4, u4 = o3.attemptNumber || 0;
+    if (null !== (l3 = o3.body) && "object" == typeof l3 && "function" == typeof l3.pipe || !c5(e4, u4, o3) || u4 >= i2)
+      return e4;
+    var l3;
+    const p3 = Object.assign({}, r2, { options: Object.assign({}, o3, { attemptNumber: u4 + 1 }) });
+    return setTimeout(() => r2.channels.request.publish(p3), a4(u4)), null;
+  } };
+})({ shouldRetry: $, ...e2 });
+P.shouldRetry = $;
+var z = class extends Error {
+  constructor(e2, t2) {
+    super(e2.message);
+    __publicField(this, "request");
+    __publicField(this, "code");
+    this.request = t2, this.code = e2.code;
+  }
+};
+var B = (D = n3, function(e2 = {}) {
+  const { maxRetries: t2 = 3, ms: s4 = 1e3, maxFree: n4 = 256 } = e2, { finalizeOptions: r2 } = D({ keepAlive: true, keepAliveMsecs: s4, maxFreeSockets: n4 });
+  return { finalizeOptions: r2, onError: (e3, s5) => {
+    if (("GET" === s5.options.method || "POST" === s5.options.method) && e3 instanceof z && "ECONNRESET" === e3.code && e3.request.reusedSocket) {
+      const e4 = s5.options.attemptNumber || 0;
+      if (e4 < t2) {
+        const t3 = Object.assign({}, s5, { options: Object.assign({}, s5.options, { attemptNumber: e4 + 1 }) });
+        return setImmediate(() => s5.channels.request.publish(t3)), null;
+      }
+    }
+    return e3;
+  } };
+});
+var D;
+
+// node_modules/tslib/tslib.es6.js
+var extendStatics = function(d3, b) {
+  extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d4, b2) {
+    d4.__proto__ = b2;
+  } || function(d4, b2) {
+    for (var p3 in b2)
+      if (Object.prototype.hasOwnProperty.call(b2, p3))
+        d4[p3] = b2[p3];
+  };
+  return extendStatics(d3, b);
+};
+function __extends(d3, b) {
+  if (typeof b !== "function" && b !== null)
+    throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+  extendStatics(d3, b);
+  function __() {
+    this.constructor = d3;
+  }
+  d3.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+}
+function __awaiter(thisArg, _arguments, P2, generator) {
+  function adopt(value) {
+    return value instanceof P2 ? value : new P2(function(resolve) {
+      resolve(value);
+    });
+  }
+  return new (P2 || (P2 = Promise))(function(resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e2) {
+        reject(e2);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e2) {
+        reject(e2);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+}
+function __generator(thisArg, body) {
+  var _3 = { label: 0, sent: function() {
+    if (t2[0] & 1)
+      throw t2[1];
+    return t2[1];
+  }, trys: [], ops: [] }, f3, y, t2, g;
+  return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() {
+    return this;
+  }), g;
+  function verb(n4) {
+    return function(v2) {
+      return step([n4, v2]);
+    };
+  }
+  function step(op) {
+    if (f3)
+      throw new TypeError("Generator is already executing.");
+    while (_3)
+      try {
+        if (f3 = 1, y && (t2 = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t2 = y["return"]) && t2.call(y), 0) : y.next) && !(t2 = t2.call(y, op[1])).done)
+          return t2;
+        if (y = 0, t2)
+          op = [op[0] & 2, t2.value];
+        switch (op[0]) {
+          case 0:
+          case 1:
+            t2 = op;
+            break;
+          case 4:
+            _3.label++;
+            return { value: op[1], done: false };
+          case 5:
+            _3.label++;
+            y = op[1];
+            op = [0];
+            continue;
+          case 7:
+            op = _3.ops.pop();
+            _3.trys.pop();
+            continue;
+          default:
+            if (!(t2 = _3.trys, t2 = t2.length > 0 && t2[t2.length - 1]) && (op[0] === 6 || op[0] === 2)) {
+              _3 = 0;
+              continue;
+            }
+            if (op[0] === 3 && (!t2 || op[1] > t2[0] && op[1] < t2[3])) {
+              _3.label = op[1];
+              break;
+            }
+            if (op[0] === 6 && _3.label < t2[1]) {
+              _3.label = t2[1];
+              t2 = op;
+              break;
+            }
+            if (t2 && _3.label < t2[2]) {
+              _3.label = t2[2];
+              _3.ops.push(op);
+              break;
+            }
+            if (t2[2])
+              _3.ops.pop();
+            _3.trys.pop();
+            continue;
+        }
+        op = body.call(thisArg, _3);
+      } catch (e2) {
+        op = [6, e2];
+        y = 0;
+      } finally {
+        f3 = t2 = 0;
+      }
+    if (op[0] & 5)
+      throw op[1];
+    return { value: op[0] ? op[1] : void 0, done: true };
+  }
+}
+function __values(o3) {
+  var s4 = typeof Symbol === "function" && Symbol.iterator, m = s4 && o3[s4], i2 = 0;
+  if (m)
+    return m.call(o3);
+  if (o3 && typeof o3.length === "number")
+    return {
+      next: function() {
+        if (o3 && i2 >= o3.length)
+          o3 = void 0;
+        return { value: o3 && o3[i2++], done: !o3 };
+      }
+    };
+  throw new TypeError(s4 ? "Object is not iterable." : "Symbol.iterator is not defined.");
+}
+function __read(o3, n4) {
+  var m = typeof Symbol === "function" && o3[Symbol.iterator];
+  if (!m)
+    return o3;
+  var i2 = m.call(o3), r2, ar = [], e2;
+  try {
+    while ((n4 === void 0 || n4-- > 0) && !(r2 = i2.next()).done)
+      ar.push(r2.value);
+  } catch (error) {
+    e2 = { error };
+  } finally {
+    try {
+      if (r2 && !r2.done && (m = i2["return"]))
+        m.call(i2);
+    } finally {
+      if (e2)
+        throw e2.error;
+    }
+  }
+  return ar;
+}
+function __spreadArray(to, from2, pack) {
+  if (pack || arguments.length === 2)
+    for (var i2 = 0, l3 = from2.length, ar; i2 < l3; i2++) {
+      if (ar || !(i2 in from2)) {
+        if (!ar)
+          ar = Array.prototype.slice.call(from2, 0, i2);
+        ar[i2] = from2[i2];
+      }
+    }
+  return to.concat(ar || Array.prototype.slice.call(from2));
+}
+function __await(v2) {
+  return this instanceof __await ? (this.v = v2, this) : new __await(v2);
+}
+function __asyncGenerator(thisArg, _arguments, generator) {
+  if (!Symbol.asyncIterator)
+    throw new TypeError("Symbol.asyncIterator is not defined.");
+  var g = generator.apply(thisArg, _arguments || []), i2, q2 = [];
+  return i2 = {}, verb("next"), verb("throw"), verb("return"), i2[Symbol.asyncIterator] = function() {
+    return this;
+  }, i2;
+  function verb(n4) {
+    if (g[n4])
+      i2[n4] = function(v2) {
+        return new Promise(function(a4, b) {
+          q2.push([n4, v2, a4, b]) > 1 || resume(n4, v2);
+        });
+      };
+  }
+  function resume(n4, v2) {
+    try {
+      step(g[n4](v2));
+    } catch (e2) {
+      settle(q2[0][3], e2);
+    }
+  }
+  function step(r2) {
+    r2.value instanceof __await ? Promise.resolve(r2.value.v).then(fulfill, reject) : settle(q2[0][2], r2);
+  }
+  function fulfill(value) {
+    resume("next", value);
+  }
+  function reject(value) {
+    resume("throw", value);
+  }
+  function settle(f3, v2) {
+    if (f3(v2), q2.shift(), q2.length)
+      resume(q2[0][0], q2[0][1]);
+  }
+}
+function __asyncValues(o3) {
+  if (!Symbol.asyncIterator)
+    throw new TypeError("Symbol.asyncIterator is not defined.");
+  var m = o3[Symbol.asyncIterator], i2;
+  return m ? m.call(o3) : (o3 = typeof __values === "function" ? __values(o3) : o3[Symbol.iterator](), i2 = {}, verb("next"), verb("throw"), verb("return"), i2[Symbol.asyncIterator] = function() {
+    return this;
+  }, i2);
+  function verb(n4) {
+    i2[n4] = o3[n4] && function(v2) {
+      return new Promise(function(resolve, reject) {
+        v2 = o3[n4](v2), settle(resolve, reject, v2.done, v2.value);
+      });
+    };
+  }
+  function settle(resolve, reject, d3, v2) {
+    Promise.resolve(v2).then(function(v3) {
+      resolve({ value: v3, done: d3 });
+    }, reject);
+  }
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/isFunction.js
+function isFunction(value) {
+  return typeof value === "function";
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/createErrorClass.js
+function createErrorClass(createImpl) {
+  var _super = function(instance) {
+    Error.call(instance);
+    instance.stack = new Error().stack;
+  };
+  var ctorFunc = createImpl(_super);
+  ctorFunc.prototype = Object.create(Error.prototype);
+  ctorFunc.prototype.constructor = ctorFunc;
+  return ctorFunc;
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/UnsubscriptionError.js
+var UnsubscriptionError = createErrorClass(function(_super) {
+  return function UnsubscriptionErrorImpl(errors) {
+    _super(this);
+    this.message = errors ? errors.length + " errors occurred during unsubscription:\n" + errors.map(function(err, i2) {
+      return i2 + 1 + ") " + err.toString();
+    }).join("\n  ") : "";
+    this.name = "UnsubscriptionError";
+    this.errors = errors;
+  };
+});
+
+// node_modules/rxjs/dist/esm5/internal/util/arrRemove.js
+function arrRemove(arr, item) {
+  if (arr) {
+    var index = arr.indexOf(item);
+    0 <= index && arr.splice(index, 1);
+  }
+}
+
+// node_modules/rxjs/dist/esm5/internal/Subscription.js
+var Subscription = function() {
+  function Subscription2(initialTeardown) {
+    this.initialTeardown = initialTeardown;
+    this.closed = false;
+    this._parentage = null;
+    this._finalizers = null;
+  }
+  Subscription2.prototype.unsubscribe = function() {
+    var e_1, _a, e_2, _b;
+    var errors;
+    if (!this.closed) {
+      this.closed = true;
+      var _parentage = this._parentage;
+      if (_parentage) {
+        this._parentage = null;
+        if (Array.isArray(_parentage)) {
+          try {
+            for (var _parentage_1 = __values(_parentage), _parentage_1_1 = _parentage_1.next(); !_parentage_1_1.done; _parentage_1_1 = _parentage_1.next()) {
+              var parent_1 = _parentage_1_1.value;
+              parent_1.remove(this);
+            }
+          } catch (e_1_1) {
+            e_1 = { error: e_1_1 };
+          } finally {
+            try {
+              if (_parentage_1_1 && !_parentage_1_1.done && (_a = _parentage_1.return))
+                _a.call(_parentage_1);
+            } finally {
+              if (e_1)
+                throw e_1.error;
+            }
+          }
+        } else {
+          _parentage.remove(this);
+        }
+      }
+      var initialFinalizer = this.initialTeardown;
+      if (isFunction(initialFinalizer)) {
+        try {
+          initialFinalizer();
+        } catch (e2) {
+          errors = e2 instanceof UnsubscriptionError ? e2.errors : [e2];
+        }
+      }
+      var _finalizers = this._finalizers;
+      if (_finalizers) {
+        this._finalizers = null;
+        try {
+          for (var _finalizers_1 = __values(_finalizers), _finalizers_1_1 = _finalizers_1.next(); !_finalizers_1_1.done; _finalizers_1_1 = _finalizers_1.next()) {
+            var finalizer = _finalizers_1_1.value;
+            try {
+              execFinalizer(finalizer);
+            } catch (err) {
+              errors = errors !== null && errors !== void 0 ? errors : [];
+              if (err instanceof UnsubscriptionError) {
+                errors = __spreadArray(__spreadArray([], __read(errors)), __read(err.errors));
+              } else {
+                errors.push(err);
+              }
+            }
+          }
+        } catch (e_2_1) {
+          e_2 = { error: e_2_1 };
+        } finally {
+          try {
+            if (_finalizers_1_1 && !_finalizers_1_1.done && (_b = _finalizers_1.return))
+              _b.call(_finalizers_1);
+          } finally {
+            if (e_2)
+              throw e_2.error;
+          }
+        }
+      }
+      if (errors) {
+        throw new UnsubscriptionError(errors);
+      }
+    }
+  };
+  Subscription2.prototype.add = function(teardown) {
+    var _a;
+    if (teardown && teardown !== this) {
+      if (this.closed) {
+        execFinalizer(teardown);
+      } else {
+        if (teardown instanceof Subscription2) {
+          if (teardown.closed || teardown._hasParent(this)) {
+            return;
+          }
+          teardown._addParent(this);
+        }
+        (this._finalizers = (_a = this._finalizers) !== null && _a !== void 0 ? _a : []).push(teardown);
+      }
+    }
+  };
+  Subscription2.prototype._hasParent = function(parent) {
+    var _parentage = this._parentage;
+    return _parentage === parent || Array.isArray(_parentage) && _parentage.includes(parent);
+  };
+  Subscription2.prototype._addParent = function(parent) {
+    var _parentage = this._parentage;
+    this._parentage = Array.isArray(_parentage) ? (_parentage.push(parent), _parentage) : _parentage ? [_parentage, parent] : parent;
+  };
+  Subscription2.prototype._removeParent = function(parent) {
+    var _parentage = this._parentage;
+    if (_parentage === parent) {
+      this._parentage = null;
+    } else if (Array.isArray(_parentage)) {
+      arrRemove(_parentage, parent);
+    }
+  };
+  Subscription2.prototype.remove = function(teardown) {
+    var _finalizers = this._finalizers;
+    _finalizers && arrRemove(_finalizers, teardown);
+    if (teardown instanceof Subscription2) {
+      teardown._removeParent(this);
+    }
+  };
+  Subscription2.EMPTY = function() {
+    var empty = new Subscription2();
+    empty.closed = true;
+    return empty;
+  }();
+  return Subscription2;
+}();
+var EMPTY_SUBSCRIPTION = Subscription.EMPTY;
+function isSubscription(value) {
+  return value instanceof Subscription || value && "closed" in value && isFunction(value.remove) && isFunction(value.add) && isFunction(value.unsubscribe);
+}
+function execFinalizer(finalizer) {
+  if (isFunction(finalizer)) {
+    finalizer();
+  } else {
+    finalizer.unsubscribe();
+  }
+}
+
+// node_modules/rxjs/dist/esm5/internal/config.js
+var config = {
+  onUnhandledError: null,
+  onStoppedNotification: null,
+  Promise: void 0,
+  useDeprecatedSynchronousErrorHandling: false,
+  useDeprecatedNextContext: false
+};
+
+// node_modules/rxjs/dist/esm5/internal/scheduler/timeoutProvider.js
+var timeoutProvider = {
+  setTimeout: function(handler, timeout) {
+    var args = [];
+    for (var _i2 = 2; _i2 < arguments.length; _i2++) {
+      args[_i2 - 2] = arguments[_i2];
+    }
+    var delegate = timeoutProvider.delegate;
+    if (delegate === null || delegate === void 0 ? void 0 : delegate.setTimeout) {
+      return delegate.setTimeout.apply(delegate, __spreadArray([handler, timeout], __read(args)));
+    }
+    return setTimeout.apply(void 0, __spreadArray([handler, timeout], __read(args)));
+  },
+  clearTimeout: function(handle) {
+    var delegate = timeoutProvider.delegate;
+    return ((delegate === null || delegate === void 0 ? void 0 : delegate.clearTimeout) || clearTimeout)(handle);
+  },
+  delegate: void 0
+};
+
+// node_modules/rxjs/dist/esm5/internal/util/reportUnhandledError.js
+function reportUnhandledError(err) {
+  timeoutProvider.setTimeout(function() {
+    var onUnhandledError = config.onUnhandledError;
+    if (onUnhandledError) {
+      onUnhandledError(err);
+    } else {
+      throw err;
+    }
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/noop.js
+function noop() {
+}
+
+// node_modules/rxjs/dist/esm5/internal/NotificationFactories.js
+var COMPLETE_NOTIFICATION = function() {
+  return createNotification("C", void 0, void 0);
+}();
+function errorNotification(error) {
+  return createNotification("E", void 0, error);
+}
+function nextNotification(value) {
+  return createNotification("N", value, void 0);
+}
+function createNotification(kind, value, error) {
+  return {
+    kind,
+    value,
+    error
+  };
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/errorContext.js
+var context = null;
+function errorContext(cb) {
+  if (config.useDeprecatedSynchronousErrorHandling) {
+    var isRoot = !context;
+    if (isRoot) {
+      context = { errorThrown: false, error: null };
+    }
+    cb();
+    if (isRoot) {
+      var _a = context, errorThrown = _a.errorThrown, error = _a.error;
+      context = null;
+      if (errorThrown) {
+        throw error;
+      }
+    }
+  } else {
+    cb();
+  }
+}
+function captureError(err) {
+  if (config.useDeprecatedSynchronousErrorHandling && context) {
+    context.errorThrown = true;
+    context.error = err;
+  }
+}
+
+// node_modules/rxjs/dist/esm5/internal/Subscriber.js
+var Subscriber = function(_super) {
+  __extends(Subscriber2, _super);
+  function Subscriber2(destination) {
+    var _this = _super.call(this) || this;
+    _this.isStopped = false;
+    if (destination) {
+      _this.destination = destination;
+      if (isSubscription(destination)) {
+        destination.add(_this);
+      }
+    } else {
+      _this.destination = EMPTY_OBSERVER;
+    }
+    return _this;
+  }
+  Subscriber2.create = function(next, error, complete) {
+    return new SafeSubscriber(next, error, complete);
+  };
+  Subscriber2.prototype.next = function(value) {
+    if (this.isStopped) {
+      handleStoppedNotification(nextNotification(value), this);
+    } else {
+      this._next(value);
+    }
+  };
+  Subscriber2.prototype.error = function(err) {
+    if (this.isStopped) {
+      handleStoppedNotification(errorNotification(err), this);
+    } else {
+      this.isStopped = true;
+      this._error(err);
+    }
+  };
+  Subscriber2.prototype.complete = function() {
+    if (this.isStopped) {
+      handleStoppedNotification(COMPLETE_NOTIFICATION, this);
+    } else {
+      this.isStopped = true;
+      this._complete();
+    }
+  };
+  Subscriber2.prototype.unsubscribe = function() {
+    if (!this.closed) {
+      this.isStopped = true;
+      _super.prototype.unsubscribe.call(this);
+      this.destination = null;
+    }
+  };
+  Subscriber2.prototype._next = function(value) {
+    this.destination.next(value);
+  };
+  Subscriber2.prototype._error = function(err) {
+    try {
+      this.destination.error(err);
+    } finally {
+      this.unsubscribe();
+    }
+  };
+  Subscriber2.prototype._complete = function() {
+    try {
+      this.destination.complete();
+    } finally {
+      this.unsubscribe();
+    }
+  };
+  return Subscriber2;
+}(Subscription);
+var _bind = Function.prototype.bind;
+function bind(fn, thisArg) {
+  return _bind.call(fn, thisArg);
+}
+var ConsumerObserver = function() {
+  function ConsumerObserver2(partialObserver) {
+    this.partialObserver = partialObserver;
+  }
+  ConsumerObserver2.prototype.next = function(value) {
+    var partialObserver = this.partialObserver;
+    if (partialObserver.next) {
+      try {
+        partialObserver.next(value);
+      } catch (error) {
+        handleUnhandledError(error);
+      }
+    }
+  };
+  ConsumerObserver2.prototype.error = function(err) {
+    var partialObserver = this.partialObserver;
+    if (partialObserver.error) {
+      try {
+        partialObserver.error(err);
+      } catch (error) {
+        handleUnhandledError(error);
+      }
+    } else {
+      handleUnhandledError(err);
+    }
+  };
+  ConsumerObserver2.prototype.complete = function() {
+    var partialObserver = this.partialObserver;
+    if (partialObserver.complete) {
+      try {
+        partialObserver.complete();
+      } catch (error) {
+        handleUnhandledError(error);
+      }
+    }
+  };
+  return ConsumerObserver2;
+}();
+var SafeSubscriber = function(_super) {
+  __extends(SafeSubscriber2, _super);
+  function SafeSubscriber2(observerOrNext, error, complete) {
+    var _this = _super.call(this) || this;
+    var partialObserver;
+    if (isFunction(observerOrNext) || !observerOrNext) {
+      partialObserver = {
+        next: observerOrNext !== null && observerOrNext !== void 0 ? observerOrNext : void 0,
+        error: error !== null && error !== void 0 ? error : void 0,
+        complete: complete !== null && complete !== void 0 ? complete : void 0
+      };
+    } else {
+      var context_1;
+      if (_this && config.useDeprecatedNextContext) {
+        context_1 = Object.create(observerOrNext);
+        context_1.unsubscribe = function() {
+          return _this.unsubscribe();
+        };
+        partialObserver = {
+          next: observerOrNext.next && bind(observerOrNext.next, context_1),
+          error: observerOrNext.error && bind(observerOrNext.error, context_1),
+          complete: observerOrNext.complete && bind(observerOrNext.complete, context_1)
+        };
+      } else {
+        partialObserver = observerOrNext;
+      }
+    }
+    _this.destination = new ConsumerObserver(partialObserver);
+    return _this;
+  }
+  return SafeSubscriber2;
+}(Subscriber);
+function handleUnhandledError(error) {
+  if (config.useDeprecatedSynchronousErrorHandling) {
+    captureError(error);
+  } else {
+    reportUnhandledError(error);
+  }
+}
+function defaultErrorHandler(err) {
+  throw err;
+}
+function handleStoppedNotification(notification, subscriber) {
+  var onStoppedNotification = config.onStoppedNotification;
+  onStoppedNotification && timeoutProvider.setTimeout(function() {
+    return onStoppedNotification(notification, subscriber);
+  });
+}
+var EMPTY_OBSERVER = {
+  closed: true,
+  next: noop,
+  error: defaultErrorHandler,
+  complete: noop
+};
+
+// node_modules/rxjs/dist/esm5/internal/symbol/observable.js
+var observable = function() {
+  return typeof Symbol === "function" && Symbol.observable || "@@observable";
+}();
+
+// node_modules/rxjs/dist/esm5/internal/util/identity.js
+function identity(x2) {
+  return x2;
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/pipe.js
+function pipe() {
+  var fns = [];
+  for (var _i2 = 0; _i2 < arguments.length; _i2++) {
+    fns[_i2] = arguments[_i2];
+  }
+  return pipeFromArray(fns);
+}
+function pipeFromArray(fns) {
+  if (fns.length === 0) {
+    return identity;
+  }
+  if (fns.length === 1) {
+    return fns[0];
+  }
+  return function piped(input) {
+    return fns.reduce(function(prev, fn) {
+      return fn(prev);
+    }, input);
+  };
+}
+
+// node_modules/rxjs/dist/esm5/internal/Observable.js
+var Observable = function() {
+  function Observable2(subscribe) {
+    if (subscribe) {
+      this._subscribe = subscribe;
+    }
+  }
+  Observable2.prototype.lift = function(operator) {
+    var observable2 = new Observable2();
+    observable2.source = this;
+    observable2.operator = operator;
+    return observable2;
+  };
+  Observable2.prototype.subscribe = function(observerOrNext, error, complete) {
+    var _this = this;
+    var subscriber = isSubscriber(observerOrNext) ? observerOrNext : new SafeSubscriber(observerOrNext, error, complete);
+    errorContext(function() {
+      var _a = _this, operator = _a.operator, source = _a.source;
+      subscriber.add(operator ? operator.call(subscriber, source) : source ? _this._subscribe(subscriber) : _this._trySubscribe(subscriber));
+    });
+    return subscriber;
+  };
+  Observable2.prototype._trySubscribe = function(sink) {
+    try {
+      return this._subscribe(sink);
+    } catch (err) {
+      sink.error(err);
+    }
+  };
+  Observable2.prototype.forEach = function(next, promiseCtor) {
+    var _this = this;
+    promiseCtor = getPromiseCtor(promiseCtor);
+    return new promiseCtor(function(resolve, reject) {
+      var subscriber = new SafeSubscriber({
+        next: function(value) {
+          try {
+            next(value);
+          } catch (err) {
+            reject(err);
+            subscriber.unsubscribe();
+          }
+        },
+        error: reject,
+        complete: resolve
+      });
+      _this.subscribe(subscriber);
+    });
+  };
+  Observable2.prototype._subscribe = function(subscriber) {
+    var _a;
+    return (_a = this.source) === null || _a === void 0 ? void 0 : _a.subscribe(subscriber);
+  };
+  Observable2.prototype[observable] = function() {
+    return this;
+  };
+  Observable2.prototype.pipe = function() {
+    var operations = [];
+    for (var _i2 = 0; _i2 < arguments.length; _i2++) {
+      operations[_i2] = arguments[_i2];
+    }
+    return pipeFromArray(operations)(this);
+  };
+  Observable2.prototype.toPromise = function(promiseCtor) {
+    var _this = this;
+    promiseCtor = getPromiseCtor(promiseCtor);
+    return new promiseCtor(function(resolve, reject) {
+      var value;
+      _this.subscribe(function(x2) {
+        return value = x2;
+      }, function(err) {
+        return reject(err);
+      }, function() {
+        return resolve(value);
+      });
+    });
+  };
+  Observable2.create = function(subscribe) {
+    return new Observable2(subscribe);
+  };
+  return Observable2;
+}();
+function getPromiseCtor(promiseCtor) {
+  var _a;
+  return (_a = promiseCtor !== null && promiseCtor !== void 0 ? promiseCtor : config.Promise) !== null && _a !== void 0 ? _a : Promise;
+}
+function isObserver(value) {
+  return value && isFunction(value.next) && isFunction(value.error) && isFunction(value.complete);
+}
+function isSubscriber(value) {
+  return value && value instanceof Subscriber || isObserver(value) && isSubscription(value);
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/lift.js
+function hasLift(source) {
+  return isFunction(source === null || source === void 0 ? void 0 : source.lift);
+}
+function operate(init) {
+  return function(source) {
+    if (hasLift(source)) {
+      return source.lift(function(liftedSource) {
+        try {
+          return init(liftedSource, this);
+        } catch (err) {
+          this.error(err);
+        }
+      });
+    }
+    throw new TypeError("Unable to lift unknown Observable type");
+  };
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/OperatorSubscriber.js
+function createOperatorSubscriber(destination, onNext, onComplete, onError, onFinalize) {
+  return new OperatorSubscriber(destination, onNext, onComplete, onError, onFinalize);
+}
+var OperatorSubscriber = function(_super) {
+  __extends(OperatorSubscriber2, _super);
+  function OperatorSubscriber2(destination, onNext, onComplete, onError, onFinalize, shouldUnsubscribe) {
+    var _this = _super.call(this, destination) || this;
+    _this.onFinalize = onFinalize;
+    _this.shouldUnsubscribe = shouldUnsubscribe;
+    _this._next = onNext ? function(value) {
+      try {
+        onNext(value);
+      } catch (err) {
+        destination.error(err);
+      }
+    } : _super.prototype._next;
+    _this._error = onError ? function(err) {
+      try {
+        onError(err);
+      } catch (err2) {
+        destination.error(err2);
+      } finally {
+        this.unsubscribe();
+      }
+    } : _super.prototype._error;
+    _this._complete = onComplete ? function() {
+      try {
+        onComplete();
+      } catch (err) {
+        destination.error(err);
+      } finally {
+        this.unsubscribe();
+      }
+    } : _super.prototype._complete;
+    return _this;
+  }
+  OperatorSubscriber2.prototype.unsubscribe = function() {
+    var _a;
+    if (!this.shouldUnsubscribe || this.shouldUnsubscribe()) {
+      var closed_1 = this.closed;
+      _super.prototype.unsubscribe.call(this);
+      !closed_1 && ((_a = this.onFinalize) === null || _a === void 0 ? void 0 : _a.call(this));
+    }
+  };
+  return OperatorSubscriber2;
+}(Subscriber);
+
+// node_modules/rxjs/dist/esm5/internal/util/ObjectUnsubscribedError.js
+var ObjectUnsubscribedError = createErrorClass(function(_super) {
+  return function ObjectUnsubscribedErrorImpl() {
+    _super(this);
+    this.name = "ObjectUnsubscribedError";
+    this.message = "object unsubscribed";
+  };
+});
+
+// node_modules/rxjs/dist/esm5/internal/Subject.js
+var Subject = function(_super) {
+  __extends(Subject2, _super);
+  function Subject2() {
+    var _this = _super.call(this) || this;
+    _this.closed = false;
+    _this.currentObservers = null;
+    _this.observers = [];
+    _this.isStopped = false;
+    _this.hasError = false;
+    _this.thrownError = null;
+    return _this;
+  }
+  Subject2.prototype.lift = function(operator) {
+    var subject = new AnonymousSubject(this, this);
+    subject.operator = operator;
+    return subject;
+  };
+  Subject2.prototype._throwIfClosed = function() {
+    if (this.closed) {
+      throw new ObjectUnsubscribedError();
+    }
+  };
+  Subject2.prototype.next = function(value) {
+    var _this = this;
+    errorContext(function() {
+      var e_1, _a;
+      _this._throwIfClosed();
+      if (!_this.isStopped) {
+        if (!_this.currentObservers) {
+          _this.currentObservers = Array.from(_this.observers);
+        }
+        try {
+          for (var _b = __values(_this.currentObservers), _c = _b.next(); !_c.done; _c = _b.next()) {
+            var observer = _c.value;
+            observer.next(value);
+          }
+        } catch (e_1_1) {
+          e_1 = { error: e_1_1 };
+        } finally {
+          try {
+            if (_c && !_c.done && (_a = _b.return))
+              _a.call(_b);
+          } finally {
+            if (e_1)
+              throw e_1.error;
+          }
+        }
+      }
+    });
+  };
+  Subject2.prototype.error = function(err) {
+    var _this = this;
+    errorContext(function() {
+      _this._throwIfClosed();
+      if (!_this.isStopped) {
+        _this.hasError = _this.isStopped = true;
+        _this.thrownError = err;
+        var observers = _this.observers;
+        while (observers.length) {
+          observers.shift().error(err);
+        }
+      }
+    });
+  };
+  Subject2.prototype.complete = function() {
+    var _this = this;
+    errorContext(function() {
+      _this._throwIfClosed();
+      if (!_this.isStopped) {
+        _this.isStopped = true;
+        var observers = _this.observers;
+        while (observers.length) {
+          observers.shift().complete();
+        }
+      }
+    });
+  };
+  Subject2.prototype.unsubscribe = function() {
+    this.isStopped = this.closed = true;
+    this.observers = this.currentObservers = null;
+  };
+  Object.defineProperty(Subject2.prototype, "observed", {
+    get: function() {
+      var _a;
+      return ((_a = this.observers) === null || _a === void 0 ? void 0 : _a.length) > 0;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Subject2.prototype._trySubscribe = function(subscriber) {
+    this._throwIfClosed();
+    return _super.prototype._trySubscribe.call(this, subscriber);
+  };
+  Subject2.prototype._subscribe = function(subscriber) {
+    this._throwIfClosed();
+    this._checkFinalizedStatuses(subscriber);
+    return this._innerSubscribe(subscriber);
+  };
+  Subject2.prototype._innerSubscribe = function(subscriber) {
+    var _this = this;
+    var _a = this, hasError = _a.hasError, isStopped = _a.isStopped, observers = _a.observers;
+    if (hasError || isStopped) {
+      return EMPTY_SUBSCRIPTION;
+    }
+    this.currentObservers = null;
+    observers.push(subscriber);
+    return new Subscription(function() {
+      _this.currentObservers = null;
+      arrRemove(observers, subscriber);
+    });
+  };
+  Subject2.prototype._checkFinalizedStatuses = function(subscriber) {
+    var _a = this, hasError = _a.hasError, thrownError = _a.thrownError, isStopped = _a.isStopped;
+    if (hasError) {
+      subscriber.error(thrownError);
+    } else if (isStopped) {
+      subscriber.complete();
+    }
+  };
+  Subject2.prototype.asObservable = function() {
+    var observable2 = new Observable();
+    observable2.source = this;
+    return observable2;
+  };
+  Subject2.create = function(destination, source) {
+    return new AnonymousSubject(destination, source);
+  };
+  return Subject2;
+}(Observable);
+var AnonymousSubject = function(_super) {
+  __extends(AnonymousSubject2, _super);
+  function AnonymousSubject2(destination, source) {
+    var _this = _super.call(this) || this;
+    _this.destination = destination;
+    _this.source = source;
+    return _this;
+  }
+  AnonymousSubject2.prototype.next = function(value) {
+    var _a, _b;
+    (_b = (_a = this.destination) === null || _a === void 0 ? void 0 : _a.next) === null || _b === void 0 ? void 0 : _b.call(_a, value);
+  };
+  AnonymousSubject2.prototype.error = function(err) {
+    var _a, _b;
+    (_b = (_a = this.destination) === null || _a === void 0 ? void 0 : _a.error) === null || _b === void 0 ? void 0 : _b.call(_a, err);
+  };
+  AnonymousSubject2.prototype.complete = function() {
+    var _a, _b;
+    (_b = (_a = this.destination) === null || _a === void 0 ? void 0 : _a.complete) === null || _b === void 0 ? void 0 : _b.call(_a);
+  };
+  AnonymousSubject2.prototype._subscribe = function(subscriber) {
+    var _a, _b;
+    return (_b = (_a = this.source) === null || _a === void 0 ? void 0 : _a.subscribe(subscriber)) !== null && _b !== void 0 ? _b : EMPTY_SUBSCRIPTION;
+  };
+  return AnonymousSubject2;
+}(Subject);
+
+// node_modules/rxjs/dist/esm5/internal/scheduler/dateTimestampProvider.js
+var dateTimestampProvider = {
+  now: function() {
+    return (dateTimestampProvider.delegate || Date).now();
+  },
+  delegate: void 0
+};
+
+// node_modules/rxjs/dist/esm5/internal/ReplaySubject.js
+var ReplaySubject = function(_super) {
+  __extends(ReplaySubject2, _super);
+  function ReplaySubject2(_bufferSize, _windowTime, _timestampProvider) {
+    if (_bufferSize === void 0) {
+      _bufferSize = Infinity;
+    }
+    if (_windowTime === void 0) {
+      _windowTime = Infinity;
+    }
+    if (_timestampProvider === void 0) {
+      _timestampProvider = dateTimestampProvider;
+    }
+    var _this = _super.call(this) || this;
+    _this._bufferSize = _bufferSize;
+    _this._windowTime = _windowTime;
+    _this._timestampProvider = _timestampProvider;
+    _this._buffer = [];
+    _this._infiniteTimeWindow = true;
+    _this._infiniteTimeWindow = _windowTime === Infinity;
+    _this._bufferSize = Math.max(1, _bufferSize);
+    _this._windowTime = Math.max(1, _windowTime);
+    return _this;
+  }
+  ReplaySubject2.prototype.next = function(value) {
+    var _a = this, isStopped = _a.isStopped, _buffer = _a._buffer, _infiniteTimeWindow = _a._infiniteTimeWindow, _timestampProvider = _a._timestampProvider, _windowTime = _a._windowTime;
+    if (!isStopped) {
+      _buffer.push(value);
+      !_infiniteTimeWindow && _buffer.push(_timestampProvider.now() + _windowTime);
+    }
+    this._trimBuffer();
+    _super.prototype.next.call(this, value);
+  };
+  ReplaySubject2.prototype._subscribe = function(subscriber) {
+    this._throwIfClosed();
+    this._trimBuffer();
+    var subscription = this._innerSubscribe(subscriber);
+    var _a = this, _infiniteTimeWindow = _a._infiniteTimeWindow, _buffer = _a._buffer;
+    var copy = _buffer.slice();
+    for (var i2 = 0; i2 < copy.length && !subscriber.closed; i2 += _infiniteTimeWindow ? 1 : 2) {
+      subscriber.next(copy[i2]);
+    }
+    this._checkFinalizedStatuses(subscriber);
+    return subscription;
+  };
+  ReplaySubject2.prototype._trimBuffer = function() {
+    var _a = this, _bufferSize = _a._bufferSize, _timestampProvider = _a._timestampProvider, _buffer = _a._buffer, _infiniteTimeWindow = _a._infiniteTimeWindow;
+    var adjustedBufferSize = (_infiniteTimeWindow ? 1 : 2) * _bufferSize;
+    _bufferSize < Infinity && adjustedBufferSize < _buffer.length && _buffer.splice(0, _buffer.length - adjustedBufferSize);
+    if (!_infiniteTimeWindow) {
+      var now = _timestampProvider.now();
+      var last2 = 0;
+      for (var i2 = 1; i2 < _buffer.length && _buffer[i2] <= now; i2 += 2) {
+        last2 = i2;
+      }
+      last2 && _buffer.splice(0, last2 + 1);
+    }
+  };
+  return ReplaySubject2;
+}(Subject);
+
+// node_modules/rxjs/dist/esm5/internal/scheduler/Action.js
+var Action = function(_super) {
+  __extends(Action2, _super);
+  function Action2(scheduler, work) {
+    return _super.call(this) || this;
+  }
+  Action2.prototype.schedule = function(state, delay) {
+    if (delay === void 0) {
+      delay = 0;
+    }
+    return this;
+  };
+  return Action2;
+}(Subscription);
+
+// node_modules/rxjs/dist/esm5/internal/scheduler/intervalProvider.js
+var intervalProvider = {
+  setInterval: function(handler, timeout) {
+    var args = [];
+    for (var _i2 = 2; _i2 < arguments.length; _i2++) {
+      args[_i2 - 2] = arguments[_i2];
+    }
+    var delegate = intervalProvider.delegate;
+    if (delegate === null || delegate === void 0 ? void 0 : delegate.setInterval) {
+      return delegate.setInterval.apply(delegate, __spreadArray([handler, timeout], __read(args)));
+    }
+    return setInterval.apply(void 0, __spreadArray([handler, timeout], __read(args)));
+  },
+  clearInterval: function(handle) {
+    var delegate = intervalProvider.delegate;
+    return ((delegate === null || delegate === void 0 ? void 0 : delegate.clearInterval) || clearInterval)(handle);
+  },
+  delegate: void 0
+};
+
+// node_modules/rxjs/dist/esm5/internal/scheduler/AsyncAction.js
+var AsyncAction = function(_super) {
+  __extends(AsyncAction2, _super);
+  function AsyncAction2(scheduler, work) {
+    var _this = _super.call(this, scheduler, work) || this;
+    _this.scheduler = scheduler;
+    _this.work = work;
+    _this.pending = false;
+    return _this;
+  }
+  AsyncAction2.prototype.schedule = function(state, delay) {
+    var _a;
+    if (delay === void 0) {
+      delay = 0;
+    }
+    if (this.closed) {
+      return this;
+    }
+    this.state = state;
+    var id = this.id;
+    var scheduler = this.scheduler;
+    if (id != null) {
+      this.id = this.recycleAsyncId(scheduler, id, delay);
+    }
+    this.pending = true;
+    this.delay = delay;
+    this.id = (_a = this.id) !== null && _a !== void 0 ? _a : this.requestAsyncId(scheduler, this.id, delay);
+    return this;
+  };
+  AsyncAction2.prototype.requestAsyncId = function(scheduler, _id, delay) {
+    if (delay === void 0) {
+      delay = 0;
+    }
+    return intervalProvider.setInterval(scheduler.flush.bind(scheduler, this), delay);
+  };
+  AsyncAction2.prototype.recycleAsyncId = function(_scheduler, id, delay) {
+    if (delay === void 0) {
+      delay = 0;
+    }
+    if (delay != null && this.delay === delay && this.pending === false) {
+      return id;
+    }
+    if (id != null) {
+      intervalProvider.clearInterval(id);
+    }
+    return void 0;
+  };
+  AsyncAction2.prototype.execute = function(state, delay) {
+    if (this.closed) {
+      return new Error("executing a cancelled action");
+    }
+    this.pending = false;
+    var error = this._execute(state, delay);
+    if (error) {
+      return error;
+    } else if (this.pending === false && this.id != null) {
+      this.id = this.recycleAsyncId(this.scheduler, this.id, null);
+    }
+  };
+  AsyncAction2.prototype._execute = function(state, _delay) {
+    var errored = false;
+    var errorValue;
+    try {
+      this.work(state);
+    } catch (e2) {
+      errored = true;
+      errorValue = e2 ? e2 : new Error("Scheduled action threw falsy error");
+    }
+    if (errored) {
+      this.unsubscribe();
+      return errorValue;
+    }
+  };
+  AsyncAction2.prototype.unsubscribe = function() {
+    if (!this.closed) {
+      var _a = this, id = _a.id, scheduler = _a.scheduler;
+      var actions = scheduler.actions;
+      this.work = this.state = this.scheduler = null;
+      this.pending = false;
+      arrRemove(actions, this);
+      if (id != null) {
+        this.id = this.recycleAsyncId(scheduler, id, null);
+      }
+      this.delay = null;
+      _super.prototype.unsubscribe.call(this);
+    }
+  };
+  return AsyncAction2;
+}(Action);
+
+// node_modules/rxjs/dist/esm5/internal/Scheduler.js
+var Scheduler = function() {
+  function Scheduler2(schedulerActionCtor, now) {
+    if (now === void 0) {
+      now = Scheduler2.now;
+    }
+    this.schedulerActionCtor = schedulerActionCtor;
+    this.now = now;
+  }
+  Scheduler2.prototype.schedule = function(work, delay, state) {
+    if (delay === void 0) {
+      delay = 0;
+    }
+    return new this.schedulerActionCtor(this, work).schedule(state, delay);
+  };
+  Scheduler2.now = dateTimestampProvider.now;
+  return Scheduler2;
+}();
+
+// node_modules/rxjs/dist/esm5/internal/scheduler/AsyncScheduler.js
+var AsyncScheduler = function(_super) {
+  __extends(AsyncScheduler2, _super);
+  function AsyncScheduler2(SchedulerAction, now) {
+    if (now === void 0) {
+      now = Scheduler.now;
+    }
+    var _this = _super.call(this, SchedulerAction, now) || this;
+    _this.actions = [];
+    _this._active = false;
+    return _this;
+  }
+  AsyncScheduler2.prototype.flush = function(action) {
+    var actions = this.actions;
+    if (this._active) {
+      actions.push(action);
+      return;
+    }
+    var error;
+    this._active = true;
+    do {
+      if (error = action.execute(action.state, action.delay)) {
+        break;
+      }
+    } while (action = actions.shift());
+    this._active = false;
+    if (error) {
+      while (action = actions.shift()) {
+        action.unsubscribe();
+      }
+      throw error;
+    }
+  };
+  return AsyncScheduler2;
+}(Scheduler);
+
+// node_modules/rxjs/dist/esm5/internal/scheduler/async.js
+var asyncScheduler = new AsyncScheduler(AsyncAction);
+var async = asyncScheduler;
+
+// node_modules/rxjs/dist/esm5/internal/observable/empty.js
+var EMPTY = new Observable(function(subscriber) {
+  return subscriber.complete();
+});
+
+// node_modules/rxjs/dist/esm5/internal/util/isScheduler.js
+function isScheduler(value) {
+  return value && isFunction(value.schedule);
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/args.js
+function last(arr) {
+  return arr[arr.length - 1];
+}
+function popResultSelector(args) {
+  return isFunction(last(args)) ? args.pop() : void 0;
+}
+function popScheduler(args) {
+  return isScheduler(last(args)) ? args.pop() : void 0;
+}
+function popNumber(args, defaultValue) {
+  return typeof last(args) === "number" ? args.pop() : defaultValue;
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/isArrayLike.js
+var isArrayLike = function(x2) {
+  return x2 && typeof x2.length === "number" && typeof x2 !== "function";
+};
+
+// node_modules/rxjs/dist/esm5/internal/util/isPromise.js
+function isPromise(value) {
+  return isFunction(value === null || value === void 0 ? void 0 : value.then);
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/isInteropObservable.js
+function isInteropObservable(input) {
+  return isFunction(input[observable]);
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/isAsyncIterable.js
+function isAsyncIterable(obj) {
+  return Symbol.asyncIterator && isFunction(obj === null || obj === void 0 ? void 0 : obj[Symbol.asyncIterator]);
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/throwUnobservableError.js
+function createInvalidObservableTypeError(input) {
+  return new TypeError("You provided " + (input !== null && typeof input === "object" ? "an invalid object" : "'" + input + "'") + " where a stream was expected. You can provide an Observable, Promise, ReadableStream, Array, AsyncIterable, or Iterable.");
+}
+
+// node_modules/rxjs/dist/esm5/internal/symbol/iterator.js
+function getSymbolIterator() {
+  if (typeof Symbol !== "function" || !Symbol.iterator) {
+    return "@@iterator";
+  }
+  return Symbol.iterator;
+}
+var iterator = getSymbolIterator();
+
+// node_modules/rxjs/dist/esm5/internal/util/isIterable.js
+function isIterable(input) {
+  return isFunction(input === null || input === void 0 ? void 0 : input[iterator]);
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/isReadableStreamLike.js
+function readableStreamLikeToAsyncGenerator(readableStream) {
+  return __asyncGenerator(this, arguments, function readableStreamLikeToAsyncGenerator_1() {
+    var reader, _a, value, done;
+    return __generator(this, function(_b) {
+      switch (_b.label) {
+        case 0:
+          reader = readableStream.getReader();
+          _b.label = 1;
+        case 1:
+          _b.trys.push([1, , 9, 10]);
+          _b.label = 2;
+        case 2:
+          if (false)
+            return [3, 8];
+          return [4, __await(reader.read())];
+        case 3:
+          _a = _b.sent(), value = _a.value, done = _a.done;
+          if (!done)
+            return [3, 5];
+          return [4, __await(void 0)];
+        case 4:
+          return [2, _b.sent()];
+        case 5:
+          return [4, __await(value)];
+        case 6:
+          return [4, _b.sent()];
+        case 7:
+          _b.sent();
+          return [3, 2];
+        case 8:
+          return [3, 10];
+        case 9:
+          reader.releaseLock();
+          return [7];
+        case 10:
+          return [2];
+      }
+    });
+  });
+}
+function isReadableStreamLike(obj) {
+  return isFunction(obj === null || obj === void 0 ? void 0 : obj.getReader);
+}
+
+// node_modules/rxjs/dist/esm5/internal/observable/innerFrom.js
+function innerFrom(input) {
+  if (input instanceof Observable) {
+    return input;
+  }
+  if (input != null) {
+    if (isInteropObservable(input)) {
+      return fromInteropObservable(input);
+    }
+    if (isArrayLike(input)) {
+      return fromArrayLike(input);
+    }
+    if (isPromise(input)) {
+      return fromPromise(input);
+    }
+    if (isAsyncIterable(input)) {
+      return fromAsyncIterable(input);
+    }
+    if (isIterable(input)) {
+      return fromIterable(input);
+    }
+    if (isReadableStreamLike(input)) {
+      return fromReadableStreamLike(input);
+    }
+  }
+  throw createInvalidObservableTypeError(input);
+}
+function fromInteropObservable(obj) {
+  return new Observable(function(subscriber) {
+    var obs = obj[observable]();
+    if (isFunction(obs.subscribe)) {
+      return obs.subscribe(subscriber);
+    }
+    throw new TypeError("Provided object does not correctly implement Symbol.observable");
+  });
+}
+function fromArrayLike(array) {
+  return new Observable(function(subscriber) {
+    for (var i2 = 0; i2 < array.length && !subscriber.closed; i2++) {
+      subscriber.next(array[i2]);
+    }
+    subscriber.complete();
+  });
+}
+function fromPromise(promise) {
+  return new Observable(function(subscriber) {
+    promise.then(function(value) {
+      if (!subscriber.closed) {
+        subscriber.next(value);
+        subscriber.complete();
+      }
+    }, function(err) {
+      return subscriber.error(err);
+    }).then(null, reportUnhandledError);
+  });
+}
+function fromIterable(iterable) {
+  return new Observable(function(subscriber) {
+    var e_1, _a;
+    try {
+      for (var iterable_1 = __values(iterable), iterable_1_1 = iterable_1.next(); !iterable_1_1.done; iterable_1_1 = iterable_1.next()) {
+        var value = iterable_1_1.value;
+        subscriber.next(value);
+        if (subscriber.closed) {
+          return;
+        }
+      }
+    } catch (e_1_1) {
+      e_1 = { error: e_1_1 };
+    } finally {
+      try {
+        if (iterable_1_1 && !iterable_1_1.done && (_a = iterable_1.return))
+          _a.call(iterable_1);
+      } finally {
+        if (e_1)
+          throw e_1.error;
+      }
+    }
+    subscriber.complete();
+  });
+}
+function fromAsyncIterable(asyncIterable) {
+  return new Observable(function(subscriber) {
+    process2(asyncIterable, subscriber).catch(function(err) {
+      return subscriber.error(err);
+    });
+  });
+}
+function fromReadableStreamLike(readableStream) {
+  return fromAsyncIterable(readableStreamLikeToAsyncGenerator(readableStream));
+}
+function process2(asyncIterable, subscriber) {
+  var asyncIterable_1, asyncIterable_1_1;
+  var e_2, _a;
+  return __awaiter(this, void 0, void 0, function() {
+    var value, e_2_1;
+    return __generator(this, function(_b) {
+      switch (_b.label) {
+        case 0:
+          _b.trys.push([0, 5, 6, 11]);
+          asyncIterable_1 = __asyncValues(asyncIterable);
+          _b.label = 1;
+        case 1:
+          return [4, asyncIterable_1.next()];
+        case 2:
+          if (!(asyncIterable_1_1 = _b.sent(), !asyncIterable_1_1.done))
+            return [3, 4];
+          value = asyncIterable_1_1.value;
+          subscriber.next(value);
+          if (subscriber.closed) {
+            return [2];
+          }
+          _b.label = 3;
+        case 3:
+          return [3, 1];
+        case 4:
+          return [3, 11];
+        case 5:
+          e_2_1 = _b.sent();
+          e_2 = { error: e_2_1 };
+          return [3, 11];
+        case 6:
+          _b.trys.push([6, , 9, 10]);
+          if (!(asyncIterable_1_1 && !asyncIterable_1_1.done && (_a = asyncIterable_1.return)))
+            return [3, 8];
+          return [4, _a.call(asyncIterable_1)];
+        case 7:
+          _b.sent();
+          _b.label = 8;
+        case 8:
+          return [3, 10];
+        case 9:
+          if (e_2)
+            throw e_2.error;
+          return [7];
+        case 10:
+          return [7];
+        case 11:
+          subscriber.complete();
+          return [2];
+      }
+    });
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/executeSchedule.js
+function executeSchedule(parentSubscription, scheduler, work, delay, repeat) {
+  if (delay === void 0) {
+    delay = 0;
+  }
+  if (repeat === void 0) {
+    repeat = false;
+  }
+  var scheduleSubscription = scheduler.schedule(function() {
+    work();
+    if (repeat) {
+      parentSubscription.add(this.schedule(null, delay));
+    } else {
+      this.unsubscribe();
+    }
+  }, delay);
+  parentSubscription.add(scheduleSubscription);
+  if (!repeat) {
+    return scheduleSubscription;
+  }
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/observeOn.js
+function observeOn(scheduler, delay) {
+  if (delay === void 0) {
+    delay = 0;
+  }
+  return operate(function(source, subscriber) {
+    source.subscribe(createOperatorSubscriber(subscriber, function(value) {
+      return executeSchedule(subscriber, scheduler, function() {
+        return subscriber.next(value);
+      }, delay);
+    }, function() {
+      return executeSchedule(subscriber, scheduler, function() {
+        return subscriber.complete();
+      }, delay);
+    }, function(err) {
+      return executeSchedule(subscriber, scheduler, function() {
+        return subscriber.error(err);
+      }, delay);
+    }));
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/subscribeOn.js
+function subscribeOn(scheduler, delay) {
+  if (delay === void 0) {
+    delay = 0;
+  }
+  return operate(function(source, subscriber) {
+    subscriber.add(scheduler.schedule(function() {
+      return source.subscribe(subscriber);
+    }, delay));
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/scheduled/scheduleObservable.js
+function scheduleObservable(input, scheduler) {
+  return innerFrom(input).pipe(subscribeOn(scheduler), observeOn(scheduler));
+}
+
+// node_modules/rxjs/dist/esm5/internal/scheduled/schedulePromise.js
+function schedulePromise(input, scheduler) {
+  return innerFrom(input).pipe(subscribeOn(scheduler), observeOn(scheduler));
+}
+
+// node_modules/rxjs/dist/esm5/internal/scheduled/scheduleArray.js
+function scheduleArray(input, scheduler) {
+  return new Observable(function(subscriber) {
+    var i2 = 0;
+    return scheduler.schedule(function() {
+      if (i2 === input.length) {
+        subscriber.complete();
+      } else {
+        subscriber.next(input[i2++]);
+        if (!subscriber.closed) {
+          this.schedule();
+        }
+      }
+    });
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/scheduled/scheduleIterable.js
+function scheduleIterable(input, scheduler) {
+  return new Observable(function(subscriber) {
+    var iterator2;
+    executeSchedule(subscriber, scheduler, function() {
+      iterator2 = input[iterator]();
+      executeSchedule(subscriber, scheduler, function() {
+        var _a;
+        var value;
+        var done;
+        try {
+          _a = iterator2.next(), value = _a.value, done = _a.done;
+        } catch (err) {
+          subscriber.error(err);
+          return;
+        }
+        if (done) {
+          subscriber.complete();
+        } else {
+          subscriber.next(value);
+        }
+      }, 0, true);
+    });
+    return function() {
+      return isFunction(iterator2 === null || iterator2 === void 0 ? void 0 : iterator2.return) && iterator2.return();
+    };
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/scheduled/scheduleAsyncIterable.js
+function scheduleAsyncIterable(input, scheduler) {
+  if (!input) {
+    throw new Error("Iterable cannot be null");
+  }
+  return new Observable(function(subscriber) {
+    executeSchedule(subscriber, scheduler, function() {
+      var iterator2 = input[Symbol.asyncIterator]();
+      executeSchedule(subscriber, scheduler, function() {
+        iterator2.next().then(function(result) {
+          if (result.done) {
+            subscriber.complete();
+          } else {
+            subscriber.next(result.value);
+          }
+        });
+      }, 0, true);
+    });
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/scheduled/scheduleReadableStreamLike.js
+function scheduleReadableStreamLike(input, scheduler) {
+  return scheduleAsyncIterable(readableStreamLikeToAsyncGenerator(input), scheduler);
+}
+
+// node_modules/rxjs/dist/esm5/internal/scheduled/scheduled.js
+function scheduled(input, scheduler) {
+  if (input != null) {
+    if (isInteropObservable(input)) {
+      return scheduleObservable(input, scheduler);
+    }
+    if (isArrayLike(input)) {
+      return scheduleArray(input, scheduler);
+    }
+    if (isPromise(input)) {
+      return schedulePromise(input, scheduler);
+    }
+    if (isAsyncIterable(input)) {
+      return scheduleAsyncIterable(input, scheduler);
+    }
+    if (isIterable(input)) {
+      return scheduleIterable(input, scheduler);
+    }
+    if (isReadableStreamLike(input)) {
+      return scheduleReadableStreamLike(input, scheduler);
+    }
+  }
+  throw createInvalidObservableTypeError(input);
+}
+
+// node_modules/rxjs/dist/esm5/internal/observable/from.js
+function from(input, scheduler) {
+  return scheduler ? scheduled(input, scheduler) : innerFrom(input);
+}
+
+// node_modules/rxjs/dist/esm5/internal/observable/of.js
+function of() {
+  var args = [];
+  for (var _i2 = 0; _i2 < arguments.length; _i2++) {
+    args[_i2] = arguments[_i2];
+  }
+  var scheduler = popScheduler(args);
+  return from(args, scheduler);
+}
+
+// node_modules/rxjs/dist/esm5/internal/observable/throwError.js
+function throwError(errorOrErrorFactory, scheduler) {
+  var errorFactory = isFunction(errorOrErrorFactory) ? errorOrErrorFactory : function() {
+    return errorOrErrorFactory;
+  };
+  var init = function(subscriber) {
+    return subscriber.error(errorFactory());
+  };
+  return new Observable(scheduler ? function(subscriber) {
+    return scheduler.schedule(init, 0, subscriber);
+  } : init);
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/isObservable.js
+function isObservable(obj) {
+  return !!obj && (obj instanceof Observable || isFunction(obj.lift) && isFunction(obj.subscribe));
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/EmptyError.js
+var EmptyError = createErrorClass(function(_super) {
+  return function EmptyErrorImpl() {
+    _super(this);
+    this.name = "EmptyError";
+    this.message = "no elements in sequence";
+  };
+});
+
+// node_modules/rxjs/dist/esm5/internal/lastValueFrom.js
+function lastValueFrom(source, config2) {
+  var hasConfig = typeof config2 === "object";
+  return new Promise(function(resolve, reject) {
+    var _hasValue = false;
+    var _value;
+    source.subscribe({
+      next: function(value) {
+        _value = value;
+        _hasValue = true;
+      },
+      error: reject,
+      complete: function() {
+        if (_hasValue) {
+          resolve(_value);
+        } else if (hasConfig) {
+          resolve(config2.defaultValue);
+        } else {
+          reject(new EmptyError());
+        }
+      }
+    });
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/isDate.js
+function isValidDate(value) {
+  return value instanceof Date && !isNaN(value);
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/map.js
+function map(project, thisArg) {
+  return operate(function(source, subscriber) {
+    var index = 0;
+    source.subscribe(createOperatorSubscriber(subscriber, function(value) {
+      subscriber.next(project.call(thisArg, value, index++));
+    }));
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/mapOneOrManyArgs.js
+var isArray = Array.isArray;
+function callOrApply(fn, args) {
+  return isArray(args) ? fn.apply(void 0, __spreadArray([], __read(args))) : fn(args);
+}
+function mapOneOrManyArgs(fn) {
+  return map(function(args) {
+    return callOrApply(fn, args);
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/observable/combineLatest.js
+function combineLatestInit(observables, scheduler, valueTransform) {
+  if (valueTransform === void 0) {
+    valueTransform = identity;
+  }
+  return function(subscriber) {
+    maybeSchedule(scheduler, function() {
+      var length = observables.length;
+      var values = new Array(length);
+      var active = length;
+      var remainingFirstValues = length;
+      var _loop_1 = function(i3) {
+        maybeSchedule(scheduler, function() {
+          var source = from(observables[i3], scheduler);
+          var hasFirstValue = false;
+          source.subscribe(createOperatorSubscriber(subscriber, function(value) {
+            values[i3] = value;
+            if (!hasFirstValue) {
+              hasFirstValue = true;
+              remainingFirstValues--;
+            }
+            if (!remainingFirstValues) {
+              subscriber.next(valueTransform(values.slice()));
+            }
+          }, function() {
+            if (!--active) {
+              subscriber.complete();
+            }
+          }));
+        }, subscriber);
+      };
+      for (var i2 = 0; i2 < length; i2++) {
+        _loop_1(i2);
+      }
+    }, subscriber);
+  };
+}
+function maybeSchedule(scheduler, execute, subscription) {
+  if (scheduler) {
+    executeSchedule(subscription, scheduler, execute);
+  } else {
+    execute();
+  }
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/mergeInternals.js
+function mergeInternals(source, subscriber, project, concurrent, onBeforeNext, expand, innerSubScheduler, additionalFinalizer) {
+  var buffer = [];
+  var active = 0;
+  var index = 0;
+  var isComplete = false;
+  var checkComplete = function() {
+    if (isComplete && !buffer.length && !active) {
+      subscriber.complete();
+    }
+  };
+  var outerNext = function(value) {
+    return active < concurrent ? doInnerSub(value) : buffer.push(value);
+  };
+  var doInnerSub = function(value) {
+    expand && subscriber.next(value);
+    active++;
+    var innerComplete = false;
+    innerFrom(project(value, index++)).subscribe(createOperatorSubscriber(subscriber, function(innerValue) {
+      onBeforeNext === null || onBeforeNext === void 0 ? void 0 : onBeforeNext(innerValue);
+      if (expand) {
+        outerNext(innerValue);
+      } else {
+        subscriber.next(innerValue);
+      }
+    }, function() {
+      innerComplete = true;
+    }, void 0, function() {
+      if (innerComplete) {
+        try {
+          active--;
+          var _loop_1 = function() {
+            var bufferedValue = buffer.shift();
+            if (innerSubScheduler) {
+              executeSchedule(subscriber, innerSubScheduler, function() {
+                return doInnerSub(bufferedValue);
+              });
+            } else {
+              doInnerSub(bufferedValue);
+            }
+          };
+          while (buffer.length && active < concurrent) {
+            _loop_1();
+          }
+          checkComplete();
+        } catch (err) {
+          subscriber.error(err);
+        }
+      }
+    }));
+  };
+  source.subscribe(createOperatorSubscriber(subscriber, outerNext, function() {
+    isComplete = true;
+    checkComplete();
+  }));
+  return function() {
+    additionalFinalizer === null || additionalFinalizer === void 0 ? void 0 : additionalFinalizer();
+  };
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/mergeMap.js
+function mergeMap(project, resultSelector, concurrent) {
+  if (concurrent === void 0) {
+    concurrent = Infinity;
+  }
+  if (isFunction(resultSelector)) {
+    return mergeMap(function(a4, i2) {
+      return map(function(b, ii) {
+        return resultSelector(a4, b, i2, ii);
+      })(innerFrom(project(a4, i2)));
+    }, concurrent);
+  } else if (typeof resultSelector === "number") {
+    concurrent = resultSelector;
+  }
+  return operate(function(source, subscriber) {
+    return mergeInternals(source, subscriber, project, concurrent);
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/mergeAll.js
+function mergeAll(concurrent) {
+  if (concurrent === void 0) {
+    concurrent = Infinity;
+  }
+  return mergeMap(identity, concurrent);
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/concatAll.js
+function concatAll() {
+  return mergeAll(1);
+}
+
+// node_modules/rxjs/dist/esm5/internal/observable/concat.js
+function concat() {
+  var args = [];
+  for (var _i2 = 0; _i2 < arguments.length; _i2++) {
+    args[_i2] = arguments[_i2];
+  }
+  return concatAll()(from(args, popScheduler(args)));
+}
+
+// node_modules/rxjs/dist/esm5/internal/observable/defer.js
+function defer(observableFactory) {
+  return new Observable(function(subscriber) {
+    innerFrom(observableFactory()).subscribe(subscriber);
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/observable/timer.js
+function timer(dueTime, intervalOrScheduler, scheduler) {
+  if (dueTime === void 0) {
+    dueTime = 0;
+  }
+  if (scheduler === void 0) {
+    scheduler = async;
+  }
+  var intervalDuration = -1;
+  if (intervalOrScheduler != null) {
+    if (isScheduler(intervalOrScheduler)) {
+      scheduler = intervalOrScheduler;
+    } else {
+      intervalDuration = intervalOrScheduler;
+    }
+  }
+  return new Observable(function(subscriber) {
+    var due = isValidDate(dueTime) ? +dueTime - scheduler.now() : dueTime;
+    if (due < 0) {
+      due = 0;
+    }
+    var n4 = 0;
+    return scheduler.schedule(function() {
+      if (!subscriber.closed) {
+        subscriber.next(n4++);
+        if (0 <= intervalDuration) {
+          this.schedule(void 0, intervalDuration);
+        } else {
+          subscriber.complete();
+        }
+      }
+    }, due);
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/observable/merge.js
+function merge() {
+  var args = [];
+  for (var _i2 = 0; _i2 < arguments.length; _i2++) {
+    args[_i2] = arguments[_i2];
+  }
+  var scheduler = popScheduler(args);
+  var concurrent = popNumber(args, Infinity);
+  var sources = args;
+  return !sources.length ? EMPTY : sources.length === 1 ? innerFrom(sources[0]) : mergeAll(concurrent)(from(sources, scheduler));
+}
+
+// node_modules/rxjs/dist/esm5/internal/util/argsOrArgArray.js
+var isArray2 = Array.isArray;
+function argsOrArgArray(args) {
+  return args.length === 1 && isArray2(args[0]) ? args[0] : args;
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/filter.js
+function filter(predicate, thisArg) {
+  return operate(function(source, subscriber) {
+    var index = 0;
+    source.subscribe(createOperatorSubscriber(subscriber, function(value) {
+      return predicate.call(thisArg, value, index++) && subscriber.next(value);
+    }));
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/catchError.js
+function catchError(selector) {
+  return operate(function(source, subscriber) {
+    var innerSub = null;
+    var syncUnsub = false;
+    var handledResult;
+    innerSub = source.subscribe(createOperatorSubscriber(subscriber, void 0, void 0, function(err) {
+      handledResult = innerFrom(selector(err, catchError(selector)(source)));
+      if (innerSub) {
+        innerSub.unsubscribe();
+        innerSub = null;
+        handledResult.subscribe(subscriber);
+      } else {
+        syncUnsub = true;
+      }
+    }));
+    if (syncUnsub) {
+      innerSub.unsubscribe();
+      innerSub = null;
+      handledResult.subscribe(subscriber);
+    }
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/combineLatest.js
+function combineLatest() {
+  var args = [];
+  for (var _i2 = 0; _i2 < arguments.length; _i2++) {
+    args[_i2] = arguments[_i2];
+  }
+  var resultSelector = popResultSelector(args);
+  return resultSelector ? pipe(combineLatest.apply(void 0, __spreadArray([], __read(args))), mapOneOrManyArgs(resultSelector)) : operate(function(source, subscriber) {
+    combineLatestInit(__spreadArray([source], __read(argsOrArgArray(args))))(subscriber);
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/combineLatestWith.js
+function combineLatestWith() {
+  var otherSources = [];
+  for (var _i2 = 0; _i2 < arguments.length; _i2++) {
+    otherSources[_i2] = arguments[_i2];
+  }
+  return combineLatest.apply(void 0, __spreadArray([], __read(otherSources)));
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/finalize.js
+function finalize(callback) {
+  return operate(function(source, subscriber) {
+    try {
+      source.subscribe(subscriber);
+    } finally {
+      subscriber.add(callback);
+    }
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/share.js
+function share(options) {
+  if (options === void 0) {
+    options = {};
+  }
+  var _a = options.connector, connector = _a === void 0 ? function() {
+    return new Subject();
+  } : _a, _b = options.resetOnError, resetOnError = _b === void 0 ? true : _b, _c = options.resetOnComplete, resetOnComplete = _c === void 0 ? true : _c, _d = options.resetOnRefCountZero, resetOnRefCountZero = _d === void 0 ? true : _d;
+  return function(wrapperSource) {
+    var connection;
+    var resetConnection;
+    var subject;
+    var refCount = 0;
+    var hasCompleted = false;
+    var hasErrored = false;
+    var cancelReset = function() {
+      resetConnection === null || resetConnection === void 0 ? void 0 : resetConnection.unsubscribe();
+      resetConnection = void 0;
+    };
+    var reset = function() {
+      cancelReset();
+      connection = subject = void 0;
+      hasCompleted = hasErrored = false;
+    };
+    var resetAndUnsubscribe = function() {
+      var conn = connection;
+      reset();
+      conn === null || conn === void 0 ? void 0 : conn.unsubscribe();
+    };
+    return operate(function(source, subscriber) {
+      refCount++;
+      if (!hasErrored && !hasCompleted) {
+        cancelReset();
+      }
+      var dest = subject = subject !== null && subject !== void 0 ? subject : connector();
+      subscriber.add(function() {
+        refCount--;
+        if (refCount === 0 && !hasErrored && !hasCompleted) {
+          resetConnection = handleReset(resetAndUnsubscribe, resetOnRefCountZero);
+        }
+      });
+      dest.subscribe(subscriber);
+      if (!connection && refCount > 0) {
+        connection = new SafeSubscriber({
+          next: function(value) {
+            return dest.next(value);
+          },
+          error: function(err) {
+            hasErrored = true;
+            cancelReset();
+            resetConnection = handleReset(reset, resetOnError, err);
+            dest.error(err);
+          },
+          complete: function() {
+            hasCompleted = true;
+            cancelReset();
+            resetConnection = handleReset(reset, resetOnComplete);
+            dest.complete();
+          }
+        });
+        innerFrom(source).subscribe(connection);
+      }
+    })(wrapperSource);
+  };
+}
+function handleReset(reset, on) {
+  var args = [];
+  for (var _i2 = 2; _i2 < arguments.length; _i2++) {
+    args[_i2 - 2] = arguments[_i2];
+  }
+  if (on === true) {
+    reset();
+    return;
+  }
+  if (on === false) {
+    return;
+  }
+  var onSubscriber = new SafeSubscriber({
+    next: function() {
+      onSubscriber.unsubscribe();
+      reset();
+    }
+  });
+  return innerFrom(on.apply(void 0, __spreadArray([], __read(args)))).subscribe(onSubscriber);
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/shareReplay.js
+function shareReplay(configOrBufferSize, windowTime, scheduler) {
+  var _a, _b, _c;
+  var bufferSize;
+  var refCount = false;
+  if (configOrBufferSize && typeof configOrBufferSize === "object") {
+    _a = configOrBufferSize.bufferSize, bufferSize = _a === void 0 ? Infinity : _a, _b = configOrBufferSize.windowTime, windowTime = _b === void 0 ? Infinity : _b, _c = configOrBufferSize.refCount, refCount = _c === void 0 ? false : _c, scheduler = configOrBufferSize.scheduler;
+  } else {
+    bufferSize = configOrBufferSize !== null && configOrBufferSize !== void 0 ? configOrBufferSize : Infinity;
+  }
+  return share({
+    connector: function() {
+      return new ReplaySubject(bufferSize, windowTime, scheduler);
+    },
+    resetOnError: true,
+    resetOnComplete: false,
+    resetOnRefCountZero: refCount
+  });
+}
+
+// node_modules/rxjs/dist/esm5/internal/operators/tap.js
+function tap(observerOrNext, error, complete) {
+  var tapObserver = isFunction(observerOrNext) || error || complete ? { next: observerOrNext, error, complete } : observerOrNext;
+  return tapObserver ? operate(function(source, subscriber) {
+    var _a;
+    (_a = tapObserver.subscribe) === null || _a === void 0 ? void 0 : _a.call(tapObserver);
+    var isUnsub = true;
+    source.subscribe(createOperatorSubscriber(subscriber, function(value) {
+      var _a2;
+      (_a2 = tapObserver.next) === null || _a2 === void 0 ? void 0 : _a2.call(tapObserver, value);
+      subscriber.next(value);
+    }, function() {
+      var _a2;
+      isUnsub = false;
+      (_a2 = tapObserver.complete) === null || _a2 === void 0 ? void 0 : _a2.call(tapObserver);
+      subscriber.complete();
+    }, function(err) {
+      var _a2;
+      isUnsub = false;
+      (_a2 = tapObserver.error) === null || _a2 === void 0 ? void 0 : _a2.call(tapObserver, err);
+      subscriber.error(err);
+    }, function() {
+      var _a2, _b;
+      if (isUnsub) {
+        (_a2 = tapObserver.unsubscribe) === null || _a2 === void 0 ? void 0 : _a2.call(tapObserver);
+      }
+      (_b = tapObserver.finalize) === null || _b === void 0 ? void 0 : _b.call(tapObserver);
+    }));
+  }) : identity;
+}
+
+// node_modules/@sanity/client/dist/index.browser.js
+init_stegaClean();
+var ClientError = class extends Error {
+  constructor(res) {
+    const props = extractErrorProps(res);
+    super(props.message);
+    __publicField(this, "response");
+    __publicField(this, "statusCode", 400);
+    __publicField(this, "responseBody");
+    __publicField(this, "details");
+    Object.assign(this, props);
+  }
+};
+var ServerError = class extends Error {
+  constructor(res) {
+    const props = extractErrorProps(res);
+    super(props.message);
+    __publicField(this, "response");
+    __publicField(this, "statusCode", 500);
+    __publicField(this, "responseBody");
+    __publicField(this, "details");
+    Object.assign(this, props);
+  }
+};
 function extractErrorProps(res) {
-  const body = res.body;
-  const props = {
+  const body = res.body, props = {
     response: res,
     statusCode: res.statusCode,
     responseBody: stringifyBody(body, res),
     message: "",
     details: void 0
   };
-  if (body.error && body.message) {
-    props.message = "".concat(body.error, " - ").concat(body.message);
-    return props;
-  }
-  if (isMutationError(body)) {
-    const allItems = body.error.items || [];
-    const items = allItems.slice(0, MAX_ITEMS_IN_ERROR_MESSAGE).map((item) => {
+  if (body.error && body.message)
+    return props.message = `${body.error} - ${body.message}`, props;
+  if (isMutationError(body) || isActionError(body)) {
+    const allItems = body.error.items || [], items = allItems.slice(0, 5).map((item) => {
       var _a;
       return (_a = item.error) == null ? void 0 : _a.description;
     }).filter(Boolean);
-    let itemsStr = items.length ? ":\n- ".concat(items.join("\n- ")) : "";
-    if (allItems.length > MAX_ITEMS_IN_ERROR_MESSAGE) {
-      itemsStr += "\n...and ".concat(allItems.length - MAX_ITEMS_IN_ERROR_MESSAGE, " more");
-    }
-    props.message = "".concat(body.error.description).concat(itemsStr);
-    props.details = body.error;
-    return props;
+    let itemsStr = items.length ? `:
+- ${items.join(`
+- `)}` : "";
+    return allItems.length > 5 && (itemsStr += `
+...and ${allItems.length - 5} more`), props.message = `${body.error.description}${itemsStr}`, props.details = body.error, props;
   }
-  if (body.error && body.error.description) {
-    props.message = body.error.description;
-    props.details = body.error;
-    return props;
-  }
-  props.message = body.error || body.message || httpErrorMessage(res);
-  return props;
+  return body.error && body.error.description ? (props.message = body.error.description, props.details = body.error, props) : (props.message = body.error || body.message || httpErrorMessage(res), props);
 }
 function isMutationError(body) {
-  return isPlainObject2(body) && isPlainObject2(body.error) && body.error.type === "mutationError" && typeof body.error.description === "string";
+  return isPlainObject(body) && isPlainObject(body.error) && body.error.type === "mutationError" && typeof body.error.description == "string";
 }
-function isPlainObject2(obj) {
-  return typeof obj === "object" && obj !== null && !Array.isArray(obj);
+function isActionError(body) {
+  return isPlainObject(body) && isPlainObject(body.error) && body.error.type === "actionError" && typeof body.error.description == "string";
+}
+function isPlainObject(obj) {
+  return typeof obj == "object" && obj !== null && !Array.isArray(obj);
 }
 function httpErrorMessage(res) {
-  const statusMessage = res.statusMessage ? " ".concat(res.statusMessage) : "";
-  return "".concat(res.method, "-request to ").concat(res.url, " resulted in HTTP ").concat(res.statusCode).concat(statusMessage);
+  const statusMessage = res.statusMessage ? ` ${res.statusMessage}` : "";
+  return `${res.method}-request to ${res.url} resulted in HTTP ${res.statusCode}${statusMessage}`;
 }
 function stringifyBody(body, res) {
-  const contentType = (res.headers["content-type"] || "").toLowerCase();
-  const isJson = contentType.indexOf("application/json") !== -1;
-  return isJson ? JSON.stringify(body, null, 2) : body;
+  return (res.headers["content-type"] || "").toLowerCase().indexOf("application/json") !== -1 ? JSON.stringify(body, null, 2) : body;
 }
-function defineHttpRequest(envMiddleware2, {
-  maxRetries = 5,
-  retryDelay
-}) {
-  const request = getIt([
-    maxRetries > 0 ? retry({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      retryDelay,
-      // This option is typed incorrectly in get-it.
-      maxRetries,
-      shouldRetry
-    }) : {},
-    ...envMiddleware2,
-    printWarnings,
-    jsonRequest(),
-    jsonResponse(),
-    progress(),
-    httpError,
-    observable({ implementation: Observable })
-  ]);
-  function httpRequest(options, requester2 = request) {
-    return requester2({ maxRedirects: 0, ...options });
+var CorsOriginError = class extends Error {
+  constructor({ projectId: projectId2 }) {
+    super("CorsOriginError");
+    __publicField(this, "projectId");
+    __publicField(this, "addOriginUrl");
+    this.name = "CorsOriginError", this.projectId = projectId2;
+    const url = new URL(`https://sanity.io/manage/project/${projectId2}/api`);
+    if (typeof location < "u") {
+      const { origin } = location;
+      url.searchParams.set("cors", "add"), url.searchParams.set("origin", origin), this.addOriginUrl = url, this.message = `The current origin is not allowed to connect to the Live Content API. Add it here: ${url}`;
+    } else
+      this.message = `The current origin is not allowed to connect to the Live Content API. Change your configuration here: ${url}`;
   }
-  httpRequest.defaultRequester = request;
-  return httpRequest;
+};
+var httpError = {
+  onResponse: (res) => {
+    if (res.statusCode >= 500)
+      throw new ServerError(res);
+    if (res.statusCode >= 400)
+      throw new ClientError(res);
+    return res;
+  }
+};
+function printWarnings() {
+  const seen = {};
+  return {
+    onResponse: (res) => {
+      const warn = res.headers["x-sanity-warning"], warnings = Array.isArray(warn) ? warn : [warn];
+      for (const msg of warnings)
+        !msg || seen[msg] || (seen[msg] = true, console.warn(msg));
+      return res;
+    }
+  };
+}
+function defineHttpRequest(envMiddleware2) {
+  return p([
+    P({ shouldRetry }),
+    ...envMiddleware2,
+    printWarnings(),
+    x(),
+    E(),
+    S(),
+    httpError,
+    A({ implementation: Observable })
+  ]);
 }
 function shouldRetry(err, attempt, options) {
-  const isSafe = options.method === "GET" || options.method === "HEAD";
-  const uri = options.uri || options.url;
-  const isQuery = uri.startsWith("/data/query");
-  const isRetriableResponse = err.response && (err.response.statusCode === 429 || err.response.statusCode === 502 || err.response.statusCode === 503);
-  if ((isSafe || isQuery) && isRetriableResponse)
-    return true;
-  return retry.shouldRetry(err, attempt, options);
+  if (options.maxRetries === 0)
+    return false;
+  const isSafe = options.method === "GET" || options.method === "HEAD", isQuery2 = (options.uri || options.url).startsWith("/data/query"), isRetriableResponse = err.response && (err.response.statusCode === 429 || err.response.statusCode === 502 || err.response.statusCode === 503);
+  return (isSafe || isQuery2) && isRetriableResponse ? true : P.shouldRetry(err, attempt, options);
+}
+var BASE_URL = "https://www.sanity.io/help/";
+function generateHelpUrl(slug) {
+  return BASE_URL + slug;
+}
+var VALID_ASSET_TYPES = ["image", "file"];
+var VALID_INSERT_LOCATIONS = ["before", "after", "replace"];
+var dataset = (name) => {
+  if (!/^(~[a-z0-9]{1}[-\w]{0,63}|[a-z0-9]{1}[-\w]{0,63})$/.test(name))
+    throw new Error(
+      "Datasets can only contain lowercase characters, numbers, underscores and dashes, and start with tilde, and be maximum 64 characters"
+    );
+};
+var projectId = (id) => {
+  if (!/^[-a-z0-9]+$/i.test(id))
+    throw new Error("`projectId` can only contain only a-z, 0-9 and dashes");
+};
+var validateAssetType = (type) => {
+  if (VALID_ASSET_TYPES.indexOf(type) === -1)
+    throw new Error(`Invalid asset type: ${type}. Must be one of ${VALID_ASSET_TYPES.join(", ")}`);
+};
+var validateObject = (op, val) => {
+  if (val === null || typeof val != "object" || Array.isArray(val))
+    throw new Error(`${op}() takes an object of properties`);
+};
+var validateDocumentId = (op, id) => {
+  if (typeof id != "string" || !/^[a-z0-9_][a-z0-9_.-]{0,127}$/i.test(id) || id.includes(".."))
+    throw new Error(`${op}(): "${id}" is not a valid document ID`);
+};
+var requireDocumentId = (op, doc) => {
+  if (!doc._id)
+    throw new Error(`${op}() requires that the document contains an ID ("_id" property)`);
+  validateDocumentId(op, doc._id);
+};
+var validateInsert = (at, selector, items) => {
+  const signature = "insert(at, selector, items)";
+  if (VALID_INSERT_LOCATIONS.indexOf(at) === -1) {
+    const valid = VALID_INSERT_LOCATIONS.map((loc) => `"${loc}"`).join(", ");
+    throw new Error(`${signature} takes an "at"-argument which is one of: ${valid}`);
+  }
+  if (typeof selector != "string")
+    throw new Error(`${signature} takes a "selector"-argument which must be a string`);
+  if (!Array.isArray(items))
+    throw new Error(`${signature} takes an "items"-argument which must be an array`);
+};
+var hasDataset = (config2) => {
+  if (!config2.dataset)
+    throw new Error("`dataset` must be provided to perform queries");
+  return config2.dataset || "";
+};
+var requestTag = (tag) => {
+  if (typeof tag != "string" || !/^[a-z0-9._-]{1,75}$/i.test(tag))
+    throw new Error(
+      "Tag can only contain alphanumeric characters, underscores, dashes and dots, and be between one and 75 characters long."
+    );
+  return tag;
+};
+var resourceConfig = (config2) => {
+  if (!config2["~experimental_resource"])
+    throw new Error("`resource` must be provided to perform resource queries");
+  const { type, id } = config2["~experimental_resource"];
+  switch (type) {
+    case "dataset": {
+      if (id.split(".").length !== 2)
+        throw new Error('Dataset resource ID must be in the format "project.dataset"');
+      return;
+    }
+    case "dashboard":
+    case "media-library":
+    case "canvas":
+      return;
+    default:
+      throw new Error(`Unsupported resource type: ${type.toString()}`);
+  }
+};
+var resourceGuard = (service, config2) => {
+  if (config2["~experimental_resource"])
+    throw new Error(`\`${service}\` does not support resource-based operations`);
+};
+function once(fn) {
+  let didCall = false, returnValue;
+  return (...args) => (didCall || (returnValue = fn(...args), didCall = true), returnValue);
+}
+var createWarningPrinter = (message) => (
+  // eslint-disable-next-line no-console
+  once((...args) => console.warn(message.join(" "), ...args))
+);
+var printCdnAndWithCredentialsWarning = createWarningPrinter([
+  "Because you set `withCredentials` to true, we will override your `useCdn`",
+  "setting to be false since (cookie-based) credentials are never set on the CDN"
+]);
+var printCdnWarning = createWarningPrinter([
+  "Since you haven't set a value for `useCdn`, we will deliver content using our",
+  "global, edge-cached API-CDN. If you wish to have content delivered faster, set",
+  "`useCdn: false` to use the Live API. Note: You may incur higher costs using the live API."
+]);
+var printCdnPreviewDraftsWarning = createWarningPrinter([
+  "The Sanity client is configured with the `perspective` set to `drafts` or `previewDrafts`, which doesn't support the API-CDN.",
+  "The Live API will be used instead. Set `useCdn: false` in your configuration to hide this warning."
+]);
+var printPreviewDraftsDeprecationWarning = createWarningPrinter([
+  "The `previewDrafts` perspective has been renamed to  `drafts` and will be removed in a future API version"
+]);
+var printBrowserTokenWarning = createWarningPrinter([
+  "You have configured Sanity client to use a token in the browser. This may cause unintentional security issues.",
+  `See ${generateHelpUrl(
+    "js-client-browser-token"
+  )} for more information and how to hide this warning.`
+]);
+var printCredentialedTokenWarning = createWarningPrinter([
+  "You have configured Sanity client to use a token, but also provided `withCredentials: true`.",
+  "This is no longer supported - only token will be used - remove `withCredentials: true`."
+]);
+var printNoApiVersionSpecifiedWarning = createWarningPrinter([
+  "Using the Sanity client without specifying an API version is deprecated.",
+  `See ${generateHelpUrl("js-client-api-version")}`
+]);
+var printNoDefaultExport = createWarningPrinter([
+  "The default export of @sanity/client has been deprecated. Use the named export `createClient` instead."
+]);
+var defaultCdnHost = "apicdn.sanity.io";
+var defaultConfig = {
+  apiHost: "https://api.sanity.io",
+  apiVersion: "1",
+  useProjectHostname: true,
+  stega: { enabled: false }
+};
+var LOCALHOSTS = ["localhost", "127.0.0.1", "0.0.0.0"];
+var isLocal = (host) => LOCALHOSTS.indexOf(host) !== -1;
+function validateApiVersion(apiVersion) {
+  if (apiVersion === "1" || apiVersion === "X")
+    return;
+  const apiDate = new Date(apiVersion);
+  if (!(/^\d{4}-\d{2}-\d{2}$/.test(apiVersion) && apiDate instanceof Date && apiDate.getTime() > 0))
+    throw new Error("Invalid API version string, expected `1` or date in format `YYYY-MM-DD`");
+}
+function validateApiPerspective(perspective) {
+  if (Array.isArray(perspective) && perspective.length > 1 && perspective.includes("raw"))
+    throw new TypeError(
+      'Invalid API perspective value: "raw". The raw-perspective can not be combined with other perspectives'
+    );
+}
+var initConfig = (config2, prevConfig) => {
+  const specifiedConfig = {
+    ...prevConfig,
+    ...config2,
+    stega: {
+      ...typeof prevConfig.stega == "boolean" ? { enabled: prevConfig.stega } : prevConfig.stega || defaultConfig.stega,
+      ...typeof config2.stega == "boolean" ? { enabled: config2.stega } : config2.stega || {}
+    }
+  };
+  specifiedConfig.apiVersion || printNoApiVersionSpecifiedWarning();
+  const newConfig = {
+    ...defaultConfig,
+    ...specifiedConfig
+  }, projectBased = newConfig.useProjectHostname && !newConfig["~experimental_resource"];
+  if (typeof Promise > "u") {
+    const helpUrl = generateHelpUrl("js-client-promise-polyfill");
+    throw new Error(`No native Promise-implementation found, polyfill needed - see ${helpUrl}`);
+  }
+  if (projectBased && !newConfig.projectId)
+    throw new Error("Configuration must contain `projectId`");
+  if (newConfig["~experimental_resource"] && resourceConfig(newConfig), typeof newConfig.perspective < "u" && validateApiPerspective(newConfig.perspective), "encodeSourceMap" in newConfig)
+    throw new Error(
+      "It looks like you're using options meant for '@sanity/preview-kit/client'. 'encodeSourceMap' is not supported in '@sanity/client'. Did you mean 'stega.enabled'?"
+    );
+  if ("encodeSourceMapAtPath" in newConfig)
+    throw new Error(
+      "It looks like you're using options meant for '@sanity/preview-kit/client'. 'encodeSourceMapAtPath' is not supported in '@sanity/client'. Did you mean 'stega.filter'?"
+    );
+  if (typeof newConfig.stega.enabled != "boolean")
+    throw new Error(`stega.enabled must be a boolean, received ${newConfig.stega.enabled}`);
+  if (newConfig.stega.enabled && newConfig.stega.studioUrl === void 0)
+    throw new Error("stega.studioUrl must be defined when stega.enabled is true");
+  if (newConfig.stega.enabled && typeof newConfig.stega.studioUrl != "string" && typeof newConfig.stega.studioUrl != "function")
+    throw new Error(
+      `stega.studioUrl must be a string or a function, received ${newConfig.stega.studioUrl}`
+    );
+  const isBrowser = typeof window < "u" && window.location && window.location.hostname, isLocalhost = isBrowser && isLocal(window.location.hostname), hasToken = !!newConfig.token;
+  newConfig.withCredentials && hasToken && (printCredentialedTokenWarning(), newConfig.withCredentials = false), isBrowser && isLocalhost && hasToken && newConfig.ignoreBrowserTokenWarning !== true ? printBrowserTokenWarning() : typeof newConfig.useCdn > "u" && printCdnWarning(), projectBased && projectId(newConfig.projectId), newConfig.dataset && dataset(newConfig.dataset), "requestTagPrefix" in newConfig && (newConfig.requestTagPrefix = newConfig.requestTagPrefix ? requestTag(newConfig.requestTagPrefix).replace(/\.+$/, "") : void 0), newConfig.apiVersion = `${newConfig.apiVersion}`.replace(/^v/, ""), newConfig.isDefaultApi = newConfig.apiHost === defaultConfig.apiHost, newConfig.useCdn === true && newConfig.withCredentials && printCdnAndWithCredentialsWarning(), newConfig.useCdn = newConfig.useCdn !== false && !newConfig.withCredentials, validateApiVersion(newConfig.apiVersion);
+  const hostParts = newConfig.apiHost.split("://", 2), protocol = hostParts[0], host = hostParts[1], cdnHost = newConfig.isDefaultApi ? defaultCdnHost : host;
+  return projectBased ? (newConfig.url = `${protocol}://${newConfig.projectId}.${host}/v${newConfig.apiVersion}`, newConfig.cdnUrl = `${protocol}://${newConfig.projectId}.${cdnHost}/v${newConfig.apiVersion}`) : (newConfig.url = `${newConfig.apiHost}/v${newConfig.apiVersion}`, newConfig.cdnUrl = newConfig.url), newConfig;
+};
+var ConnectionFailedError = class extends Error {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "name", "ConnectionFailedError");
+  }
+};
+var DisconnectError = class extends Error {
+  constructor(message, reason, options = {}) {
+    super(message, options);
+    __publicField(this, "name", "DisconnectError");
+    __publicField(this, "reason");
+    this.reason = reason;
+  }
+};
+var ChannelError = class extends Error {
+  constructor(message, data) {
+    super(message);
+    __publicField(this, "name", "ChannelError");
+    __publicField(this, "data");
+    this.data = data;
+  }
+};
+var MessageError = class extends Error {
+  constructor(message, data, options = {}) {
+    super(message, options);
+    __publicField(this, "name", "MessageError");
+    __publicField(this, "data");
+    this.data = data;
+  }
+};
+var MessageParseError = class extends Error {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "name", "MessageParseError");
+  }
+};
+var REQUIRED_EVENTS = ["channelError", "disconnect"];
+function connectEventSource(initEventSource, events) {
+  return defer(() => {
+    const es = initEventSource();
+    return isObservable(es) ? es : of(es);
+  }).pipe(mergeMap((es) => connectWithESInstance(es, events)));
+}
+function connectWithESInstance(es, events) {
+  return new Observable((observer) => {
+    const emitOpen = events.includes("open"), emitReconnect = events.includes("reconnect");
+    function onError(evt) {
+      if ("data" in evt) {
+        const [parseError, event] = parseEvent(evt);
+        observer.error(
+          parseError ? new MessageParseError("Unable to parse EventSource error message", { cause: event }) : new MessageError((event == null ? void 0 : event.data).message, event)
+        );
+        return;
+      }
+      es.readyState === es.CLOSED ? observer.error(new ConnectionFailedError("EventSource connection failed")) : emitReconnect && observer.next({ type: "reconnect" });
+    }
+    function onOpen() {
+      observer.next({ type: "open" });
+    }
+    function onMessage(message) {
+      var _a;
+      const [parseError, event] = parseEvent(message);
+      if (parseError) {
+        observer.error(
+          new MessageParseError("Unable to parse EventSource message", { cause: parseError })
+        );
+        return;
+      }
+      if (message.type === "channelError") {
+        observer.error(new ChannelError(extractErrorMessage(event == null ? void 0 : event.data), event.data));
+        return;
+      }
+      if (message.type === "disconnect") {
+        observer.error(
+          new DisconnectError(
+            `Server disconnected client: ${((_a = event.data) == null ? void 0 : _a.reason) || "unknown error"}`
+          )
+        );
+        return;
+      }
+      observer.next({
+        type: message.type,
+        id: message.lastEventId,
+        ...event.data ? { data: event.data } : {}
+      });
+    }
+    es.addEventListener("error", onError), emitOpen && es.addEventListener("open", onOpen);
+    const cleanedEvents = [.../* @__PURE__ */ new Set([...REQUIRED_EVENTS, ...events])].filter((type) => type !== "error" && type !== "open" && type !== "reconnect");
+    return cleanedEvents.forEach((type) => es.addEventListener(type, onMessage)), () => {
+      es.removeEventListener("error", onError), emitOpen && es.removeEventListener("open", onOpen), cleanedEvents.forEach((type) => es.removeEventListener(type, onMessage)), es.close();
+    };
+  });
+}
+function parseEvent(message) {
+  try {
+    const data = typeof message.data == "string" && JSON.parse(message.data);
+    return [
+      null,
+      {
+        type: message.type,
+        id: message.lastEventId,
+        ...isEmptyObject(data) ? {} : { data }
+      }
+    ];
+  } catch (err) {
+    return [err, null];
+  }
+}
+function extractErrorMessage(err) {
+  return err.error ? err.error.description ? err.error.description : typeof err.error == "string" ? err.error : JSON.stringify(err.error, null, 2) : err.message || "Unknown listener error";
+}
+function isEmptyObject(data) {
+  for (const _3 in data)
+    return false;
+  return true;
 }
 function getSelection(sel) {
-  if (typeof sel === "string" || Array.isArray(sel)) {
+  if (typeof sel == "string")
     return { id: sel };
-  }
-  if (typeof sel === "object" && sel !== null && "query" in sel && typeof sel.query === "string") {
-    return "params" in sel && typeof sel.params === "object" && sel.params !== null ? { query: sel.query, params: sel.params } : { query: sel.query };
-  }
+  if (Array.isArray(sel))
+    return { query: "*[_id in $ids]", params: { ids: sel } };
+  if (typeof sel == "object" && sel !== null && "query" in sel && typeof sel.query == "string")
+    return "params" in sel && typeof sel.params == "object" && sel.params !== null ? { query: sel.query, params: sel.params } : { query: sel.query };
   const selectionOpts = [
     "* Document ID (<docId>)",
     "* Array of document IDs",
     "* Object containing `query`"
-  ].join("\n");
-  throw new Error("Unknown selection - must be one of:\n\n".concat(selectionOpts));
+  ].join(`
+`);
+  throw new Error(`Unknown selection - must be one of:
+
+${selectionOpts}`);
 }
-function generateHelpUrl(slug) {
-  return BASE_URL + slug;
-}
-function once(fn) {
-  let didCall = false;
-  let returnValue;
-  return (...args) => {
-    if (didCall) {
-      return returnValue;
+var BasePatch = class {
+  constructor(selection, operations = {}) {
+    __publicField(this, "selection");
+    __publicField(this, "operations");
+    this.selection = selection, this.operations = operations;
+  }
+  /**
+   * Sets the given attributes to the document. Does NOT merge objects.
+   * The operation is added to the current patch, ready to be commited by `commit()`
+   *
+   * @param attrs - Attributes to set. To set a deep attribute, use JSONMatch, eg: \{"nested.prop": "value"\}
+   */
+  set(attrs) {
+    return this._assign("set", attrs);
+  }
+  /**
+   * Sets the given attributes to the document if they are not currently set. Does NOT merge objects.
+   * The operation is added to the current patch, ready to be commited by `commit()`
+   *
+   * @param attrs - Attributes to set. To set a deep attribute, use JSONMatch, eg: \{"nested.prop": "value"\}
+   */
+  setIfMissing(attrs) {
+    return this._assign("setIfMissing", attrs);
+  }
+  /**
+   * Performs a "diff-match-patch" operation on the string attributes provided.
+   * The operation is added to the current patch, ready to be commited by `commit()`
+   *
+   * @param attrs - Attributes to perform operation on. To set a deep attribute, use JSONMatch, eg: \{"nested.prop": "dmp"\}
+   */
+  diffMatchPatch(attrs) {
+    return validateObject("diffMatchPatch", attrs), this._assign("diffMatchPatch", attrs);
+  }
+  /**
+   * Unsets the attribute paths provided.
+   * The operation is added to the current patch, ready to be commited by `commit()`
+   *
+   * @param attrs - Attribute paths to unset.
+   */
+  unset(attrs) {
+    if (!Array.isArray(attrs))
+      throw new Error("unset(attrs) takes an array of attributes to unset, non-array given");
+    return this.operations = Object.assign({}, this.operations, { unset: attrs }), this;
+  }
+  /**
+   * Increment a numeric value. Each entry in the argument is either an attribute or a JSON path. The value may be a positive or negative integer or floating-point value. The operation will fail if target value is not a numeric value, or doesn't exist.
+   *
+   * @param attrs - Object of attribute paths to increment, values representing the number to increment by.
+   */
+  inc(attrs) {
+    return this._assign("inc", attrs);
+  }
+  /**
+   * Decrement a numeric value. Each entry in the argument is either an attribute or a JSON path. The value may be a positive or negative integer or floating-point value. The operation will fail if target value is not a numeric value, or doesn't exist.
+   *
+   * @param attrs - Object of attribute paths to decrement, values representing the number to decrement by.
+   */
+  dec(attrs) {
+    return this._assign("dec", attrs);
+  }
+  /**
+   * Provides methods for modifying arrays, by inserting, appending and replacing elements via a JSONPath expression.
+   *
+   * @param at - Location to insert at, relative to the given selector, or 'replace' the matched path
+   * @param selector - JSONPath expression, eg `comments[-1]` or `blocks[_key=="abc123"]`
+   * @param items - Array of items to insert/replace
+   */
+  insert(at, selector, items) {
+    return validateInsert(at, selector, items), this._assign("insert", { [at]: selector, items });
+  }
+  /**
+   * Append the given items to the array at the given JSONPath
+   *
+   * @param selector - Attribute/path to append to, eg `comments` or `person.hobbies`
+   * @param items - Array of items to append to the array
+   */
+  append(selector, items) {
+    return this.insert("after", `${selector}[-1]`, items);
+  }
+  /**
+   * Prepend the given items to the array at the given JSONPath
+   *
+   * @param selector - Attribute/path to prepend to, eg `comments` or `person.hobbies`
+   * @param items - Array of items to prepend to the array
+   */
+  prepend(selector, items) {
+    return this.insert("before", `${selector}[0]`, items);
+  }
+  /**
+   * Change the contents of an array by removing existing elements and/or adding new elements.
+   *
+   * @param selector - Attribute or JSONPath expression for array
+   * @param start - Index at which to start changing the array (with origin 0). If greater than the length of the array, actual starting index will be set to the length of the array. If negative, will begin that many elements from the end of the array (with origin -1) and will be set to 0 if absolute value is greater than the length of the array.x
+   * @param deleteCount - An integer indicating the number of old array elements to remove.
+   * @param items - The elements to add to the array, beginning at the start index. If you don't specify any elements, splice() will only remove elements from the array.
+   */
+  splice(selector, start, deleteCount, items) {
+    const delAll = typeof deleteCount > "u" || deleteCount === -1, startIndex = start < 0 ? start - 1 : start, delCount = delAll ? -1 : Math.max(0, start + deleteCount), delRange = startIndex < 0 && delCount >= 0 ? "" : delCount, rangeSelector = `${selector}[${startIndex}:${delRange}]`;
+    return this.insert("replace", rangeSelector, items || []);
+  }
+  /**
+   * Adds a revision clause, preventing the document from being patched if the `_rev` property does not match the given value
+   *
+   * @param rev - Revision to lock the patch to
+   */
+  ifRevisionId(rev) {
+    return this.operations.ifRevisionID = rev, this;
+  }
+  /**
+   * Return a plain JSON representation of the patch
+   */
+  serialize() {
+    return { ...getSelection(this.selection), ...this.operations };
+  }
+  /**
+   * Return a plain JSON representation of the patch
+   */
+  toJSON() {
+    return this.serialize();
+  }
+  /**
+   * Clears the patch of all operations
+   */
+  reset() {
+    return this.operations = {}, this;
+  }
+  _assign(op, props, merge2 = true) {
+    return validateObject(op, props), this.operations = Object.assign({}, this.operations, {
+      [op]: Object.assign({}, merge2 && this.operations[op] || {}, props)
+    }), this;
+  }
+  _set(op, props) {
+    return this._assign(op, props, false);
+  }
+};
+var _client;
+var _ObservablePatch = class extends BasePatch {
+  constructor(selection, operations, client) {
+    super(selection, operations);
+    __privateAdd(this, _client, void 0);
+    __privateSet(this, _client, client);
+  }
+  /**
+   * Clones the patch
+   */
+  clone() {
+    return new _ObservablePatch(this.selection, { ...this.operations }, __privateGet(this, _client));
+  }
+  commit(options) {
+    if (!__privateGet(this, _client))
+      throw new Error(
+        "No `client` passed to patch, either provide one or pass the patch to a clients `mutate()` method"
+      );
+    const returnFirst = typeof this.selection == "string", opts = Object.assign({ returnFirst, returnDocuments: true }, options);
+    return __privateGet(this, _client).mutate({ patch: this.serialize() }, opts);
+  }
+};
+var ObservablePatch = _ObservablePatch;
+_client = new WeakMap();
+var _client2;
+var _Patch = class extends BasePatch {
+  constructor(selection, operations, client) {
+    super(selection, operations);
+    __privateAdd(this, _client2, void 0);
+    __privateSet(this, _client2, client);
+  }
+  /**
+   * Clones the patch
+   */
+  clone() {
+    return new _Patch(this.selection, { ...this.operations }, __privateGet(this, _client2));
+  }
+  commit(options) {
+    if (!__privateGet(this, _client2))
+      throw new Error(
+        "No `client` passed to patch, either provide one or pass the patch to a clients `mutate()` method"
+      );
+    const returnFirst = typeof this.selection == "string", opts = Object.assign({ returnFirst, returnDocuments: true }, options);
+    return __privateGet(this, _client2).mutate({ patch: this.serialize() }, opts);
+  }
+};
+var Patch = _Patch;
+_client2 = new WeakMap();
+var defaultMutateOptions = { returnDocuments: false };
+var BaseTransaction = class {
+  constructor(operations = [], transactionId) {
+    __publicField(this, "operations");
+    __publicField(this, "trxId");
+    this.operations = operations, this.trxId = transactionId;
+  }
+  /**
+   * Creates a new Sanity document. If `_id` is provided and already exists, the mutation will fail. If no `_id` is given, one will automatically be generated by the database.
+   * The operation is added to the current transaction, ready to be commited by `commit()`
+   *
+   * @param doc - Document to create. Requires a `_type` property.
+   */
+  create(doc) {
+    return validateObject("create", doc), this._add({ create: doc });
+  }
+  /**
+   * Creates a new Sanity document. If a document with the same `_id` already exists, the create operation will be ignored.
+   * The operation is added to the current transaction, ready to be commited by `commit()`
+   *
+   * @param doc - Document to create if it does not already exist. Requires `_id` and `_type` properties.
+   */
+  createIfNotExists(doc) {
+    const op = "createIfNotExists";
+    return validateObject(op, doc), requireDocumentId(op, doc), this._add({ [op]: doc });
+  }
+  /**
+   * Creates a new Sanity document, or replaces an existing one if the same `_id` is already used.
+   * The operation is added to the current transaction, ready to be commited by `commit()`
+   *
+   * @param doc - Document to create or replace. Requires `_id` and `_type` properties.
+   */
+  createOrReplace(doc) {
+    const op = "createOrReplace";
+    return validateObject(op, doc), requireDocumentId(op, doc), this._add({ [op]: doc });
+  }
+  /**
+   * Deletes the document with the given document ID
+   * The operation is added to the current transaction, ready to be commited by `commit()`
+   *
+   * @param documentId - Document ID to delete
+   */
+  delete(documentId) {
+    return validateDocumentId("delete", documentId), this._add({ delete: { id: documentId } });
+  }
+  transactionId(id) {
+    return id ? (this.trxId = id, this) : this.trxId;
+  }
+  /**
+   * Return a plain JSON representation of the transaction
+   */
+  serialize() {
+    return [...this.operations];
+  }
+  /**
+   * Return a plain JSON representation of the transaction
+   */
+  toJSON() {
+    return this.serialize();
+  }
+  /**
+   * Clears the transaction of all operations
+   */
+  reset() {
+    return this.operations = [], this;
+  }
+  _add(mut) {
+    return this.operations.push(mut), this;
+  }
+};
+var _client3;
+var _Transaction = class extends BaseTransaction {
+  constructor(operations, client, transactionId) {
+    super(operations, transactionId);
+    __privateAdd(this, _client3, void 0);
+    __privateSet(this, _client3, client);
+  }
+  /**
+   * Clones the transaction
+   */
+  clone() {
+    return new _Transaction([...this.operations], __privateGet(this, _client3), this.trxId);
+  }
+  commit(options) {
+    if (!__privateGet(this, _client3))
+      throw new Error(
+        "No `client` passed to transaction, either provide one or pass the transaction to a clients `mutate()` method"
+      );
+    return __privateGet(this, _client3).mutate(
+      this.serialize(),
+      Object.assign({ transactionId: this.trxId }, defaultMutateOptions, options || {})
+    );
+  }
+  patch(patchOrDocumentId, patchOps) {
+    const isBuilder = typeof patchOps == "function", isPatch = typeof patchOrDocumentId != "string" && patchOrDocumentId instanceof Patch, isMutationSelection = typeof patchOrDocumentId == "object" && ("query" in patchOrDocumentId || "id" in patchOrDocumentId);
+    if (isPatch)
+      return this._add({ patch: patchOrDocumentId.serialize() });
+    if (isBuilder) {
+      const patch = patchOps(new Patch(patchOrDocumentId, {}, __privateGet(this, _client3)));
+      if (!(patch instanceof Patch))
+        throw new Error("function passed to `patch()` must return the patch");
+      return this._add({ patch: patch.serialize() });
     }
-    returnValue = fn(...args);
-    didCall = true;
-    return returnValue;
-  };
-}
+    if (isMutationSelection) {
+      const patch = new Patch(patchOrDocumentId, patchOps || {}, __privateGet(this, _client3));
+      return this._add({ patch: patch.serialize() });
+    }
+    return this._add({ patch: { id: patchOrDocumentId, ...patchOps } });
+  }
+};
+var Transaction = _Transaction;
+_client3 = new WeakMap();
+var _client4;
+var _ObservableTransaction = class extends BaseTransaction {
+  constructor(operations, client, transactionId) {
+    super(operations, transactionId);
+    __privateAdd(this, _client4, void 0);
+    __privateSet(this, _client4, client);
+  }
+  /**
+   * Clones the transaction
+   */
+  clone() {
+    return new _ObservableTransaction([...this.operations], __privateGet(this, _client4), this.trxId);
+  }
+  commit(options) {
+    if (!__privateGet(this, _client4))
+      throw new Error(
+        "No `client` passed to transaction, either provide one or pass the transaction to a clients `mutate()` method"
+      );
+    return __privateGet(this, _client4).mutate(
+      this.serialize(),
+      Object.assign({ transactionId: this.trxId }, defaultMutateOptions, options || {})
+    );
+  }
+  patch(patchOrDocumentId, patchOps) {
+    const isBuilder = typeof patchOps == "function";
+    if (typeof patchOrDocumentId != "string" && patchOrDocumentId instanceof ObservablePatch)
+      return this._add({ patch: patchOrDocumentId.serialize() });
+    if (isBuilder) {
+      const patch = patchOps(new ObservablePatch(patchOrDocumentId, {}, __privateGet(this, _client4)));
+      if (!(patch instanceof ObservablePatch))
+        throw new Error("function passed to `patch()` must return the patch");
+      return this._add({ patch: patch.serialize() });
+    }
+    return this._add({ patch: { id: patchOrDocumentId, ...patchOps } });
+  }
+};
+var ObservableTransaction = _ObservableTransaction;
+_client4 = new WeakMap();
+var projectHeader = "X-Sanity-Project-ID";
 function requestOptions(config2, overrides = {}) {
-  const headers = {};
-  const token = overrides.token || config2.token;
-  if (token) {
-    headers.Authorization = "Bearer ".concat(token);
-  }
-  if (!overrides.useGlobalApi && !config2.useProjectHostname && config2.projectId) {
-    headers[projectHeader] = config2.projectId;
-  }
-  const withCredentials = Boolean(
-    typeof overrides.withCredentials === "undefined" ? config2.token || config2.withCredentials : overrides.withCredentials
-  );
-  const timeout = typeof overrides.timeout === "undefined" ? config2.timeout : overrides.timeout;
+  const headers = {}, token = overrides.token || config2.token;
+  token && (headers.Authorization = `Bearer ${token}`), !overrides.useGlobalApi && !config2.useProjectHostname && config2.projectId && (headers[projectHeader] = config2.projectId);
+  const withCredentials = !!(typeof overrides.withCredentials > "u" ? config2.withCredentials : overrides.withCredentials), timeout = typeof overrides.timeout > "u" ? config2.timeout : overrides.timeout;
   return Object.assign({}, overrides, {
     headers: Object.assign({}, headers, overrides.headers || {}),
-    timeout: typeof timeout === "undefined" ? 5 * 60 * 1e3 : timeout,
+    timeout: typeof timeout > "u" ? 5 * 60 * 1e3 : timeout,
     proxy: overrides.proxy || config2.proxy,
     json: true,
     withCredentials,
-    fetch: typeof overrides.fetch === "object" && typeof config2.fetch === "object" ? { ...config2.fetch, ...overrides.fetch } : overrides.fetch || config2.fetch
+    fetch: typeof overrides.fetch == "object" && typeof config2.fetch == "object" ? { ...config2.fetch, ...overrides.fetch } : overrides.fetch || config2.fetch
   });
 }
-function E(t) {
-  let e = JSON.stringify(t);
-  return `${d}${Array.from(e).map((r) => {
-    let n = r.charCodeAt(0);
-    if (n > 255)
-      throw new Error(`Only ASCII edit info can be encoded. Error attempting to encode ${e} on character ${r} (${n})`);
-    return Array.from(n.toString(4).padStart(4, "0")).map((o) => String.fromCodePoint(c[o])).join("");
-  }).join("")}`;
-}
-function I(t) {
-  return Number.isNaN(Number(t)) ? Boolean(Date.parse(t)) : false;
-}
-function x(t) {
-  try {
-    new URL(t, t.startsWith("/") ? "https://acme.com" : void 0);
-  } catch (e) {
-    return false;
-  }
-  return true;
-}
-function b(t, e, r = "auto") {
-  return r === true || r === "auto" && (I(t) || x(t)) ? t : `${t}${E(e)}`;
-}
-function X(t) {
-  var e;
-  return { cleaned: t.replace(f, ""), encoded: ((e = t.match(f)) == null ? void 0 : e[0]) || "" };
-}
-function vercelStegaCleanAll(result) {
-  try {
-    return JSON.parse(
-      JSON.stringify(result, (key, value) => {
-        if (typeof value !== "string")
-          return value;
-        return X(value).cleaned;
-      })
-    );
-  } catch (e) {
-    return result;
-  }
-}
+var encodeQueryString = ({
+  query,
+  params = {},
+  options = {}
+}) => {
+  const searchParams = new URLSearchParams(), { tag, includeMutations, returnQuery, ...opts } = options;
+  tag && searchParams.append("tag", tag), searchParams.append("query", query);
+  for (const [key, value] of Object.entries(params))
+    searchParams.append(`$${key}`, JSON.stringify(value));
+  for (const [key, value] of Object.entries(opts))
+    value && searchParams.append(key, `${value}`);
+  return returnQuery === false && searchParams.append("returnQuery", "false"), includeMutations === false && searchParams.append("includeMutations", "false"), `?${searchParams}`;
+};
+var excludeFalsey = (param, defValue) => param === false ? void 0 : typeof param > "u" ? defValue : param;
+var getMutationQuery = (options = {}) => ({
+  dryRun: options.dryRun,
+  returnIds: true,
+  returnDocuments: excludeFalsey(options.returnDocuments, true),
+  visibility: options.visibility || "sync",
+  autoGenerateArrayKeys: options.autoGenerateArrayKeys,
+  skipCrossDatasetReferenceValidation: options.skipCrossDatasetReferenceValidation
+});
+var isResponse = (event) => event.type === "response";
+var getBody = (event) => event.body;
+var indexBy = (docs, attr) => docs.reduce((indexed, doc) => (indexed[attr(doc)] = doc, indexed), /* @__PURE__ */ Object.create(null));
+var getQuerySizeLimit = 11264;
 function _fetch(client, httpRequest, _stega, query, _params = {}, options = {}) {
   const stega = "stega" in options ? {
     ..._stega || {},
-    ...typeof options.stega === "boolean" ? { enabled: options.stega } : options.stega || {}
-  } : _stega;
-  const params = stega.enabled ? vercelStegaCleanAll(_params) : _params;
-  const mapResponse = options.filterResponse === false ? (res) => res : (res) => res.result;
-  const { cache, next, ...opts } = {
+    ...typeof options.stega == "boolean" ? { enabled: options.stega } : options.stega || {}
+  } : _stega, params = stega.enabled ? stegaClean(_params) : _params, mapResponse = options.filterResponse === false ? (res) => res : (res) => res.result, { cache, next, ...opts } = {
     // Opt out of setting a `signal` on an internal `fetch` if one isn't provided.
     // This is necessary in React Server Components to avoid opting out of Request Memoization.
-    useAbortSignal: typeof options.signal !== "undefined",
+    useAbortSignal: typeof options.signal < "u",
     // Set `resultSourceMap' when stega is enabled, as it's required for encoding.
     resultSourceMap: stega.enabled ? "withKeyArraySelector" : options.resultSourceMap,
-    ...options
-  };
-  const reqOpts = typeof cache !== "undefined" || typeof next !== "undefined" ? { ...opts, fetch: { cache, next } } : opts;
-  const $request = _dataRequest(client, httpRequest, "query", { query, params }, reqOpts);
+    ...options,
+    // Default to not returning the query, unless `filterResponse` is `false`,
+    // or `returnQuery` is explicitly set. `true` is the default in Content Lake, so skip if truthy
+    returnQuery: options.filterResponse === false && options.returnQuery !== false
+  }, reqOpts = typeof cache < "u" || typeof next < "u" ? { ...opts, fetch: { cache, next } } : opts, $request = _dataRequest(client, httpRequest, "query", { query, params }, reqOpts);
   return stega.enabled ? $request.pipe(
     combineLatestWith(
       from(
-        Promise.resolve().then(() => (init_stegaEncodeSourceMap_gZIRaYar(), stegaEncodeSourceMap_gZIRaYar_exports)).then(function(n) {
-          return n.stegaEncodeSourceMap$1;
+        Promise.resolve().then(() => (init_stegaEncodeSourceMap(), stegaEncodeSourceMap_exports)).then(function(n4) {
+          return n4.stegaEncodeSourceMap$1;
         }).then(
           ({ stegaEncodeSourceMap: stegaEncodeSourceMap2 }) => stegaEncodeSourceMap2
         )
@@ -4561,14 +5051,24 @@ function _fetch(client, httpRequest, _stega, query, _params = {}, options = {}) 
   ) : $request.pipe(map(mapResponse));
 }
 function _getDocument(client, httpRequest, id, opts = {}) {
-  const options = { uri: _getDataUrl(client, "doc", id), json: true, tag: opts.tag };
+  const options = {
+    uri: _getDataUrl(client, "doc", id),
+    json: true,
+    tag: opts.tag,
+    signal: opts.signal
+  };
   return _requestObservable(client, httpRequest, options).pipe(
     filter(isResponse),
     map((event) => event.body.documents && event.body.documents[0])
   );
 }
 function _getDocuments(client, httpRequest, ids, opts = {}) {
-  const options = { uri: _getDataUrl(client, "doc", ids.join(",")), json: true, tag: opts.tag };
+  const options = {
+    uri: _getDataUrl(client, "doc", ids.join(",")),
+    json: true,
+    tag: opts.tag,
+    signal: opts.signal
+  };
   return _requestObservable(client, httpRequest, options).pipe(
     filter(isResponse),
     map((event) => {
@@ -4578,12 +5078,10 @@ function _getDocuments(client, httpRequest, ids, opts = {}) {
   );
 }
 function _createIfNotExists(client, httpRequest, doc, options) {
-  requireDocumentId("createIfNotExists", doc);
-  return _create(client, httpRequest, doc, "createIfNotExists", options);
+  return requireDocumentId("createIfNotExists", doc), _create(client, httpRequest, doc, "createIfNotExists", options);
 }
 function _createOrReplace(client, httpRequest, doc, options) {
-  requireDocumentId("createOrReplace", doc);
-  return _create(client, httpRequest, doc, "createOrReplace", options);
+  return requireDocumentId("createOrReplace", doc), _create(client, httpRequest, doc, "createOrReplace", options);
 }
 function _delete(client, httpRequest, selection, options) {
   return _dataRequest(
@@ -4596,27 +5094,22 @@ function _delete(client, httpRequest, selection, options) {
 }
 function _mutate(client, httpRequest, mutations, options) {
   let mut;
-  if (mutations instanceof Patch || mutations instanceof ObservablePatch) {
-    mut = { patch: mutations.serialize() };
-  } else if (mutations instanceof Transaction || mutations instanceof ObservableTransaction) {
-    mut = mutations.serialize();
-  } else {
-    mut = mutations;
-  }
-  const muts = Array.isArray(mut) ? mut : [mut];
-  const transactionId = options && options.transactionId || void 0;
+  mutations instanceof Patch || mutations instanceof ObservablePatch ? mut = { patch: mutations.serialize() } : mutations instanceof Transaction || mutations instanceof ObservableTransaction ? mut = mutations.serialize() : mut = mutations;
+  const muts = Array.isArray(mut) ? mut : [mut], transactionId = options && options.transactionId || void 0;
   return _dataRequest(client, httpRequest, "mutate", { mutations: muts, transactionId }, options);
 }
+function _action(client, httpRequest, actions, options) {
+  const acts = Array.isArray(actions) ? actions : [actions], transactionId = options && options.transactionId || void 0, skipCrossDatasetReferenceValidation = options && options.skipCrossDatasetReferenceValidation || void 0, dryRun = options && options.dryRun || void 0;
+  return _dataRequest(
+    client,
+    httpRequest,
+    "actions",
+    { actions: acts, transactionId, skipCrossDatasetReferenceValidation, dryRun },
+    options
+  );
+}
 function _dataRequest(client, httpRequest, endpoint, body, options = {}) {
-  const isMutation = endpoint === "mutate";
-  const isQuery = endpoint === "query";
-  const strQuery = isMutation ? "" : encodeQueryString(body);
-  const useGet = !isMutation && strQuery.length < getQuerySizeLimit;
-  const stringQuery = useGet ? strQuery : "";
-  const returnFirst = options.returnFirst;
-  const { timeout, token, tag, headers } = options;
-  const uri = _getDataUrl(client, endpoint, stringQuery);
-  const reqOptions = {
+  const isMutation = endpoint === "mutate", isAction = endpoint === "actions", isQuery2 = endpoint === "query", strQuery = isMutation || isAction ? "" : encodeQueryString(body), useGet = !isMutation && !isAction && strQuery.length < getQuerySizeLimit, stringQuery = useGet ? strQuery : "", returnFirst = options.returnFirst, { timeout, token, tag, headers, returnQuery, lastLiveEventId, cacheMode } = options, uri = _getDataUrl(client, endpoint, stringQuery), reqOptions = {
     method: useGet ? "GET" : "POST",
     uri,
     json: true,
@@ -4626,9 +5119,12 @@ function _dataRequest(client, httpRequest, endpoint, body, options = {}) {
     headers,
     token,
     tag,
+    returnQuery,
     perspective: options.perspective,
     resultSourceMap: options.resultSourceMap,
-    canUseCdn: isQuery,
+    lastLiveEventId: Array.isArray(lastLiveEventId) ? lastLiveEventId[0] : lastLiveEventId,
+    cacheMode,
+    canUseCdn: isQuery2,
     signal: options.signal,
     fetch: options.fetch,
     useAbortSignal: options.useAbortSignal,
@@ -4638,15 +5134,12 @@ function _dataRequest(client, httpRequest, endpoint, body, options = {}) {
     filter(isResponse),
     map(getBody),
     map((res) => {
-      if (!isMutation) {
+      if (!isMutation)
         return res;
-      }
       const results = res.results || [];
-      if (options.returnDocuments) {
+      if (options.returnDocuments)
         return returnFirst ? results[0] && results[0].document : results.map((mut) => mut.document);
-      }
-      const key = returnFirst ? "documentId" : "documentIds";
-      const ids = returnFirst ? results[0] && results[0].id : results.map((mut) => mut.id);
+      const key = returnFirst ? "documentId" : "documentIds", ids = returnFirst ? results[0] && results[0].id : results.map((mut) => mut.id);
       return {
         transactionId: res.transactionId,
         results,
@@ -4656,102 +5149,142 @@ function _dataRequest(client, httpRequest, endpoint, body, options = {}) {
   );
 }
 function _create(client, httpRequest, doc, op, options = {}) {
-  const mutation = { [op]: doc };
-  const opts = Object.assign({ returnFirst: true, returnDocuments: true }, options);
+  const mutation = { [op]: doc }, opts = Object.assign({ returnFirst: true, returnDocuments: true }, options);
   return _dataRequest(client, httpRequest, "mutate", { mutations: [mutation] }, opts);
 }
+var hasDataConfig = (client) => client.config().dataset !== void 0 && client.config().projectId !== void 0 || client.config()["~experimental_resource"] !== void 0;
+var isQuery = (client, uri) => hasDataConfig(client) && uri.startsWith(_getDataUrl(client, "query"));
+var isMutate = (client, uri) => hasDataConfig(client) && uri.startsWith(_getDataUrl(client, "mutate"));
+var isDoc = (client, uri) => hasDataConfig(client) && uri.startsWith(_getDataUrl(client, "doc", ""));
+var isListener = (client, uri) => hasDataConfig(client) && uri.startsWith(_getDataUrl(client, "listen"));
+var isHistory = (client, uri) => hasDataConfig(client) && uri.startsWith(_getDataUrl(client, "history", ""));
+var isData = (client, uri) => uri.startsWith("/data/") || isQuery(client, uri) || isMutate(client, uri) || isDoc(client, uri) || isListener(client, uri) || isHistory(client, uri);
 function _requestObservable(client, httpRequest, options) {
   var _a, _b;
-  const uri = options.url || options.uri;
-  const config2 = client.config();
-  const canUseCdn = typeof options.canUseCdn === "undefined" ? ["GET", "HEAD"].indexOf(options.method || "GET") >= 0 && uri.indexOf("/data/") === 0 : options.canUseCdn;
+  const uri = options.url || options.uri, config2 = client.config(), canUseCdn = typeof options.canUseCdn > "u" ? ["GET", "HEAD"].indexOf(options.method || "GET") >= 0 && isData(client, uri) : options.canUseCdn;
   let useCdn = ((_a = options.useCdn) != null ? _a : config2.useCdn) && canUseCdn;
   const tag = options.tag && config2.requestTagPrefix ? [config2.requestTagPrefix, options.tag].join(".") : options.tag || config2.requestTagPrefix;
-  if (tag && options.tag !== null) {
-    options.query = { tag: requestTag(tag), ...options.query };
-  }
-  if (["GET", "HEAD", "POST"].indexOf(options.method || "GET") >= 0 && uri.indexOf("/data/query/") === 0) {
+  if (tag && options.tag !== null && (options.query = { tag: requestTag(tag), ...options.query }), ["GET", "HEAD", "POST"].indexOf(options.method || "GET") >= 0 && isQuery(client, uri)) {
     const resultSourceMap = (_b = options.resultSourceMap) != null ? _b : config2.resultSourceMap;
-    if (resultSourceMap !== void 0 && resultSourceMap !== false) {
-      options.query = { resultSourceMap, ...options.query };
-    }
-    const perspective = options.perspective || config2.perspective;
-    if (typeof perspective === "string" && perspective !== "raw") {
-      validateApiPerspective(perspective);
-      options.query = { perspective, ...options.query };
-      if (perspective === "previewDrafts" && useCdn) {
-        useCdn = false;
-        printCdnPreviewDraftsWarning();
-      }
-    }
+    resultSourceMap !== void 0 && resultSourceMap !== false && (options.query = { resultSourceMap, ...options.query });
+    const perspectiveOption = options.perspective || config2.perspective;
+    typeof perspectiveOption < "u" && (perspectiveOption === "previewDrafts" && printPreviewDraftsDeprecationWarning(), validateApiPerspective(perspectiveOption), options.query = {
+      perspective: Array.isArray(perspectiveOption) ? perspectiveOption.join(",") : perspectiveOption,
+      ...options.query
+    }, (Array.isArray(perspectiveOption) && perspectiveOption.length > 0 || // previewDrafts was renamed to drafts, but keep for backwards compat
+    perspectiveOption === "previewDrafts" || perspectiveOption === "drafts") && useCdn && (useCdn = false, printCdnPreviewDraftsWarning())), options.lastLiveEventId && (options.query = { ...options.query, lastLiveEventId: options.lastLiveEventId }), options.returnQuery === false && (options.query = { returnQuery: "false", ...options.query }), useCdn && options.cacheMode == "noStale" && (options.query = { cacheMode: "noStale", ...options.query });
   }
   const reqOptions = requestOptions(
     config2,
     Object.assign({}, options, {
       url: _getUrl(client, uri, useCdn)
     })
-  );
-  const request = new Observable(
+  ), request = new Observable(
     (subscriber) => httpRequest(reqOptions, config2.requester).subscribe(subscriber)
   );
   return options.signal ? request.pipe(_withAbortSignal(options.signal)) : request;
 }
 function _request(client, httpRequest, options) {
-  const observable3 = _requestObservable(client, httpRequest, options).pipe(
+  return _requestObservable(client, httpRequest, options).pipe(
     filter((event) => event.type === "response"),
     map((event) => event.body)
   );
-  return observable3;
 }
 function _getDataUrl(client, operation, path) {
   const config2 = client.config();
-  const catalog = hasDataset(config2);
-  const baseUri = "/".concat(operation, "/").concat(catalog);
-  const uri = path ? "".concat(baseUri, "/").concat(path) : baseUri;
-  return "/data".concat(uri).replace(/\/($|\?)/, "$1");
+  if (config2["~experimental_resource"]) {
+    resourceConfig(config2);
+    const resourceBase = resourceDataBase(config2), uri2 = path !== void 0 ? `${operation}/${path}` : operation;
+    return `${resourceBase}/${uri2}`.replace(/\/($|\?)/, "$1");
+  }
+  const catalog = hasDataset(config2), baseUri = `/${operation}/${catalog}`;
+  return `/data${path !== void 0 ? `${baseUri}/${path}` : baseUri}`.replace(/\/($|\?)/, "$1");
 }
 function _getUrl(client, uri, canUseCdn = false) {
   const { url, cdnUrl } = client.config();
-  const base = canUseCdn ? cdnUrl : url;
-  return "".concat(base, "/").concat(uri.replace(/^\//, ""));
+  return `${canUseCdn ? cdnUrl : url}/${uri.replace(/^\//, "")}`;
 }
 function _withAbortSignal(signal) {
-  return (input) => {
-    return new Observable((observer) => {
-      const abort = () => observer.error(_createAbortError(signal));
-      if (signal && signal.aborted) {
-        abort();
-        return;
-      }
-      const subscription = input.subscribe(observer);
-      signal.addEventListener("abort", abort);
-      return () => {
-        signal.removeEventListener("abort", abort);
-        subscription.unsubscribe();
-      };
-    });
-  };
+  return (input) => new Observable((observer) => {
+    const abort = () => observer.error(_createAbortError(signal));
+    if (signal && signal.aborted) {
+      abort();
+      return;
+    }
+    const subscription = input.subscribe(observer);
+    return signal.addEventListener("abort", abort), () => {
+      signal.removeEventListener("abort", abort), subscription.unsubscribe();
+    };
+  });
 }
+var isDomExceptionSupported = !!globalThis.DOMException;
 function _createAbortError(signal) {
   var _a, _b;
-  if (isDomExceptionSupported) {
+  if (isDomExceptionSupported)
     return new DOMException((_a = signal == null ? void 0 : signal.reason) != null ? _a : "The operation was aborted.", "AbortError");
-  }
   const error = new Error((_b = signal == null ? void 0 : signal.reason) != null ? _b : "The operation was aborted.");
-  error.name = "AbortError";
-  return error;
+  return error.name = "AbortError", error;
 }
+var resourceDataBase = (config2) => {
+  if (!config2["~experimental_resource"])
+    throw new Error("`resource` must be provided to perform resource queries");
+  const { type, id } = config2["~experimental_resource"];
+  switch (type) {
+    case "dataset": {
+      const segments = id.split(".");
+      if (segments.length !== 2)
+        throw new Error('Dataset ID must be in the format "project.dataset"');
+      return `/projects/${segments[0]}/datasets/${segments[1]}`;
+    }
+    case "canvas":
+      return `/canvases/${id}`;
+    case "media-library":
+      return `/media-libraries/${id}`;
+    case "dashboard":
+      return `/dashboards/${id}`;
+    default:
+      throw new Error(`Unsupported resource type: ${type.toString()}`);
+  }
+};
+var _client5, _httpRequest;
+var ObservableAssetsClient = class {
+  constructor(client, httpRequest) {
+    __privateAdd(this, _client5, void 0);
+    __privateAdd(this, _httpRequest, void 0);
+    __privateSet(this, _client5, client), __privateSet(this, _httpRequest, httpRequest);
+  }
+  upload(assetType, body, options) {
+    return _upload(__privateGet(this, _client5), __privateGet(this, _httpRequest), assetType, body, options);
+  }
+};
+_client5 = new WeakMap();
+_httpRequest = new WeakMap();
+var _client6, _httpRequest2;
+var AssetsClient = class {
+  constructor(client, httpRequest) {
+    __privateAdd(this, _client6, void 0);
+    __privateAdd(this, _httpRequest2, void 0);
+    __privateSet(this, _client6, client), __privateSet(this, _httpRequest2, httpRequest);
+  }
+  upload(assetType, body, options) {
+    const observable2 = _upload(__privateGet(this, _client6), __privateGet(this, _httpRequest2), assetType, body, options);
+    return lastValueFrom(
+      observable2.pipe(
+        filter((event) => event.type === "response"),
+        map(
+          (event) => event.body.document
+        )
+      )
+    );
+  }
+};
+_client6 = new WeakMap();
+_httpRequest2 = new WeakMap();
 function _upload(client, httpRequest, assetType, body, opts = {}) {
   validateAssetType(assetType);
   let meta = opts.extract || void 0;
-  if (meta && !meta.length) {
-    meta = ["none"];
-  }
-  const dataset2 = hasDataset(client.config());
-  const assetEndpoint = assetType === "image" ? "images" : "files";
-  const options = optionsFromFile(opts, body);
-  const { tag, label, title, description, creditLine, filename, source } = options;
-  const query = {
+  meta && !meta.length && (meta = ["none"]);
+  const config2 = client.config(), options = optionsFromFile(opts, body), { tag, label, title, description, creditLine, filename, source } = options, query = {
     label,
     title,
     description,
@@ -4759,26 +5292,40 @@ function _upload(client, httpRequest, assetType, body, opts = {}) {
     meta,
     creditLine
   };
-  if (source) {
-    query.sourceId = source.id;
-    query.sourceName = source.name;
-    query.sourceUrl = source.url;
-  }
-  return _requestObservable(client, httpRequest, {
+  return source && (query.sourceId = source.id, query.sourceName = source.name, query.sourceUrl = source.url), _requestObservable(client, httpRequest, {
     tag,
     method: "POST",
     timeout: options.timeout || 0,
-    uri: "/assets/".concat(assetEndpoint, "/").concat(dataset2),
+    uri: buildAssetUploadUrl(config2, assetType),
     headers: options.contentType ? { "Content-Type": options.contentType } : {},
     query,
     body
   });
 }
-function optionsFromFile(opts, file) {
-  if (typeof File === "undefined" || !(file instanceof File)) {
-    return opts;
+function buildAssetUploadUrl(config2, assetType) {
+  const assetTypeEndpoint = assetType === "image" ? "images" : "files";
+  if (config2["~experimental_resource"]) {
+    const { type, id } = config2["~experimental_resource"];
+    switch (type) {
+      case "dataset":
+        throw new Error(
+          "Assets are not supported for dataset resources, yet. Configure the client with `{projectId: <projectId>, dataset: <datasetId>}` instead."
+        );
+      case "canvas":
+        return `/canvases/${id}/assets/${assetTypeEndpoint}`;
+      case "media-library":
+        return `/media-libraries/${id}/upload`;
+      case "dashboard":
+        return `/dashboards/${id}/assets/${assetTypeEndpoint}`;
+      default:
+        throw new Error(`Unsupported resource type: ${type.toString()}`);
+    }
   }
-  return Object.assign(
+  const dataset2 = hasDataset(config2);
+  return `assets/${assetTypeEndpoint}/${dataset2}`;
+}
+function optionsFromFile(opts, file) {
+  return typeof File > "u" || !(file instanceof File) ? opts : Object.assign(
     {
       filename: opts.preserveFilename === false ? void 0 : file.name,
       contentType: file.type
@@ -4786,1488 +5333,716 @@ function optionsFromFile(opts, file) {
     opts
   );
 }
+var defaults = (obj, defaults2) => Object.keys(defaults2).concat(Object.keys(obj)).reduce((target, prop) => (target[prop] = typeof obj[prop] > "u" ? defaults2[prop] : obj[prop], target), {});
+var pick = (obj, props) => props.reduce((selection, prop) => (typeof obj[prop] > "u" || (selection[prop] = obj[prop]), selection), {});
+var eventSourcePolyfill = defer(() => Promise.resolve().then(() => (init_browser(), browser_exports))).pipe(
+  map(({ default: EventSource2 }) => EventSource2),
+  shareReplay(1)
+);
+function reconnectOnConnectionFailure() {
+  return function(source) {
+    return source.pipe(
+      catchError((err, caught) => err instanceof ConnectionFailedError ? concat(of({ type: "reconnect" }), timer(1e3).pipe(mergeMap(() => caught))) : throwError(() => err))
+    );
+  };
+}
+var MAX_URL_LENGTH = 14800;
+var possibleOptions = [
+  "includePreviousRevision",
+  "includeResult",
+  "includeMutations",
+  "includeAllVersions",
+  "visibility",
+  "effectFormat",
+  "tag"
+];
+var defaultOptions = {
+  includeResult: true
+};
 function _listen(query, params, opts = {}) {
-  const { url, token, withCredentials, requestTagPrefix } = this.config();
-  const tag = opts.tag && requestTagPrefix ? [requestTagPrefix, opts.tag].join(".") : opts.tag;
-  const options = { ...defaults(opts, defaultOptions2), tag };
-  const listenOpts = pick(options, possibleOptions);
-  const qs = encodeQueryString({ query, params, options: { tag, ...listenOpts } });
-  const uri = "".concat(url).concat(_getDataUrl(this, "listen", qs));
-  if (uri.length > MAX_URL_LENGTH) {
-    return new Observable((observer) => observer.error(new Error("Query too large for listener")));
-  }
-  const listenFor = options.events ? options.events : ["mutation"];
-  const shouldEmitReconnect = listenFor.indexOf("reconnect") !== -1;
-  const esOptions = {};
-  if (token || withCredentials) {
-    esOptions.withCredentials = true;
-  }
-  if (token) {
-    esOptions.headers = {
-      Authorization: "Bearer ".concat(token)
-    };
-  }
-  return new Observable((observer) => {
-    let es;
-    getEventSource().then((eventSource) => {
-      es = eventSource;
-    }).catch((reason) => {
-      observer.error(reason);
-      stop();
+  const { url, token, withCredentials, requestTagPrefix } = this.config(), tag = opts.tag && requestTagPrefix ? [requestTagPrefix, opts.tag].join(".") : opts.tag, options = { ...defaults(opts, defaultOptions), tag }, listenOpts = pick(options, possibleOptions), qs = encodeQueryString({ query, params, options: { tag, ...listenOpts } }), uri = `${url}${_getDataUrl(this, "listen", qs)}`;
+  if (uri.length > MAX_URL_LENGTH)
+    return throwError(() => new Error("Query too large for listener"));
+  const listenFor = options.events ? options.events : ["mutation"], esOptions = {};
+  return withCredentials && (esOptions.withCredentials = true), token && (esOptions.headers = {
+    Authorization: `Bearer ${token}`
+  }), connectEventSource(() => (
+    // use polyfill if there is no global EventSource or if we need to set headers
+    (typeof EventSource > "u" || esOptions.headers ? eventSourcePolyfill : of(EventSource)).pipe(map((EventSource2) => new EventSource2(uri, esOptions)))
+  ), listenFor).pipe(
+    reconnectOnConnectionFailure(),
+    filter((event) => listenFor.includes(event.type)),
+    map(
+      (event) => ({
+        type: event.type,
+        ..."data" in event ? event.data : {}
+      })
+    )
+  );
+}
+function shareReplayLatest(configOrPredicate, config2) {
+  return _shareReplayLatest(
+    typeof configOrPredicate == "function" ? { predicate: configOrPredicate, ...config2 } : configOrPredicate
+  );
+}
+function _shareReplayLatest(config2) {
+  return (source) => {
+    let latest, emitted = false;
+    const { predicate, ...shareConfig } = config2, wrapped = source.pipe(
+      tap((value) => {
+        config2.predicate(value) && (emitted = true, latest = value);
+      }),
+      finalize(() => {
+        emitted = false, latest = void 0;
+      }),
+      share(shareConfig)
+    ), emitLatest = new Observable((subscriber) => {
+      emitted && subscriber.next(
+        // this cast is safe because of the emitted check which asserts that we got T from the source
+        latest
+      ), subscriber.complete();
     });
-    let reconnectTimer;
-    let stopped = false;
-    function onError() {
-      if (stopped) {
-        return;
+    return merge(wrapped, emitLatest);
+  };
+}
+var requiredApiVersion = "2021-03-25";
+var _client7;
+var LiveClient = class {
+  constructor(client) {
+    __privateAdd(this, _client7, void 0);
+    __privateSet(this, _client7, client);
+  }
+  /**
+   * Requires `apiVersion` to be `2021-03-25` or later.
+   */
+  events({
+    includeDrafts = false,
+    tag: _tag
+  } = {}) {
+    resourceGuard("live", __privateGet(this, _client7).config());
+    const {
+      projectId: projectId2,
+      apiVersion: _apiVersion,
+      token,
+      withCredentials,
+      requestTagPrefix
+    } = __privateGet(this, _client7).config(), apiVersion = _apiVersion.replace(/^v/, "");
+    if (apiVersion !== "X" && apiVersion < requiredApiVersion)
+      throw new Error(
+        `The live events API requires API version ${requiredApiVersion} or later. The current API version is ${apiVersion}. Please update your API version to use this feature.`
+      );
+    if (includeDrafts && !token && !withCredentials)
+      throw new Error(
+        "The live events API requires a token or withCredentials when 'includeDrafts: true'. Please update your client configuration. The token should have the lowest possible access role."
+      );
+    const path = _getDataUrl(__privateGet(this, _client7), "live/events"), url = new URL(__privateGet(this, _client7).getUrl(path, false)), tag = _tag && requestTagPrefix ? [requestTagPrefix, _tag].join(".") : _tag;
+    tag && url.searchParams.set("tag", tag), includeDrafts && url.searchParams.set("includeDrafts", "true");
+    const esOptions = {};
+    includeDrafts && token && (esOptions.headers = {
+      Authorization: `Bearer ${token}`
+    }), includeDrafts && withCredentials && (esOptions.withCredentials = true);
+    const key = `${url.href}::${JSON.stringify(esOptions)}`, existing = eventsCache.get(key);
+    if (existing)
+      return existing;
+    const events = connectEventSource(() => (
+      // use polyfill if there is no global EventSource or if we need to set headers
+      (typeof EventSource > "u" || esOptions.headers ? eventSourcePolyfill : of(EventSource)).pipe(map((EventSource2) => new EventSource2(url.href, esOptions)))
+    ), [
+      "message",
+      "restart",
+      "welcome",
+      "reconnect",
+      "goaway"
+    ]).pipe(
+      reconnectOnConnectionFailure(),
+      map((event) => {
+        if (event.type === "message") {
+          const { data, ...rest } = event;
+          return { ...rest, tags: data.tags };
+        }
+        return event;
+      })
+    ), checkCors = fetchObservable(url, {
+      method: "OPTIONS",
+      mode: "cors",
+      credentials: esOptions.withCredentials ? "include" : "omit",
+      headers: esOptions.headers
+    }).pipe(
+      mergeMap(() => EMPTY),
+      catchError(() => {
+        throw new CorsOriginError({ projectId: projectId2 });
+      })
+    ), observable2 = concat(checkCors, events).pipe(
+      finalize(() => eventsCache.delete(key)),
+      shareReplayLatest({
+        predicate: (event) => event.type === "welcome"
+      })
+    );
+    return eventsCache.set(key, observable2), observable2;
+  }
+};
+_client7 = new WeakMap();
+function fetchObservable(url, init) {
+  return new Observable((observer) => {
+    const controller = new AbortController(), signal = controller.signal;
+    return fetch(url, { ...init, signal: controller.signal }).then(
+      (response) => {
+        observer.next(response), observer.complete();
+      },
+      (err) => {
+        signal.aborted || observer.error(err);
       }
-      emitReconnect();
-      if (stopped) {
-        return;
-      }
-      if (es.readyState === es.CLOSED) {
-        unsubscribe();
-        clearTimeout(reconnectTimer);
-        reconnectTimer = setTimeout(open, 100);
-      }
-    }
-    function onChannelError(err) {
-      observer.error(cooerceError(err));
-    }
-    function onMessage(evt) {
-      const event = parseEvent(evt);
-      return event instanceof Error ? observer.error(event) : observer.next(event);
-    }
-    function onDisconnect() {
-      stopped = true;
-      unsubscribe();
-      observer.complete();
-    }
-    function unsubscribe() {
-      if (!es)
-        return;
-      es.removeEventListener("error", onError);
-      es.removeEventListener("channelError", onChannelError);
-      es.removeEventListener("disconnect", onDisconnect);
-      listenFor.forEach((type) => es.removeEventListener(type, onMessage));
-      es.close();
-    }
-    function emitReconnect() {
-      if (shouldEmitReconnect) {
-        observer.next({ type: "reconnect" });
-      }
-    }
-    async function getEventSource() {
-      const { default: EventSource } = await Promise.resolve().then(() => __toESM(require_browser2(), 1));
-      const evs = new EventSource(uri, esOptions);
-      evs.addEventListener("error", onError);
-      evs.addEventListener("channelError", onChannelError);
-      evs.addEventListener("disconnect", onDisconnect);
-      listenFor.forEach((type) => evs.addEventListener(type, onMessage));
-      return evs;
-    }
-    function open() {
-      getEventSource().then((eventSource) => {
-        es = eventSource;
-      }).catch((reason) => {
-        observer.error(reason);
-        stop();
-      });
-    }
-    function stop() {
-      stopped = true;
-      unsubscribe();
-    }
-    return stop;
+    ), () => controller.abort();
   });
 }
-function parseEvent(event) {
-  try {
-    const data = event.data && JSON.parse(event.data) || {};
-    return Object.assign({ type: event.type }, data);
-  } catch (err) {
-    return err;
+var eventsCache = /* @__PURE__ */ new Map();
+var _client8, _httpRequest3;
+var ObservableDatasetsClient = class {
+  constructor(client, httpRequest) {
+    __privateAdd(this, _client8, void 0);
+    __privateAdd(this, _httpRequest3, void 0);
+    __privateSet(this, _client8, client), __privateSet(this, _httpRequest3, httpRequest);
   }
-}
-function cooerceError(err) {
-  if (err instanceof Error) {
-    return err;
+  /**
+   * Create a new dataset with the given name
+   *
+   * @param name - Name of the dataset to create
+   * @param options - Options for the dataset
+   */
+  create(name, options) {
+    return _modify(__privateGet(this, _client8), __privateGet(this, _httpRequest3), "PUT", name, options);
   }
-  const evt = parseEvent(err);
-  return evt instanceof Error ? evt : new Error(extractErrorMessage(evt));
-}
-function extractErrorMessage(err) {
-  if (!err.error) {
-    return err.message || "Unknown listener error";
+  /**
+   * Edit a dataset with the given name
+   *
+   * @param name - Name of the dataset to edit
+   * @param options - New options for the dataset
+   */
+  edit(name, options) {
+    return _modify(__privateGet(this, _client8), __privateGet(this, _httpRequest3), "PATCH", name, options);
   }
-  if (err.error.description) {
-    return err.error.description;
+  /**
+   * Delete a dataset with the given name
+   *
+   * @param name - Name of the dataset to delete
+   */
+  delete(name) {
+    return _modify(__privateGet(this, _client8), __privateGet(this, _httpRequest3), "DELETE", name);
   }
-  return typeof err.error === "string" ? err.error : JSON.stringify(err.error, null, 2);
-}
+  /**
+   * Fetch a list of datasets for the configured project
+   */
+  list() {
+    return _request(__privateGet(this, _client8), __privateGet(this, _httpRequest3), {
+      uri: "/datasets",
+      tag: null
+    });
+  }
+};
+_client8 = new WeakMap();
+_httpRequest3 = new WeakMap();
+var _client9, _httpRequest4;
+var DatasetsClient = class {
+  constructor(client, httpRequest) {
+    __privateAdd(this, _client9, void 0);
+    __privateAdd(this, _httpRequest4, void 0);
+    __privateSet(this, _client9, client), __privateSet(this, _httpRequest4, httpRequest);
+  }
+  /**
+   * Create a new dataset with the given name
+   *
+   * @param name - Name of the dataset to create
+   * @param options - Options for the dataset
+   */
+  create(name, options) {
+    return resourceGuard("dataset", __privateGet(this, _client9).config()), lastValueFrom(
+      _modify(__privateGet(this, _client9), __privateGet(this, _httpRequest4), "PUT", name, options)
+    );
+  }
+  /**
+   * Edit a dataset with the given name
+   *
+   * @param name - Name of the dataset to edit
+   * @param options - New options for the dataset
+   */
+  edit(name, options) {
+    return resourceGuard("dataset", __privateGet(this, _client9).config()), lastValueFrom(
+      _modify(__privateGet(this, _client9), __privateGet(this, _httpRequest4), "PATCH", name, options)
+    );
+  }
+  /**
+   * Delete a dataset with the given name
+   *
+   * @param name - Name of the dataset to delete
+   */
+  delete(name) {
+    return resourceGuard("dataset", __privateGet(this, _client9).config()), lastValueFrom(_modify(__privateGet(this, _client9), __privateGet(this, _httpRequest4), "DELETE", name));
+  }
+  /**
+   * Fetch a list of datasets for the configured project
+   */
+  list() {
+    return resourceGuard("dataset", __privateGet(this, _client9).config()), lastValueFrom(
+      _request(__privateGet(this, _client9), __privateGet(this, _httpRequest4), { uri: "/datasets", tag: null })
+    );
+  }
+};
+_client9 = new WeakMap();
+_httpRequest4 = new WeakMap();
 function _modify(client, httpRequest, method, name, options) {
-  dataset(name);
-  return _request(client, httpRequest, {
+  return resourceGuard("dataset", client.config()), dataset(name), _request(client, httpRequest, {
     method,
-    uri: "/datasets/".concat(name),
+    uri: `/datasets/${name}`,
     body: options,
     tag: null
   });
 }
-function defineCreateClientExports(envMiddleware2, ClassConstructor) {
-  const httpRequest = defineHttpRequest(envMiddleware2, {});
-  const requester2 = httpRequest.defaultRequester;
-  const createClient2 = (config2) => new ClassConstructor(
-    defineHttpRequest(envMiddleware2, {
-      maxRetries: config2.maxRetries,
-      retryDelay: config2.retryDelay
-    }),
-    config2
-  );
-  return { requester: requester2, createClient: createClient2 };
-}
-var MAX_ITEMS_IN_ERROR_MESSAGE, ClientError, ServerError, httpError, printWarnings, VALID_ASSET_TYPES, VALID_INSERT_LOCATIONS, dataset, projectId, validateAssetType, validateObject, validateDocumentId, requireDocumentId, validateInsert, hasDataset, requestTag, __accessCheck$6, __privateGet$6, __privateAdd$6, __privateSet$6, _client$5, _client2$5, BasePatch, _ObservablePatch, ObservablePatch, _Patch, Patch, __accessCheck$5, __privateGet$5, __privateAdd$5, __privateSet$5, _client$4, _client2$4, defaultMutateOptions, BaseTransaction, _Transaction, Transaction, _ObservableTransaction, ObservableTransaction, BASE_URL, createWarningPrinter, printCdnWarning, printCdnPreviewDraftsWarning, printBrowserTokenWarning, printNoApiVersionSpecifiedWarning, printNoDefaultExport, defaultCdnHost, defaultConfig, LOCALHOSTS, isLocal, validateApiVersion, validateApiPerspective, initConfig, projectHeader, s, c, d, S, f, encodeQueryString, excludeFalsey, getMutationQuery, isResponse, getBody, indexBy, getQuerySizeLimit, isDomExceptionSupported, __accessCheck$4, __privateGet$4, __privateAdd$4, __privateSet$4, _client$3, _httpRequest$4, _client2$3, _httpRequest2$4, ObservableAssetsClient, AssetsClient, defaults, pick, MAX_URL_LENGTH, possibleOptions, defaultOptions2, __accessCheck$3, __privateGet$3, __privateAdd$3, __privateSet$3, _client$2, _httpRequest$3, _client2$2, _httpRequest2$3, ObservableDatasetsClient, DatasetsClient, __accessCheck$2, __privateGet$2, __privateAdd$2, __privateSet$2, _client$1, _httpRequest$2, _client2$1, _httpRequest2$2, ObservableProjectsClient, ProjectsClient, __accessCheck$1, __privateGet$1, __privateAdd$1, __privateSet$1, _client, _httpRequest$1, _client2, _httpRequest2$1, ObservableUsersClient, UsersClient, __accessCheck2, __privateGet2, __privateAdd2, __privateSet2, _clientConfig, _httpRequest, _clientConfig2, _httpRequest2, _ObservableSanityClient, ObservableSanityClient, _SanityClient, SanityClient, envMiddleware;
-var init_browserMiddleware_zDVeirri = __esm({
-  "node_modules/@sanity/client/dist/_chunks/browserMiddleware-zDVeirri.js"() {
-    init_index_browser();
-    init_middleware_browser();
-    init_esm5();
-    init_operators();
-    MAX_ITEMS_IN_ERROR_MESSAGE = 5;
-    ClientError = class extends Error {
-      constructor(res) {
-        const props = extractErrorProps(res);
-        super(props.message);
-        this.statusCode = 400;
-        Object.assign(this, props);
-      }
-    };
-    ServerError = class extends Error {
-      constructor(res) {
-        const props = extractErrorProps(res);
-        super(props.message);
-        this.statusCode = 500;
-        Object.assign(this, props);
-      }
-    };
-    httpError = {
-      onResponse: (res) => {
-        if (res.statusCode >= 500) {
-          throw new ServerError(res);
-        } else if (res.statusCode >= 400) {
-          throw new ClientError(res);
-        }
-        return res;
-      }
-    };
-    printWarnings = {
-      onResponse: (res) => {
-        const warn = res.headers["x-sanity-warning"];
-        const warnings = Array.isArray(warn) ? warn : [warn];
-        warnings.filter(Boolean).forEach((msg) => console.warn(msg));
-        return res;
-      }
-    };
-    VALID_ASSET_TYPES = ["image", "file"];
-    VALID_INSERT_LOCATIONS = ["before", "after", "replace"];
-    dataset = (name) => {
-      if (!/^(~[a-z0-9]{1}[-\w]{0,63}|[a-z0-9]{1}[-\w]{0,63})$/.test(name)) {
-        throw new Error(
-          "Datasets can only contain lowercase characters, numbers, underscores and dashes, and start with tilde, and be maximum 64 characters"
-        );
-      }
-    };
-    projectId = (id) => {
-      if (!/^[-a-z0-9]+$/i.test(id)) {
-        throw new Error("`projectId` can only contain only a-z, 0-9 and dashes");
-      }
-    };
-    validateAssetType = (type) => {
-      if (VALID_ASSET_TYPES.indexOf(type) === -1) {
-        throw new Error("Invalid asset type: ".concat(type, ". Must be one of ").concat(VALID_ASSET_TYPES.join(", ")));
-      }
-    };
-    validateObject = (op, val) => {
-      if (val === null || typeof val !== "object" || Array.isArray(val)) {
-        throw new Error("".concat(op, "() takes an object of properties"));
-      }
-    };
-    validateDocumentId = (op, id) => {
-      if (typeof id !== "string" || !/^[a-z0-9_][a-z0-9_.-]{0,127}$/i.test(id) || id.includes("..")) {
-        throw new Error("".concat(op, '(): "').concat(id, '" is not a valid document ID'));
-      }
-    };
-    requireDocumentId = (op, doc) => {
-      if (!doc._id) {
-        throw new Error("".concat(op, '() requires that the document contains an ID ("_id" property)'));
-      }
-      validateDocumentId(op, doc._id);
-    };
-    validateInsert = (at, selector, items) => {
-      const signature = "insert(at, selector, items)";
-      if (VALID_INSERT_LOCATIONS.indexOf(at) === -1) {
-        const valid = VALID_INSERT_LOCATIONS.map((loc) => '"'.concat(loc, '"')).join(", ");
-        throw new Error("".concat(signature, ' takes an "at"-argument which is one of: ').concat(valid));
-      }
-      if (typeof selector !== "string") {
-        throw new Error("".concat(signature, ' takes a "selector"-argument which must be a string'));
-      }
-      if (!Array.isArray(items)) {
-        throw new Error("".concat(signature, ' takes an "items"-argument which must be an array'));
-      }
-    };
-    hasDataset = (config2) => {
-      if (!config2.dataset) {
-        throw new Error("`dataset` must be provided to perform queries");
-      }
-      return config2.dataset || "";
-    };
-    requestTag = (tag) => {
-      if (typeof tag !== "string" || !/^[a-z0-9._-]{1,75}$/i.test(tag)) {
-        throw new Error(
-          "Tag can only contain alphanumeric characters, underscores, dashes and dots, and be between one and 75 characters long."
-        );
-      }
-      return tag;
-    };
-    __accessCheck$6 = (obj, member, msg) => {
-      if (!member.has(obj))
-        throw TypeError("Cannot " + msg);
-    };
-    __privateGet$6 = (obj, member, getter) => {
-      __accessCheck$6(obj, member, "read from private field");
-      return getter ? getter.call(obj) : member.get(obj);
-    };
-    __privateAdd$6 = (obj, member, value) => {
-      if (member.has(obj))
-        throw TypeError("Cannot add the same private member more than once");
-      member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-    };
-    __privateSet$6 = (obj, member, value, setter) => {
-      __accessCheck$6(obj, member, "write to private field");
-      setter ? setter.call(obj, value) : member.set(obj, value);
-      return value;
-    };
-    BasePatch = class {
-      constructor(selection, operations = {}) {
-        this.selection = selection;
-        this.operations = operations;
-      }
-      /**
-       * Sets the given attributes to the document. Does NOT merge objects.
-       * The operation is added to the current patch, ready to be commited by `commit()`
-       *
-       * @param attrs - Attributes to set. To set a deep attribute, use JSONMatch, eg: \{"nested.prop": "value"\}
-       */
-      set(attrs) {
-        return this._assign("set", attrs);
-      }
-      /**
-       * Sets the given attributes to the document if they are not currently set. Does NOT merge objects.
-       * The operation is added to the current patch, ready to be commited by `commit()`
-       *
-       * @param attrs - Attributes to set. To set a deep attribute, use JSONMatch, eg: \{"nested.prop": "value"\}
-       */
-      setIfMissing(attrs) {
-        return this._assign("setIfMissing", attrs);
-      }
-      /**
-       * Performs a "diff-match-patch" operation on the string attributes provided.
-       * The operation is added to the current patch, ready to be commited by `commit()`
-       *
-       * @param attrs - Attributes to perform operation on. To set a deep attribute, use JSONMatch, eg: \{"nested.prop": "dmp"\}
-       */
-      diffMatchPatch(attrs) {
-        validateObject("diffMatchPatch", attrs);
-        return this._assign("diffMatchPatch", attrs);
-      }
-      /**
-       * Unsets the attribute paths provided.
-       * The operation is added to the current patch, ready to be commited by `commit()`
-       *
-       * @param attrs - Attribute paths to unset.
-       */
-      unset(attrs) {
-        if (!Array.isArray(attrs)) {
-          throw new Error("unset(attrs) takes an array of attributes to unset, non-array given");
-        }
-        this.operations = Object.assign({}, this.operations, { unset: attrs });
-        return this;
-      }
-      /**
-       * Increment a numeric value. Each entry in the argument is either an attribute or a JSON path. The value may be a positive or negative integer or floating-point value. The operation will fail if target value is not a numeric value, or doesn't exist.
-       *
-       * @param attrs - Object of attribute paths to increment, values representing the number to increment by.
-       */
-      inc(attrs) {
-        return this._assign("inc", attrs);
-      }
-      /**
-       * Decrement a numeric value. Each entry in the argument is either an attribute or a JSON path. The value may be a positive or negative integer or floating-point value. The operation will fail if target value is not a numeric value, or doesn't exist.
-       *
-       * @param attrs - Object of attribute paths to decrement, values representing the number to decrement by.
-       */
-      dec(attrs) {
-        return this._assign("dec", attrs);
-      }
-      /**
-       * Provides methods for modifying arrays, by inserting, appending and replacing elements via a JSONPath expression.
-       *
-       * @param at - Location to insert at, relative to the given selector, or 'replace' the matched path
-       * @param selector - JSONPath expression, eg `comments[-1]` or `blocks[_key=="abc123"]`
-       * @param items - Array of items to insert/replace
-       */
-      insert(at, selector, items) {
-        validateInsert(at, selector, items);
-        return this._assign("insert", { [at]: selector, items });
-      }
-      /**
-       * Append the given items to the array at the given JSONPath
-       *
-       * @param selector - Attribute/path to append to, eg `comments` or `person.hobbies`
-       * @param items - Array of items to append to the array
-       */
-      append(selector, items) {
-        return this.insert("after", "".concat(selector, "[-1]"), items);
-      }
-      /**
-       * Prepend the given items to the array at the given JSONPath
-       *
-       * @param selector - Attribute/path to prepend to, eg `comments` or `person.hobbies`
-       * @param items - Array of items to prepend to the array
-       */
-      prepend(selector, items) {
-        return this.insert("before", "".concat(selector, "[0]"), items);
-      }
-      /**
-       * Change the contents of an array by removing existing elements and/or adding new elements.
-       *
-       * @param selector - Attribute or JSONPath expression for array
-       * @param start - Index at which to start changing the array (with origin 0). If greater than the length of the array, actual starting index will be set to the length of the array. If negative, will begin that many elements from the end of the array (with origin -1) and will be set to 0 if absolute value is greater than the length of the array.x
-       * @param deleteCount - An integer indicating the number of old array elements to remove.
-       * @param items - The elements to add to the array, beginning at the start index. If you don't specify any elements, splice() will only remove elements from the array.
-       */
-      splice(selector, start, deleteCount, items) {
-        const delAll = typeof deleteCount === "undefined" || deleteCount === -1;
-        const startIndex = start < 0 ? start - 1 : start;
-        const delCount = delAll ? -1 : Math.max(0, start + deleteCount);
-        const delRange = startIndex < 0 && delCount >= 0 ? "" : delCount;
-        const rangeSelector = "".concat(selector, "[").concat(startIndex, ":").concat(delRange, "]");
-        return this.insert("replace", rangeSelector, items || []);
-      }
-      /**
-       * Adds a revision clause, preventing the document from being patched if the `_rev` property does not match the given value
-       *
-       * @param rev - Revision to lock the patch to
-       */
-      ifRevisionId(rev) {
-        this.operations.ifRevisionID = rev;
-        return this;
-      }
-      /**
-       * Return a plain JSON representation of the patch
-       */
-      serialize() {
-        return { ...getSelection(this.selection), ...this.operations };
-      }
-      /**
-       * Return a plain JSON representation of the patch
-       */
-      toJSON() {
-        return this.serialize();
-      }
-      /**
-       * Clears the patch of all operations
-       */
-      reset() {
-        this.operations = {};
-        return this;
-      }
-      _assign(op, props, merge = true) {
-        validateObject(op, props);
-        this.operations = Object.assign({}, this.operations, {
-          [op]: Object.assign({}, merge && this.operations[op] || {}, props)
-        });
-        return this;
-      }
-      _set(op, props) {
-        return this._assign(op, props, false);
-      }
-    };
-    _ObservablePatch = class _ObservablePatch2 extends BasePatch {
-      constructor(selection, operations, client) {
-        super(selection, operations);
-        __privateAdd$6(this, _client$5, void 0);
-        __privateSet$6(this, _client$5, client);
-      }
-      /**
-       * Clones the patch
-       */
-      clone() {
-        return new _ObservablePatch2(this.selection, { ...this.operations }, __privateGet$6(this, _client$5));
-      }
-      commit(options) {
-        if (!__privateGet$6(this, _client$5)) {
-          throw new Error(
-            "No `client` passed to patch, either provide one or pass the patch to a clients `mutate()` method"
-          );
-        }
-        const returnFirst = typeof this.selection === "string";
-        const opts = Object.assign({ returnFirst, returnDocuments: true }, options);
-        return __privateGet$6(this, _client$5).mutate({ patch: this.serialize() }, opts);
-      }
-    };
-    _client$5 = /* @__PURE__ */ new WeakMap();
-    ObservablePatch = _ObservablePatch;
-    _Patch = class _Patch2 extends BasePatch {
-      constructor(selection, operations, client) {
-        super(selection, operations);
-        __privateAdd$6(this, _client2$5, void 0);
-        __privateSet$6(this, _client2$5, client);
-      }
-      /**
-       * Clones the patch
-       */
-      clone() {
-        return new _Patch2(this.selection, { ...this.operations }, __privateGet$6(this, _client2$5));
-      }
-      commit(options) {
-        if (!__privateGet$6(this, _client2$5)) {
-          throw new Error(
-            "No `client` passed to patch, either provide one or pass the patch to a clients `mutate()` method"
-          );
-        }
-        const returnFirst = typeof this.selection === "string";
-        const opts = Object.assign({ returnFirst, returnDocuments: true }, options);
-        return __privateGet$6(this, _client2$5).mutate({ patch: this.serialize() }, opts);
-      }
-    };
-    _client2$5 = /* @__PURE__ */ new WeakMap();
-    Patch = _Patch;
-    __accessCheck$5 = (obj, member, msg) => {
-      if (!member.has(obj))
-        throw TypeError("Cannot " + msg);
-    };
-    __privateGet$5 = (obj, member, getter) => {
-      __accessCheck$5(obj, member, "read from private field");
-      return getter ? getter.call(obj) : member.get(obj);
-    };
-    __privateAdd$5 = (obj, member, value) => {
-      if (member.has(obj))
-        throw TypeError("Cannot add the same private member more than once");
-      member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-    };
-    __privateSet$5 = (obj, member, value, setter) => {
-      __accessCheck$5(obj, member, "write to private field");
-      setter ? setter.call(obj, value) : member.set(obj, value);
-      return value;
-    };
-    defaultMutateOptions = { returnDocuments: false };
-    BaseTransaction = class {
-      constructor(operations = [], transactionId) {
-        this.operations = operations;
-        this.trxId = transactionId;
-      }
-      /**
-       * Creates a new Sanity document. If `_id` is provided and already exists, the mutation will fail. If no `_id` is given, one will automatically be generated by the database.
-       * The operation is added to the current transaction, ready to be commited by `commit()`
-       *
-       * @param doc - Document to create. Requires a `_type` property.
-       */
-      create(doc) {
-        validateObject("create", doc);
-        return this._add({ create: doc });
-      }
-      /**
-       * Creates a new Sanity document. If a document with the same `_id` already exists, the create operation will be ignored.
-       * The operation is added to the current transaction, ready to be commited by `commit()`
-       *
-       * @param doc - Document to create if it does not already exist. Requires `_id` and `_type` properties.
-       */
-      createIfNotExists(doc) {
-        const op = "createIfNotExists";
-        validateObject(op, doc);
-        requireDocumentId(op, doc);
-        return this._add({ [op]: doc });
-      }
-      /**
-       * Creates a new Sanity document, or replaces an existing one if the same `_id` is already used.
-       * The operation is added to the current transaction, ready to be commited by `commit()`
-       *
-       * @param doc - Document to create or replace. Requires `_id` and `_type` properties.
-       */
-      createOrReplace(doc) {
-        const op = "createOrReplace";
-        validateObject(op, doc);
-        requireDocumentId(op, doc);
-        return this._add({ [op]: doc });
-      }
-      /**
-       * Deletes the document with the given document ID
-       * The operation is added to the current transaction, ready to be commited by `commit()`
-       *
-       * @param documentId - Document ID to delete
-       */
-      delete(documentId) {
-        validateDocumentId("delete", documentId);
-        return this._add({ delete: { id: documentId } });
-      }
-      transactionId(id) {
-        if (!id) {
-          return this.trxId;
-        }
-        this.trxId = id;
-        return this;
-      }
-      /**
-       * Return a plain JSON representation of the transaction
-       */
-      serialize() {
-        return [...this.operations];
-      }
-      /**
-       * Return a plain JSON representation of the transaction
-       */
-      toJSON() {
-        return this.serialize();
-      }
-      /**
-       * Clears the transaction of all operations
-       */
-      reset() {
-        this.operations = [];
-        return this;
-      }
-      _add(mut) {
-        this.operations.push(mut);
-        return this;
-      }
-    };
-    _Transaction = class _Transaction2 extends BaseTransaction {
-      constructor(operations, client, transactionId) {
-        super(operations, transactionId);
-        __privateAdd$5(this, _client$4, void 0);
-        __privateSet$5(this, _client$4, client);
-      }
-      /**
-       * Clones the transaction
-       */
-      clone() {
-        return new _Transaction2([...this.operations], __privateGet$5(this, _client$4), this.trxId);
-      }
-      commit(options) {
-        if (!__privateGet$5(this, _client$4)) {
-          throw new Error(
-            "No `client` passed to transaction, either provide one or pass the transaction to a clients `mutate()` method"
-          );
-        }
-        return __privateGet$5(this, _client$4).mutate(
-          this.serialize(),
-          Object.assign({ transactionId: this.trxId }, defaultMutateOptions, options || {})
-        );
-      }
-      patch(patchOrDocumentId, patchOps) {
-        const isBuilder = typeof patchOps === "function";
-        const isPatch = typeof patchOrDocumentId !== "string" && patchOrDocumentId instanceof Patch;
-        if (isPatch) {
-          return this._add({ patch: patchOrDocumentId.serialize() });
-        }
-        if (isBuilder) {
-          const patch = patchOps(new Patch(patchOrDocumentId, {}, __privateGet$5(this, _client$4)));
-          if (!(patch instanceof Patch)) {
-            throw new Error("function passed to `patch()` must return the patch");
-          }
-          return this._add({ patch: patch.serialize() });
-        }
-        return this._add({ patch: { id: patchOrDocumentId, ...patchOps } });
-      }
-    };
-    _client$4 = /* @__PURE__ */ new WeakMap();
-    Transaction = _Transaction;
-    _ObservableTransaction = class _ObservableTransaction2 extends BaseTransaction {
-      constructor(operations, client, transactionId) {
-        super(operations, transactionId);
-        __privateAdd$5(this, _client2$4, void 0);
-        __privateSet$5(this, _client2$4, client);
-      }
-      /**
-       * Clones the transaction
-       */
-      clone() {
-        return new _ObservableTransaction2([...this.operations], __privateGet$5(this, _client2$4), this.trxId);
-      }
-      commit(options) {
-        if (!__privateGet$5(this, _client2$4)) {
-          throw new Error(
-            "No `client` passed to transaction, either provide one or pass the transaction to a clients `mutate()` method"
-          );
-        }
-        return __privateGet$5(this, _client2$4).mutate(
-          this.serialize(),
-          Object.assign({ transactionId: this.trxId }, defaultMutateOptions, options || {})
-        );
-      }
-      patch(patchOrDocumentId, patchOps) {
-        const isBuilder = typeof patchOps === "function";
-        const isPatch = typeof patchOrDocumentId !== "string" && patchOrDocumentId instanceof ObservablePatch;
-        if (isPatch) {
-          return this._add({ patch: patchOrDocumentId.serialize() });
-        }
-        if (isBuilder) {
-          const patch = patchOps(new ObservablePatch(patchOrDocumentId, {}, __privateGet$5(this, _client2$4)));
-          if (!(patch instanceof ObservablePatch)) {
-            throw new Error("function passed to `patch()` must return the patch");
-          }
-          return this._add({ patch: patch.serialize() });
-        }
-        return this._add({ patch: { id: patchOrDocumentId, ...patchOps } });
-      }
-    };
-    _client2$4 = /* @__PURE__ */ new WeakMap();
-    ObservableTransaction = _ObservableTransaction;
-    BASE_URL = "https://www.sanity.io/help/";
-    createWarningPrinter = (message) => (
-      // eslint-disable-next-line no-console
-      once((...args) => console.warn(message.join(" "), ...args))
-    );
-    printCdnWarning = createWarningPrinter([
-      "Since you haven't set a value for `useCdn`, we will deliver content using our",
-      "global, edge-cached API-CDN. If you wish to have content delivered faster, set",
-      "`useCdn: false` to use the Live API. Note: You may incur higher costs using the live API."
-    ]);
-    printCdnPreviewDraftsWarning = createWarningPrinter([
-      "The Sanity client is configured with the `perspective` set to `previewDrafts`, which doesn't support the API-CDN.",
-      "The Live API will be used instead. Set `useCdn: false` in your configuration to hide this warning."
-    ]);
-    printBrowserTokenWarning = createWarningPrinter([
-      "You have configured Sanity client to use a token in the browser. This may cause unintentional security issues.",
-      "See ".concat(generateHelpUrl(
-        "js-client-browser-token"
-      ), " for more information and how to hide this warning.")
-    ]);
-    printNoApiVersionSpecifiedWarning = createWarningPrinter([
-      "Using the Sanity client without specifying an API version is deprecated.",
-      "See ".concat(generateHelpUrl("js-client-api-version"))
-    ]);
-    printNoDefaultExport = createWarningPrinter([
-      "The default export of @sanity/client has been deprecated. Use the named export `createClient` instead."
-    ]);
-    defaultCdnHost = "apicdn.sanity.io";
-    defaultConfig = {
-      apiHost: "https://api.sanity.io",
-      apiVersion: "1",
-      useProjectHostname: true,
-      stega: { enabled: false }
-    };
-    LOCALHOSTS = ["localhost", "127.0.0.1", "0.0.0.0"];
-    isLocal = (host) => LOCALHOSTS.indexOf(host) !== -1;
-    validateApiVersion = function validateApiVersion2(apiVersion) {
-      if (apiVersion === "1" || apiVersion === "X") {
-        return;
-      }
-      const apiDate = new Date(apiVersion);
-      const apiVersionValid = /^\d{4}-\d{2}-\d{2}$/.test(apiVersion) && apiDate instanceof Date && apiDate.getTime() > 0;
-      if (!apiVersionValid) {
-        throw new Error("Invalid API version string, expected `1` or date in format `YYYY-MM-DD`");
-      }
-    };
-    validateApiPerspective = function validateApiPerspective2(perspective) {
-      switch (perspective) {
-        case "previewDrafts":
-        case "published":
-        case "raw":
-          return;
-        default:
-          throw new TypeError(
-            "Invalid API perspective string, expected `published`, `previewDrafts` or `raw`"
-          );
-      }
-    };
-    initConfig = (config2, prevConfig) => {
-      const specifiedConfig = {
-        ...prevConfig,
-        ...config2,
-        stega: {
-          ...typeof prevConfig.stega === "boolean" ? { enabled: prevConfig.stega } : prevConfig.stega || defaultConfig.stega,
-          ...typeof config2.stega === "boolean" ? { enabled: config2.stega } : config2.stega || {}
-        }
-      };
-      if (!specifiedConfig.apiVersion) {
-        printNoApiVersionSpecifiedWarning();
-      }
-      const newConfig = {
-        ...defaultConfig,
-        ...specifiedConfig
-      };
-      const projectBased = newConfig.useProjectHostname;
-      if (typeof Promise === "undefined") {
-        const helpUrl = generateHelpUrl("js-client-promise-polyfill");
-        throw new Error("No native Promise-implementation found, polyfill needed - see ".concat(helpUrl));
-      }
-      if (projectBased && !newConfig.projectId) {
-        throw new Error("Configuration must contain `projectId`");
-      }
-      if (typeof newConfig.perspective === "string") {
-        validateApiPerspective(newConfig.perspective);
-      }
-      if ("encodeSourceMap" in newConfig) {
-        throw new Error(
-          "It looks like you're using options meant for '@sanity/preview-kit/client'. 'encodeSourceMap' is not supported in '@sanity/client'. Did you mean 'stega.enabled'?"
-        );
-      }
-      if ("encodeSourceMapAtPath" in newConfig) {
-        throw new Error(
-          "It looks like you're using options meant for '@sanity/preview-kit/client'. 'encodeSourceMapAtPath' is not supported in '@sanity/client'. Did you mean 'stega.filter'?"
-        );
-      }
-      if (typeof newConfig.stega.enabled !== "boolean") {
-        throw new Error("stega.enabled must be a boolean, received ".concat(newConfig.stega.enabled));
-      }
-      if (newConfig.stega.enabled && newConfig.stega.studioUrl === void 0) {
-        throw new Error("stega.studioUrl must be defined when stega.enabled is true");
-      }
-      if (newConfig.stega.enabled && typeof newConfig.stega.studioUrl !== "string" && typeof newConfig.stega.studioUrl !== "function") {
-        throw new Error(
-          "stega.studioUrl must be a string or a function, received ".concat(newConfig.stega.studioUrl)
-        );
-      }
-      const isBrowser = typeof window !== "undefined" && window.location && window.location.hostname;
-      const isLocalhost = isBrowser && isLocal(window.location.hostname);
-      if (isBrowser && isLocalhost && newConfig.token && newConfig.ignoreBrowserTokenWarning !== true) {
-        printBrowserTokenWarning();
-      } else if (typeof newConfig.useCdn === "undefined") {
-        printCdnWarning();
-      }
-      if (projectBased) {
-        projectId(newConfig.projectId);
-      }
-      if (newConfig.dataset) {
-        dataset(newConfig.dataset);
-      }
-      if ("requestTagPrefix" in newConfig) {
-        newConfig.requestTagPrefix = newConfig.requestTagPrefix ? requestTag(newConfig.requestTagPrefix).replace(/\.+$/, "") : void 0;
-      }
-      newConfig.apiVersion = "".concat(newConfig.apiVersion).replace(/^v/, "");
-      newConfig.isDefaultApi = newConfig.apiHost === defaultConfig.apiHost;
-      newConfig.useCdn = newConfig.useCdn !== false && !newConfig.withCredentials;
-      validateApiVersion(newConfig.apiVersion);
-      const hostParts = newConfig.apiHost.split("://", 2);
-      const protocol = hostParts[0];
-      const host = hostParts[1];
-      const cdnHost = newConfig.isDefaultApi ? defaultCdnHost : host;
-      if (newConfig.useProjectHostname) {
-        newConfig.url = "".concat(protocol, "://").concat(newConfig.projectId, ".").concat(host, "/v").concat(newConfig.apiVersion);
-        newConfig.cdnUrl = "".concat(protocol, "://").concat(newConfig.projectId, ".").concat(cdnHost, "/v").concat(newConfig.apiVersion);
-      } else {
-        newConfig.url = "".concat(newConfig.apiHost, "/v").concat(newConfig.apiVersion);
-        newConfig.cdnUrl = newConfig.url;
-      }
-      return newConfig;
-    };
-    projectHeader = "X-Sanity-Project-ID";
-    s = { 0: 8203, 1: 8204, 2: 8205, 3: 8290, 4: 8291, 5: 8288, 6: 65279, 7: 8289, 8: 119155, 9: 119156, a: 119157, b: 119158, c: 119159, d: 119160, e: 119161, f: 119162 };
-    c = { 0: 8203, 1: 8204, 2: 8205, 3: 65279 };
-    d = new Array(4).fill(String.fromCodePoint(c[0])).join("");
-    Object.fromEntries(Object.entries(c).map((t) => t.reverse()));
-    Object.fromEntries(Object.entries(s).map((t) => t.reverse()));
-    S = `${Object.values(s).map((t) => `\\u{${t.toString(16)}}`).join("")}`;
-    f = new RegExp(`[${S}]{4,}`, "gu");
-    encodeQueryString = ({
-      query,
-      params = {},
-      options = {}
-    }) => {
-      const searchParams = new URLSearchParams();
-      const { tag, ...opts } = options;
-      if (tag)
-        searchParams.append("tag", tag);
-      searchParams.append("query", query);
-      for (const [key, value] of Object.entries(params)) {
-        searchParams.append("$".concat(key), JSON.stringify(value));
-      }
-      for (const [key, value] of Object.entries(opts)) {
-        if (value)
-          searchParams.append(key, "".concat(value));
-      }
-      return "?".concat(searchParams);
-    };
-    excludeFalsey = (param, defValue) => {
-      const value = typeof param === "undefined" ? defValue : param;
-      return param === false ? void 0 : value;
-    };
-    getMutationQuery = (options = {}) => {
-      return {
-        dryRun: options.dryRun,
-        returnIds: true,
-        returnDocuments: excludeFalsey(options.returnDocuments, true),
-        visibility: options.visibility || "sync",
-        autoGenerateArrayKeys: options.autoGenerateArrayKeys,
-        skipCrossDatasetReferenceValidation: options.skipCrossDatasetReferenceValidation
-      };
-    };
-    isResponse = (event) => event.type === "response";
-    getBody = (event) => event.body;
-    indexBy = (docs, attr) => docs.reduce((indexed, doc) => {
-      indexed[attr(doc)] = doc;
-      return indexed;
-    }, /* @__PURE__ */ Object.create(null));
-    getQuerySizeLimit = 11264;
-    isDomExceptionSupported = Boolean(globalThis.DOMException);
-    __accessCheck$4 = (obj, member, msg) => {
-      if (!member.has(obj))
-        throw TypeError("Cannot " + msg);
-    };
-    __privateGet$4 = (obj, member, getter) => {
-      __accessCheck$4(obj, member, "read from private field");
-      return getter ? getter.call(obj) : member.get(obj);
-    };
-    __privateAdd$4 = (obj, member, value) => {
-      if (member.has(obj))
-        throw TypeError("Cannot add the same private member more than once");
-      member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-    };
-    __privateSet$4 = (obj, member, value, setter) => {
-      __accessCheck$4(obj, member, "write to private field");
-      setter ? setter.call(obj, value) : member.set(obj, value);
-      return value;
-    };
-    ObservableAssetsClient = class {
-      constructor(client, httpRequest) {
-        __privateAdd$4(this, _client$3, void 0);
-        __privateAdd$4(this, _httpRequest$4, void 0);
-        __privateSet$4(this, _client$3, client);
-        __privateSet$4(this, _httpRequest$4, httpRequest);
-      }
-      upload(assetType, body, options) {
-        return _upload(__privateGet$4(this, _client$3), __privateGet$4(this, _httpRequest$4), assetType, body, options);
-      }
-    };
-    _client$3 = /* @__PURE__ */ new WeakMap();
-    _httpRequest$4 = /* @__PURE__ */ new WeakMap();
-    AssetsClient = class {
-      constructor(client, httpRequest) {
-        __privateAdd$4(this, _client2$3, void 0);
-        __privateAdd$4(this, _httpRequest2$4, void 0);
-        __privateSet$4(this, _client2$3, client);
-        __privateSet$4(this, _httpRequest2$4, httpRequest);
-      }
-      upload(assetType, body, options) {
-        const observable3 = _upload(__privateGet$4(this, _client2$3), __privateGet$4(this, _httpRequest2$4), assetType, body, options);
-        return lastValueFrom(
-          observable3.pipe(
-            filter((event) => event.type === "response"),
-            map(
-              (event) => event.body.document
-            )
-          )
-        );
-      }
-    };
-    _client2$3 = /* @__PURE__ */ new WeakMap();
-    _httpRequest2$4 = /* @__PURE__ */ new WeakMap();
-    defaults = (obj, defaults2) => Object.keys(defaults2).concat(Object.keys(obj)).reduce((target, prop) => {
-      target[prop] = typeof obj[prop] === "undefined" ? defaults2[prop] : obj[prop];
-      return target;
-    }, {});
-    pick = (obj, props) => props.reduce((selection, prop) => {
-      if (typeof obj[prop] === "undefined") {
-        return selection;
-      }
-      selection[prop] = obj[prop];
-      return selection;
-    }, {});
-    MAX_URL_LENGTH = 16e3 - 1200;
-    possibleOptions = [
-      "includePreviousRevision",
-      "includeResult",
-      "visibility",
-      "effectFormat",
-      "tag"
-    ];
-    defaultOptions2 = {
-      includeResult: true
-    };
-    __accessCheck$3 = (obj, member, msg) => {
-      if (!member.has(obj))
-        throw TypeError("Cannot " + msg);
-    };
-    __privateGet$3 = (obj, member, getter) => {
-      __accessCheck$3(obj, member, "read from private field");
-      return getter ? getter.call(obj) : member.get(obj);
-    };
-    __privateAdd$3 = (obj, member, value) => {
-      if (member.has(obj))
-        throw TypeError("Cannot add the same private member more than once");
-      member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-    };
-    __privateSet$3 = (obj, member, value, setter) => {
-      __accessCheck$3(obj, member, "write to private field");
-      setter ? setter.call(obj, value) : member.set(obj, value);
-      return value;
-    };
-    ObservableDatasetsClient = class {
-      constructor(client, httpRequest) {
-        __privateAdd$3(this, _client$2, void 0);
-        __privateAdd$3(this, _httpRequest$3, void 0);
-        __privateSet$3(this, _client$2, client);
-        __privateSet$3(this, _httpRequest$3, httpRequest);
-      }
-      /**
-       * Create a new dataset with the given name
-       *
-       * @param name - Name of the dataset to create
-       * @param options - Options for the dataset
-       */
-      create(name, options) {
-        return _modify(__privateGet$3(this, _client$2), __privateGet$3(this, _httpRequest$3), "PUT", name, options);
-      }
-      /**
-       * Edit a dataset with the given name
-       *
-       * @param name - Name of the dataset to edit
-       * @param options - New options for the dataset
-       */
-      edit(name, options) {
-        return _modify(__privateGet$3(this, _client$2), __privateGet$3(this, _httpRequest$3), "PATCH", name, options);
-      }
-      /**
-       * Delete a dataset with the given name
-       *
-       * @param name - Name of the dataset to delete
-       */
-      delete(name) {
-        return _modify(__privateGet$3(this, _client$2), __privateGet$3(this, _httpRequest$3), "DELETE", name);
-      }
-      /**
-       * Fetch a list of datasets for the configured project
-       */
-      list() {
-        return _request(__privateGet$3(this, _client$2), __privateGet$3(this, _httpRequest$3), {
-          uri: "/datasets",
-          tag: null
-        });
-      }
-    };
-    _client$2 = /* @__PURE__ */ new WeakMap();
-    _httpRequest$3 = /* @__PURE__ */ new WeakMap();
-    DatasetsClient = class {
-      constructor(client, httpRequest) {
-        __privateAdd$3(this, _client2$2, void 0);
-        __privateAdd$3(this, _httpRequest2$3, void 0);
-        __privateSet$3(this, _client2$2, client);
-        __privateSet$3(this, _httpRequest2$3, httpRequest);
-      }
-      /**
-       * Create a new dataset with the given name
-       *
-       * @param name - Name of the dataset to create
-       * @param options - Options for the dataset
-       */
-      create(name, options) {
-        return lastValueFrom(
-          _modify(__privateGet$3(this, _client2$2), __privateGet$3(this, _httpRequest2$3), "PUT", name, options)
-        );
-      }
-      /**
-       * Edit a dataset with the given name
-       *
-       * @param name - Name of the dataset to edit
-       * @param options - New options for the dataset
-       */
-      edit(name, options) {
-        return lastValueFrom(
-          _modify(__privateGet$3(this, _client2$2), __privateGet$3(this, _httpRequest2$3), "PATCH", name, options)
-        );
-      }
-      /**
-       * Delete a dataset with the given name
-       *
-       * @param name - Name of the dataset to delete
-       */
-      delete(name) {
-        return lastValueFrom(_modify(__privateGet$3(this, _client2$2), __privateGet$3(this, _httpRequest2$3), "DELETE", name));
-      }
-      /**
-       * Fetch a list of datasets for the configured project
-       */
-      list() {
-        return lastValueFrom(
-          _request(__privateGet$3(this, _client2$2), __privateGet$3(this, _httpRequest2$3), { uri: "/datasets", tag: null })
-        );
-      }
-    };
-    _client2$2 = /* @__PURE__ */ new WeakMap();
-    _httpRequest2$3 = /* @__PURE__ */ new WeakMap();
-    __accessCheck$2 = (obj, member, msg) => {
-      if (!member.has(obj))
-        throw TypeError("Cannot " + msg);
-    };
-    __privateGet$2 = (obj, member, getter) => {
-      __accessCheck$2(obj, member, "read from private field");
-      return getter ? getter.call(obj) : member.get(obj);
-    };
-    __privateAdd$2 = (obj, member, value) => {
-      if (member.has(obj))
-        throw TypeError("Cannot add the same private member more than once");
-      member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-    };
-    __privateSet$2 = (obj, member, value, setter) => {
-      __accessCheck$2(obj, member, "write to private field");
-      setter ? setter.call(obj, value) : member.set(obj, value);
-      return value;
-    };
-    ObservableProjectsClient = class {
-      constructor(client, httpRequest) {
-        __privateAdd$2(this, _client$1, void 0);
-        __privateAdd$2(this, _httpRequest$2, void 0);
-        __privateSet$2(this, _client$1, client);
-        __privateSet$2(this, _httpRequest$2, httpRequest);
-      }
-      list(options) {
-        const uri = (options == null ? void 0 : options.includeMembers) === false ? "/projects?includeMembers=false" : "/projects";
-        return _request(__privateGet$2(this, _client$1), __privateGet$2(this, _httpRequest$2), { uri });
-      }
-      /**
-       * Fetch a project by project ID
-       *
-       * @param projectId - ID of the project to fetch
-       */
-      getById(projectId2) {
-        return _request(__privateGet$2(this, _client$1), __privateGet$2(this, _httpRequest$2), { uri: "/projects/".concat(projectId2) });
-      }
-    };
-    _client$1 = /* @__PURE__ */ new WeakMap();
-    _httpRequest$2 = /* @__PURE__ */ new WeakMap();
-    ProjectsClient = class {
-      constructor(client, httpRequest) {
-        __privateAdd$2(this, _client2$1, void 0);
-        __privateAdd$2(this, _httpRequest2$2, void 0);
-        __privateSet$2(this, _client2$1, client);
-        __privateSet$2(this, _httpRequest2$2, httpRequest);
-      }
-      list(options) {
-        const uri = (options == null ? void 0 : options.includeMembers) === false ? "/projects?includeMembers=false" : "/projects";
-        return lastValueFrom(_request(__privateGet$2(this, _client2$1), __privateGet$2(this, _httpRequest2$2), { uri }));
-      }
-      /**
-       * Fetch a project by project ID
-       *
-       * @param projectId - ID of the project to fetch
-       */
-      getById(projectId2) {
-        return lastValueFrom(
-          _request(__privateGet$2(this, _client2$1), __privateGet$2(this, _httpRequest2$2), { uri: "/projects/".concat(projectId2) })
-        );
-      }
-    };
-    _client2$1 = /* @__PURE__ */ new WeakMap();
-    _httpRequest2$2 = /* @__PURE__ */ new WeakMap();
-    __accessCheck$1 = (obj, member, msg) => {
-      if (!member.has(obj))
-        throw TypeError("Cannot " + msg);
-    };
-    __privateGet$1 = (obj, member, getter) => {
-      __accessCheck$1(obj, member, "read from private field");
-      return getter ? getter.call(obj) : member.get(obj);
-    };
-    __privateAdd$1 = (obj, member, value) => {
-      if (member.has(obj))
-        throw TypeError("Cannot add the same private member more than once");
-      member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-    };
-    __privateSet$1 = (obj, member, value, setter) => {
-      __accessCheck$1(obj, member, "write to private field");
-      setter ? setter.call(obj, value) : member.set(obj, value);
-      return value;
-    };
-    ObservableUsersClient = class {
-      constructor(client, httpRequest) {
-        __privateAdd$1(this, _client, void 0);
-        __privateAdd$1(this, _httpRequest$1, void 0);
-        __privateSet$1(this, _client, client);
-        __privateSet$1(this, _httpRequest$1, httpRequest);
-      }
-      /**
-       * Fetch a user by user ID
-       *
-       * @param id - User ID of the user to fetch. If `me` is provided, a minimal response including the users role is returned.
-       */
-      getById(id) {
-        return _request(
-          __privateGet$1(this, _client),
-          __privateGet$1(this, _httpRequest$1),
-          { uri: "/users/".concat(id) }
-        );
-      }
-    };
-    _client = /* @__PURE__ */ new WeakMap();
-    _httpRequest$1 = /* @__PURE__ */ new WeakMap();
-    UsersClient = class {
-      constructor(client, httpRequest) {
-        __privateAdd$1(this, _client2, void 0);
-        __privateAdd$1(this, _httpRequest2$1, void 0);
-        __privateSet$1(this, _client2, client);
-        __privateSet$1(this, _httpRequest2$1, httpRequest);
-      }
-      /**
-       * Fetch a user by user ID
-       *
-       * @param id - User ID of the user to fetch. If `me` is provided, a minimal response including the users role is returned.
-       */
-      getById(id) {
-        return lastValueFrom(
-          _request(__privateGet$1(this, _client2), __privateGet$1(this, _httpRequest2$1), {
-            uri: "/users/".concat(id)
-          })
-        );
-      }
-    };
-    _client2 = /* @__PURE__ */ new WeakMap();
-    _httpRequest2$1 = /* @__PURE__ */ new WeakMap();
-    __accessCheck2 = (obj, member, msg) => {
-      if (!member.has(obj))
-        throw TypeError("Cannot " + msg);
-    };
-    __privateGet2 = (obj, member, getter) => {
-      __accessCheck2(obj, member, "read from private field");
-      return getter ? getter.call(obj) : member.get(obj);
-    };
-    __privateAdd2 = (obj, member, value) => {
-      if (member.has(obj))
-        throw TypeError("Cannot add the same private member more than once");
-      member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-    };
-    __privateSet2 = (obj, member, value, setter) => {
-      __accessCheck2(obj, member, "write to private field");
-      setter ? setter.call(obj, value) : member.set(obj, value);
-      return value;
-    };
-    _ObservableSanityClient = class _ObservableSanityClient2 {
-      constructor(httpRequest, config2 = defaultConfig) {
-        __privateAdd2(this, _clientConfig, void 0);
-        __privateAdd2(this, _httpRequest, void 0);
-        this.listen = _listen;
-        this.config(config2);
-        __privateSet2(this, _httpRequest, httpRequest);
-        this.assets = new ObservableAssetsClient(this, __privateGet2(this, _httpRequest));
-        this.datasets = new ObservableDatasetsClient(this, __privateGet2(this, _httpRequest));
-        this.projects = new ObservableProjectsClient(this, __privateGet2(this, _httpRequest));
-        this.users = new ObservableUsersClient(this, __privateGet2(this, _httpRequest));
-      }
-      /**
-       * Clone the client - returns a new instance
-       */
-      clone() {
-        return new _ObservableSanityClient2(__privateGet2(this, _httpRequest), this.config());
-      }
-      config(newConfig) {
-        if (newConfig === void 0) {
-          return { ...__privateGet2(this, _clientConfig) };
-        }
-        if (__privateGet2(this, _clientConfig) && __privateGet2(this, _clientConfig).allowReconfigure === false) {
-          throw new Error(
-            "Existing client instance cannot be reconfigured - use `withConfig(newConfig)` to return a new client"
-          );
-        }
-        __privateSet2(this, _clientConfig, initConfig(newConfig, __privateGet2(this, _clientConfig) || {}));
-        return this;
-      }
-      /**
-       * Clone the client with a new (partial) configuration.
-       *
-       * @param newConfig - New client configuration properties, shallowly merged with existing configuration
-       */
-      withConfig(newConfig) {
-        const thisConfig = this.config();
-        return new _ObservableSanityClient2(__privateGet2(this, _httpRequest), {
-          ...thisConfig,
-          ...newConfig,
-          stega: {
-            ...thisConfig.stega || {},
-            ...typeof (newConfig == null ? void 0 : newConfig.stega) === "boolean" ? { enabled: newConfig.stega } : (newConfig == null ? void 0 : newConfig.stega) || {}
-          }
-        });
-      }
-      fetch(query, params, options) {
-        return _fetch(
-          this,
-          __privateGet2(this, _httpRequest),
-          __privateGet2(this, _clientConfig).stega,
-          query,
-          params,
-          options
-        );
-      }
-      /**
-       * Fetch a single document with the given ID.
-       *
-       * @param id - Document ID to fetch
-       * @param options - Request options
-       */
-      getDocument(id, options) {
-        return _getDocument(this, __privateGet2(this, _httpRequest), id, options);
-      }
-      /**
-       * Fetch multiple documents in one request.
-       * Should be used sparingly - performing a query is usually a better option.
-       * The order/position of documents is preserved based on the original array of IDs.
-       * If any of the documents are missing, they will be replaced by a `null` entry in the returned array
-       *
-       * @param ids - Document IDs to fetch
-       * @param options - Request options
-       */
-      getDocuments(ids, options) {
-        return _getDocuments(this, __privateGet2(this, _httpRequest), ids, options);
-      }
-      create(document2, options) {
-        return _create(this, __privateGet2(this, _httpRequest), document2, "create", options);
-      }
-      createIfNotExists(document2, options) {
-        return _createIfNotExists(this, __privateGet2(this, _httpRequest), document2, options);
-      }
-      createOrReplace(document2, options) {
-        return _createOrReplace(this, __privateGet2(this, _httpRequest), document2, options);
-      }
-      delete(selection, options) {
-        return _delete(this, __privateGet2(this, _httpRequest), selection, options);
-      }
-      mutate(operations, options) {
-        return _mutate(this, __privateGet2(this, _httpRequest), operations, options);
-      }
-      /**
-       * Create a new buildable patch of operations to perform
-       *
-       * @param selection - Document ID, an array of document IDs, or an object with `query` and optional `params`, defining which document(s) to patch
-       * @param operations - Optional object of patch operations to initialize the patch instance with
-       * @returns Patch instance - call `.commit()` to perform the operations defined
-       */
-      patch(selection, operations) {
-        return new ObservablePatch(selection, operations, this);
-      }
-      /**
-       * Create a new transaction of mutations
-       *
-       * @param operations - Optional array of mutation operations to initialize the transaction instance with
-       */
-      transaction(operations) {
-        return new ObservableTransaction(operations, this);
-      }
-      /**
-       * Perform an HTTP request against the Sanity API
-       *
-       * @param options - Request options
-       */
-      request(options) {
-        return _request(this, __privateGet2(this, _httpRequest), options);
-      }
-      /**
-       * Get a Sanity API URL for the URI provided
-       *
-       * @param uri - URI/path to build URL for
-       * @param canUseCdn - Whether or not to allow using the API CDN for this route
-       */
-      getUrl(uri, canUseCdn) {
-        return _getUrl(this, uri, canUseCdn);
-      }
-      /**
-       * Get a Sanity API URL for the data operation and path provided
-       *
-       * @param operation - Data operation (eg `query`, `mutate`, `listen` or similar)
-       * @param path - Path to append after the operation
-       */
-      getDataUrl(operation, path) {
-        return _getDataUrl(this, operation, path);
-      }
-    };
-    _clientConfig = /* @__PURE__ */ new WeakMap();
-    _httpRequest = /* @__PURE__ */ new WeakMap();
-    ObservableSanityClient = _ObservableSanityClient;
-    _SanityClient = class _SanityClient2 {
-      constructor(httpRequest, config2 = defaultConfig) {
-        __privateAdd2(this, _clientConfig2, void 0);
-        __privateAdd2(this, _httpRequest2, void 0);
-        this.listen = _listen;
-        this.config(config2);
-        __privateSet2(this, _httpRequest2, httpRequest);
-        this.assets = new AssetsClient(this, __privateGet2(this, _httpRequest2));
-        this.datasets = new DatasetsClient(this, __privateGet2(this, _httpRequest2));
-        this.projects = new ProjectsClient(this, __privateGet2(this, _httpRequest2));
-        this.users = new UsersClient(this, __privateGet2(this, _httpRequest2));
-        this.observable = new ObservableSanityClient(httpRequest, config2);
-      }
-      /**
-       * Clone the client - returns a new instance
-       */
-      clone() {
-        return new _SanityClient2(__privateGet2(this, _httpRequest2), this.config());
-      }
-      config(newConfig) {
-        if (newConfig === void 0) {
-          return { ...__privateGet2(this, _clientConfig2) };
-        }
-        if (__privateGet2(this, _clientConfig2) && __privateGet2(this, _clientConfig2).allowReconfigure === false) {
-          throw new Error(
-            "Existing client instance cannot be reconfigured - use `withConfig(newConfig)` to return a new client"
-          );
-        }
-        if (this.observable) {
-          this.observable.config(newConfig);
-        }
-        __privateSet2(this, _clientConfig2, initConfig(newConfig, __privateGet2(this, _clientConfig2) || {}));
-        return this;
-      }
-      /**
-       * Clone the client with a new (partial) configuration.
-       *
-       * @param newConfig - New client configuration properties, shallowly merged with existing configuration
-       */
-      withConfig(newConfig) {
-        const thisConfig = this.config();
-        return new _SanityClient2(__privateGet2(this, _httpRequest2), {
-          ...thisConfig,
-          ...newConfig,
-          stega: {
-            ...thisConfig.stega || {},
-            ...typeof (newConfig == null ? void 0 : newConfig.stega) === "boolean" ? { enabled: newConfig.stega } : (newConfig == null ? void 0 : newConfig.stega) || {}
-          }
-        });
-      }
-      fetch(query, params, options) {
-        return lastValueFrom(
-          _fetch(
-            this,
-            __privateGet2(this, _httpRequest2),
-            __privateGet2(this, _clientConfig2).stega,
-            query,
-            params,
-            options
-          )
-        );
-      }
-      /**
-       * Fetch a single document with the given ID.
-       *
-       * @param id - Document ID to fetch
-       * @param options - Request options
-       */
-      getDocument(id, options) {
-        return lastValueFrom(_getDocument(this, __privateGet2(this, _httpRequest2), id, options));
-      }
-      /**
-       * Fetch multiple documents in one request.
-       * Should be used sparingly - performing a query is usually a better option.
-       * The order/position of documents is preserved based on the original array of IDs.
-       * If any of the documents are missing, they will be replaced by a `null` entry in the returned array
-       *
-       * @param ids - Document IDs to fetch
-       * @param options - Request options
-       */
-      getDocuments(ids, options) {
-        return lastValueFrom(_getDocuments(this, __privateGet2(this, _httpRequest2), ids, options));
-      }
-      create(document2, options) {
-        return lastValueFrom(
-          _create(this, __privateGet2(this, _httpRequest2), document2, "create", options)
-        );
-      }
-      createIfNotExists(document2, options) {
-        return lastValueFrom(
-          _createIfNotExists(this, __privateGet2(this, _httpRequest2), document2, options)
-        );
-      }
-      createOrReplace(document2, options) {
-        return lastValueFrom(
-          _createOrReplace(this, __privateGet2(this, _httpRequest2), document2, options)
-        );
-      }
-      delete(selection, options) {
-        return lastValueFrom(_delete(this, __privateGet2(this, _httpRequest2), selection, options));
-      }
-      mutate(operations, options) {
-        return lastValueFrom(_mutate(this, __privateGet2(this, _httpRequest2), operations, options));
-      }
-      /**
-       * Create a new buildable patch of operations to perform
-       *
-       * @param selection - Document ID, an array of document IDs, or an object with `query` and optional `params`, defining which document(s) to patch
-       * @param operations - Optional object of patch operations to initialize the patch instance with
-       * @returns Patch instance - call `.commit()` to perform the operations defined
-       */
-      patch(documentId, operations) {
-        return new Patch(documentId, operations, this);
-      }
-      /**
-       * Create a new transaction of mutations
-       *
-       * @param operations - Optional array of mutation operations to initialize the transaction instance with
-       */
-      transaction(operations) {
-        return new Transaction(operations, this);
-      }
-      /**
-       * Perform a request against the Sanity API
-       * NOTE: Only use this for Sanity API endpoints, not for your own APIs!
-       *
-       * @param options - Request options
-       * @returns Promise resolving to the response body
-       */
-      request(options) {
-        return lastValueFrom(_request(this, __privateGet2(this, _httpRequest2), options));
-      }
-      /**
-       * Perform an HTTP request a `/data` sub-endpoint
-       * NOTE: Considered internal, thus marked as deprecated. Use `request` instead.
-       *
-       * @deprecated - Use `request()` or your own HTTP library instead
-       * @param endpoint - Endpoint to hit (mutate, query etc)
-       * @param body - Request body
-       * @param options - Request options
-       * @internal
-       */
-      dataRequest(endpoint, body, options) {
-        return lastValueFrom(_dataRequest(this, __privateGet2(this, _httpRequest2), endpoint, body, options));
-      }
-      /**
-       * Get a Sanity API URL for the URI provided
-       *
-       * @param uri - URI/path to build URL for
-       * @param canUseCdn - Whether or not to allow using the API CDN for this route
-       */
-      getUrl(uri, canUseCdn) {
-        return _getUrl(this, uri, canUseCdn);
-      }
-      /**
-       * Get a Sanity API URL for the data operation and path provided
-       *
-       * @param operation - Data operation (eg `query`, `mutate`, `listen` or similar)
-       * @param path - Path to append after the operation
-       */
-      getDataUrl(operation, path) {
-        return _getDataUrl(this, operation, path);
-      }
-    };
-    _clientConfig2 = /* @__PURE__ */ new WeakMap();
-    _httpRequest2 = /* @__PURE__ */ new WeakMap();
-    SanityClient = _SanityClient;
-    envMiddleware = [];
+var _client10, _httpRequest5;
+var ObservableProjectsClient = class {
+  constructor(client, httpRequest) {
+    __privateAdd(this, _client10, void 0);
+    __privateAdd(this, _httpRequest5, void 0);
+    __privateSet(this, _client10, client), __privateSet(this, _httpRequest5, httpRequest);
   }
-});
-
-// main.ts
-var main_exports = {};
-__export(main_exports, {
-  default: () => SanityPublishPlugin
-});
-module.exports = __toCommonJS(main_exports);
-
-// node_modules/@sanity/client/dist/index.browser.js
-init_browserMiddleware_zDVeirri();
+  list(options) {
+    resourceGuard("projects", __privateGet(this, _client10).config());
+    const uri = (options == null ? void 0 : options.includeMembers) === false ? "/projects?includeMembers=false" : "/projects";
+    return _request(__privateGet(this, _client10), __privateGet(this, _httpRequest5), { uri });
+  }
+  /**
+   * Fetch a project by project ID
+   *
+   * @param projectId - ID of the project to fetch
+   */
+  getById(projectId2) {
+    return resourceGuard("projects", __privateGet(this, _client10).config()), _request(__privateGet(this, _client10), __privateGet(this, _httpRequest5), { uri: `/projects/${projectId2}` });
+  }
+};
+_client10 = new WeakMap();
+_httpRequest5 = new WeakMap();
+var _client11, _httpRequest6;
+var ProjectsClient = class {
+  constructor(client, httpRequest) {
+    __privateAdd(this, _client11, void 0);
+    __privateAdd(this, _httpRequest6, void 0);
+    __privateSet(this, _client11, client), __privateSet(this, _httpRequest6, httpRequest);
+  }
+  list(options) {
+    resourceGuard("projects", __privateGet(this, _client11).config());
+    const uri = (options == null ? void 0 : options.includeMembers) === false ? "/projects?includeMembers=false" : "/projects";
+    return lastValueFrom(_request(__privateGet(this, _client11), __privateGet(this, _httpRequest6), { uri }));
+  }
+  /**
+   * Fetch a project by project ID
+   *
+   * @param projectId - ID of the project to fetch
+   */
+  getById(projectId2) {
+    return resourceGuard("projects", __privateGet(this, _client11).config()), lastValueFrom(
+      _request(__privateGet(this, _client11), __privateGet(this, _httpRequest6), { uri: `/projects/${projectId2}` })
+    );
+  }
+};
+_client11 = new WeakMap();
+_httpRequest6 = new WeakMap();
+var _client12, _httpRequest7;
+var ObservableUsersClient = class {
+  constructor(client, httpRequest) {
+    __privateAdd(this, _client12, void 0);
+    __privateAdd(this, _httpRequest7, void 0);
+    __privateSet(this, _client12, client), __privateSet(this, _httpRequest7, httpRequest);
+  }
+  /**
+   * Fetch a user by user ID
+   *
+   * @param id - User ID of the user to fetch. If `me` is provided, a minimal response including the users role is returned.
+   */
+  getById(id) {
+    return _request(
+      __privateGet(this, _client12),
+      __privateGet(this, _httpRequest7),
+      { uri: `/users/${id}` }
+    );
+  }
+};
+_client12 = new WeakMap();
+_httpRequest7 = new WeakMap();
+var _client13, _httpRequest8;
+var UsersClient = class {
+  constructor(client, httpRequest) {
+    __privateAdd(this, _client13, void 0);
+    __privateAdd(this, _httpRequest8, void 0);
+    __privateSet(this, _client13, client), __privateSet(this, _httpRequest8, httpRequest);
+  }
+  /**
+   * Fetch a user by user ID
+   *
+   * @param id - User ID of the user to fetch. If `me` is provided, a minimal response including the users role is returned.
+   */
+  getById(id) {
+    return lastValueFrom(
+      _request(__privateGet(this, _client13), __privateGet(this, _httpRequest8), {
+        uri: `/users/${id}`
+      })
+    );
+  }
+};
+_client13 = new WeakMap();
+_httpRequest8 = new WeakMap();
+var _clientConfig, _httpRequest9;
+var _ObservableSanityClient = class {
+  constructor(httpRequest, config2 = defaultConfig) {
+    __publicField(this, "assets");
+    __publicField(this, "datasets");
+    __publicField(this, "live");
+    __publicField(this, "projects");
+    __publicField(this, "users");
+    /**
+     * Private properties
+     */
+    __privateAdd(this, _clientConfig, void 0);
+    __privateAdd(this, _httpRequest9, void 0);
+    /**
+     * Instance properties
+     */
+    __publicField(this, "listen", _listen);
+    this.config(config2), __privateSet(this, _httpRequest9, httpRequest), this.assets = new ObservableAssetsClient(this, __privateGet(this, _httpRequest9)), this.datasets = new ObservableDatasetsClient(this, __privateGet(this, _httpRequest9)), this.live = new LiveClient(this), this.projects = new ObservableProjectsClient(this, __privateGet(this, _httpRequest9)), this.users = new ObservableUsersClient(this, __privateGet(this, _httpRequest9));
+  }
+  /**
+   * Clone the client - returns a new instance
+   */
+  clone() {
+    return new _ObservableSanityClient(__privateGet(this, _httpRequest9), this.config());
+  }
+  config(newConfig) {
+    if (newConfig === void 0)
+      return { ...__privateGet(this, _clientConfig) };
+    if (__privateGet(this, _clientConfig) && __privateGet(this, _clientConfig).allowReconfigure === false)
+      throw new Error(
+        "Existing client instance cannot be reconfigured - use `withConfig(newConfig)` to return a new client"
+      );
+    return __privateSet(this, _clientConfig, initConfig(newConfig, __privateGet(this, _clientConfig) || {})), this;
+  }
+  /**
+   * Clone the client with a new (partial) configuration.
+   *
+   * @param newConfig - New client configuration properties, shallowly merged with existing configuration
+   */
+  withConfig(newConfig) {
+    const thisConfig = this.config();
+    return new _ObservableSanityClient(__privateGet(this, _httpRequest9), {
+      ...thisConfig,
+      ...newConfig,
+      stega: {
+        ...thisConfig.stega || {},
+        ...typeof (newConfig == null ? void 0 : newConfig.stega) == "boolean" ? { enabled: newConfig.stega } : (newConfig == null ? void 0 : newConfig.stega) || {}
+      }
+    });
+  }
+  fetch(query, params, options) {
+    return _fetch(
+      this,
+      __privateGet(this, _httpRequest9),
+      __privateGet(this, _clientConfig).stega,
+      query,
+      params,
+      options
+    );
+  }
+  /**
+   * Fetch a single document with the given ID.
+   *
+   * @param id - Document ID to fetch
+   * @param options - Request options
+   */
+  getDocument(id, options) {
+    return _getDocument(this, __privateGet(this, _httpRequest9), id, options);
+  }
+  /**
+   * Fetch multiple documents in one request.
+   * Should be used sparingly - performing a query is usually a better option.
+   * The order/position of documents is preserved based on the original array of IDs.
+   * If any of the documents are missing, they will be replaced by a `null` entry in the returned array
+   *
+   * @param ids - Document IDs to fetch
+   * @param options - Request options
+   */
+  getDocuments(ids, options) {
+    return _getDocuments(this, __privateGet(this, _httpRequest9), ids, options);
+  }
+  create(document2, options) {
+    return _create(this, __privateGet(this, _httpRequest9), document2, "create", options);
+  }
+  createIfNotExists(document2, options) {
+    return _createIfNotExists(this, __privateGet(this, _httpRequest9), document2, options);
+  }
+  createOrReplace(document2, options) {
+    return _createOrReplace(this, __privateGet(this, _httpRequest9), document2, options);
+  }
+  delete(selection, options) {
+    return _delete(this, __privateGet(this, _httpRequest9), selection, options);
+  }
+  mutate(operations, options) {
+    return _mutate(this, __privateGet(this, _httpRequest9), operations, options);
+  }
+  /**
+   * Create a new buildable patch of operations to perform
+   *
+   * @param selection - Document ID, an array of document IDs, or an object with `query` and optional `params`, defining which document(s) to patch
+   * @param operations - Optional object of patch operations to initialize the patch instance with
+   * @returns Patch instance - call `.commit()` to perform the operations defined
+   */
+  patch(selection, operations) {
+    return new ObservablePatch(selection, operations, this);
+  }
+  /**
+   * Create a new transaction of mutations
+   *
+   * @param operations - Optional array of mutation operations to initialize the transaction instance with
+   */
+  transaction(operations) {
+    return new ObservableTransaction(operations, this);
+  }
+  /**
+   * Perform action operations against the configured dataset
+   *
+   * @param operations - Action operation(s) to execute
+   * @param options - Action options
+   */
+  action(operations, options) {
+    return _action(this, __privateGet(this, _httpRequest9), operations, options);
+  }
+  /**
+   * Perform an HTTP request against the Sanity API
+   *
+   * @param options - Request options
+   */
+  request(options) {
+    return _request(this, __privateGet(this, _httpRequest9), options);
+  }
+  /**
+   * Get a Sanity API URL for the URI provided
+   *
+   * @param uri - URI/path to build URL for
+   * @param canUseCdn - Whether or not to allow using the API CDN for this route
+   */
+  getUrl(uri, canUseCdn) {
+    return _getUrl(this, uri, canUseCdn);
+  }
+  /**
+   * Get a Sanity API URL for the data operation and path provided
+   *
+   * @param operation - Data operation (eg `query`, `mutate`, `listen` or similar)
+   * @param path - Path to append after the operation
+   */
+  getDataUrl(operation, path) {
+    return _getDataUrl(this, operation, path);
+  }
+};
+var ObservableSanityClient = _ObservableSanityClient;
+_clientConfig = new WeakMap();
+_httpRequest9 = new WeakMap();
+var _clientConfig2, _httpRequest10;
+var _SanityClient = class {
+  constructor(httpRequest, config2 = defaultConfig) {
+    __publicField(this, "assets");
+    __publicField(this, "datasets");
+    __publicField(this, "live");
+    __publicField(this, "projects");
+    __publicField(this, "users");
+    /**
+     * Observable version of the Sanity client, with the same configuration as the promise-based one
+     */
+    __publicField(this, "observable");
+    /**
+     * Private properties
+     */
+    __privateAdd(this, _clientConfig2, void 0);
+    __privateAdd(this, _httpRequest10, void 0);
+    /**
+     * Instance properties
+     */
+    __publicField(this, "listen", _listen);
+    this.config(config2), __privateSet(this, _httpRequest10, httpRequest), this.assets = new AssetsClient(this, __privateGet(this, _httpRequest10)), this.datasets = new DatasetsClient(this, __privateGet(this, _httpRequest10)), this.live = new LiveClient(this), this.projects = new ProjectsClient(this, __privateGet(this, _httpRequest10)), this.users = new UsersClient(this, __privateGet(this, _httpRequest10)), this.observable = new ObservableSanityClient(httpRequest, config2);
+  }
+  /**
+   * Clone the client - returns a new instance
+   */
+  clone() {
+    return new _SanityClient(__privateGet(this, _httpRequest10), this.config());
+  }
+  config(newConfig) {
+    if (newConfig === void 0)
+      return { ...__privateGet(this, _clientConfig2) };
+    if (__privateGet(this, _clientConfig2) && __privateGet(this, _clientConfig2).allowReconfigure === false)
+      throw new Error(
+        "Existing client instance cannot be reconfigured - use `withConfig(newConfig)` to return a new client"
+      );
+    return this.observable && this.observable.config(newConfig), __privateSet(this, _clientConfig2, initConfig(newConfig, __privateGet(this, _clientConfig2) || {})), this;
+  }
+  /**
+   * Clone the client with a new (partial) configuration.
+   *
+   * @param newConfig - New client configuration properties, shallowly merged with existing configuration
+   */
+  withConfig(newConfig) {
+    const thisConfig = this.config();
+    return new _SanityClient(__privateGet(this, _httpRequest10), {
+      ...thisConfig,
+      ...newConfig,
+      stega: {
+        ...thisConfig.stega || {},
+        ...typeof (newConfig == null ? void 0 : newConfig.stega) == "boolean" ? { enabled: newConfig.stega } : (newConfig == null ? void 0 : newConfig.stega) || {}
+      }
+    });
+  }
+  fetch(query, params, options) {
+    return lastValueFrom(
+      _fetch(
+        this,
+        __privateGet(this, _httpRequest10),
+        __privateGet(this, _clientConfig2).stega,
+        query,
+        params,
+        options
+      )
+    );
+  }
+  /**
+   * Fetch a single document with the given ID.
+   *
+   * @param id - Document ID to fetch
+   * @param options - Request options
+   */
+  getDocument(id, options) {
+    return lastValueFrom(_getDocument(this, __privateGet(this, _httpRequest10), id, options));
+  }
+  /**
+   * Fetch multiple documents in one request.
+   * Should be used sparingly - performing a query is usually a better option.
+   * The order/position of documents is preserved based on the original array of IDs.
+   * If any of the documents are missing, they will be replaced by a `null` entry in the returned array
+   *
+   * @param ids - Document IDs to fetch
+   * @param options - Request options
+   */
+  getDocuments(ids, options) {
+    return lastValueFrom(_getDocuments(this, __privateGet(this, _httpRequest10), ids, options));
+  }
+  create(document2, options) {
+    return lastValueFrom(
+      _create(this, __privateGet(this, _httpRequest10), document2, "create", options)
+    );
+  }
+  createIfNotExists(document2, options) {
+    return lastValueFrom(
+      _createIfNotExists(this, __privateGet(this, _httpRequest10), document2, options)
+    );
+  }
+  createOrReplace(document2, options) {
+    return lastValueFrom(
+      _createOrReplace(this, __privateGet(this, _httpRequest10), document2, options)
+    );
+  }
+  delete(selection, options) {
+    return lastValueFrom(_delete(this, __privateGet(this, _httpRequest10), selection, options));
+  }
+  mutate(operations, options) {
+    return lastValueFrom(_mutate(this, __privateGet(this, _httpRequest10), operations, options));
+  }
+  /**
+   * Create a new buildable patch of operations to perform
+   *
+   * @param selection - Document ID, an array of document IDs, or an object with `query` and optional `params`, defining which document(s) to patch
+   * @param operations - Optional object of patch operations to initialize the patch instance with
+   * @returns Patch instance - call `.commit()` to perform the operations defined
+   */
+  patch(documentId, operations) {
+    return new Patch(documentId, operations, this);
+  }
+  /**
+   * Create a new transaction of mutations
+   *
+   * @param operations - Optional array of mutation operations to initialize the transaction instance with
+   */
+  transaction(operations) {
+    return new Transaction(operations, this);
+  }
+  /**
+   * Perform action operations against the configured dataset
+   * Returns a promise that resolves to the transaction result
+   *
+   * @param operations - Action operation(s) to execute
+   * @param options - Action options
+   */
+  action(operations, options) {
+    return lastValueFrom(_action(this, __privateGet(this, _httpRequest10), operations, options));
+  }
+  /**
+   * Perform a request against the Sanity API
+   * NOTE: Only use this for Sanity API endpoints, not for your own APIs!
+   *
+   * @param options - Request options
+   * @returns Promise resolving to the response body
+   */
+  request(options) {
+    return lastValueFrom(_request(this, __privateGet(this, _httpRequest10), options));
+  }
+  /**
+   * Perform an HTTP request a `/data` sub-endpoint
+   * NOTE: Considered internal, thus marked as deprecated. Use `request` instead.
+   *
+   * @deprecated - Use `request()` or your own HTTP library instead
+   * @param endpoint - Endpoint to hit (mutate, query etc)
+   * @param body - Request body
+   * @param options - Request options
+   * @internal
+   */
+  dataRequest(endpoint, body, options) {
+    return lastValueFrom(_dataRequest(this, __privateGet(this, _httpRequest10), endpoint, body, options));
+  }
+  /**
+   * Get a Sanity API URL for the URI provided
+   *
+   * @param uri - URI/path to build URL for
+   * @param canUseCdn - Whether or not to allow using the API CDN for this route
+   */
+  getUrl(uri, canUseCdn) {
+    return _getUrl(this, uri, canUseCdn);
+  }
+  /**
+   * Get a Sanity API URL for the data operation and path provided
+   *
+   * @param operation - Data operation (eg `query`, `mutate`, `listen` or similar)
+   * @param path - Path to append after the operation
+   */
+  getDataUrl(operation, path) {
+    return _getDataUrl(this, operation, path);
+  }
+};
+var SanityClient = _SanityClient;
+_clientConfig2 = new WeakMap();
+_httpRequest10 = new WeakMap();
+function defineCreateClientExports(envMiddleware2, ClassConstructor) {
+  return { requester: defineHttpRequest(envMiddleware2), createClient: (config2) => {
+    const clientRequester = defineHttpRequest(envMiddleware2);
+    return new ClassConstructor(
+      (options, requester2) => (requester2 || clientRequester)({
+        maxRedirects: 0,
+        maxRetries: config2.maxRetries,
+        retryDelay: config2.retryDelay,
+        ...options
+      }),
+      config2
+    );
+  } };
+}
 function defineDeprecatedCreateClient(createClient2) {
-  return function deprecatedCreateClient2(config2) {
-    printNoDefaultExport();
-    return createClient2(config2);
+  return function(config2) {
+    return printNoDefaultExport(), createClient2(config2);
   };
 }
+var envMiddleware = [];
 var exp = defineCreateClientExports(envMiddleware, SanityClient);
 var requester = exp.requester;
 var createClient = exp.createClient;
@@ -6278,16 +6053,16 @@ var import_obsidian = require("obsidian");
 function splitSyncRows(raw) {
   const rows = [];
   for (const line of (raw || "").split(/\r?\n/)) {
-    const t = line.trim();
-    if (!t)
+    const t2 = line.trim();
+    if (!t2)
       continue;
-    const i = t.indexOf(":");
-    if (i === -1)
-      rows.push({ sanity: t, fm: "" });
+    const i2 = t2.indexOf(":");
+    if (i2 === -1)
+      rows.push({ sanity: t2, fm: "" });
     else
       rows.push({
-        sanity: t.slice(0, i).trim(),
-        fm: t.slice(i + 1).trim()
+        sanity: t2.slice(0, i2).trim(),
+        fm: t2.slice(i2 + 1).trim()
       });
   }
   while (rows.length < 10)
@@ -6295,7 +6070,7 @@ function splitSyncRows(raw) {
   return rows;
 }
 function joinSyncRows(rows) {
-  return rows.filter((r) => r.sanity.trim()).map((r) => r.sanity.trim() + (r.fm.trim() ? ":" + r.fm.trim() : "")).join("\n");
+  return rows.filter((r2) => r2.sanity.trim()).map((r2) => r2.sanity.trim() + (r2.fm.trim() ? ":" + r2.fm.trim() : "")).join("\n");
 }
 var DEFAULT_SETTINGS = {
   apiToken: "",
@@ -6413,15 +6188,15 @@ var SanitySettingTab = class extends import_obsidian.PluginSettingTab {
       this.plugin.settings.syncFields = joinSyncRows(rows);
       await this.plugin.saveSettings();
     };
-    for (let i = 0; i < 10; i++) {
+    for (let i2 = 0; i2 < 10; i2++) {
       const rowEl = box.createDiv({ cls: "sanity-sync-row" });
-      const left = new import_obsidian.TextComponent(rowEl).setPlaceholder("Sanity \u5B57\u6BB5 (\u5982 slug.current)").setValue(rows[i].sanity).onChange(async (v) => {
-        rows[i].sanity = v;
+      const left = new import_obsidian.TextComponent(rowEl).setPlaceholder("Sanity \u5B57\u6BB5 (\u5982 slug.current)").setValue(rows[i2].sanity).onChange(async (v2) => {
+        rows[i2].sanity = v2;
         await persist();
       });
       left.inputEl.addClass("sanity-sync-input");
-      const right = new import_obsidian.TextComponent(rowEl).setPlaceholder("Frontmatter \u952E (\u53EF\u7559\u7A7A)").setValue(rows[i].fm).onChange(async (v) => {
-        rows[i].fm = v;
+      const right = new import_obsidian.TextComponent(rowEl).setPlaceholder("Frontmatter \u952E (\u53EF\u7559\u7A7A)").setValue(rows[i2].fm).onChange(async (v2) => {
+        rows[i2].fm = v2;
         await persist();
       });
       right.inputEl.addClass("sanity-sync-input");
@@ -6467,10 +6242,10 @@ function apiBaseFor(settings) {
   return custom || `https://${settings.projectId}.api.sanity.io`;
 }
 function sanityErrorText(res) {
-  var _a, _b, _c, _d, _e;
+  var _a, _b, _c, _d, _e2;
   const err = (_a = res.json) == null ? void 0 : _a.error;
   const desc = (typeof err === "string" ? err : err == null ? void 0 : err.description) || ((_b = res.json) == null ? void 0 : _b.message) || res.text;
-  const itemType = (_e = (_d = (_c = err == null ? void 0 : err.items) == null ? void 0 : _c[0]) == null ? void 0 : _d.error) == null ? void 0 : _e.type;
+  const itemType = (_e2 = (_d = (_c = err == null ? void 0 : err.items) == null ? void 0 : _c[0]) == null ? void 0 : _d.error) == null ? void 0 : _e2.type;
   const detail = desc ? String(desc).slice(0, 400) : "(\u65E0\u54CD\u5E94\u4F53)";
   return itemType ? `${detail} [${itemType}]` : detail;
 }
@@ -6524,8 +6299,8 @@ function cleanGroqExpr(expr) {
 function setDeepPath(obj, path, value) {
   const keys = path.split(".");
   let cur = obj;
-  for (let i = 0; i < keys.length - 1; i++) {
-    const k = keys[i];
+  for (let i2 = 0; i2 < keys.length - 1; i2++) {
+    const k = keys[i2];
     if (!cur[k] || typeof cur[k] !== "object")
       cur[k] = {};
     cur = cur[k];
@@ -6545,8 +6320,8 @@ function sanityRefFromAssetUrl(url, projectId2, dataset2) {
   );
   if (!m)
     return null;
-  const [, p, d2, assetId, dims, ext] = m;
-  if (p !== projectId2 || d2 !== dataset2)
+  const [, p3, d3, assetId, dims, ext] = m;
+  if (p3 !== projectId2 || d3 !== dataset2)
     return null;
   return `image-${assetId}-${dims}-${ext}`;
 }
@@ -6581,11 +6356,58 @@ function parseFrontmatter(raw) {
   let data = {};
   try {
     data = (0, import_obsidian2.parseYaml)(m[1]) || {};
-  } catch (e) {
+  } catch (e2) {
     data = {};
   }
   return { data, content: m[2] };
 }
+var ProgressModal = class extends import_obsidian2.Modal {
+  constructor() {
+    super(...arguments);
+    this.total = 0;
+    this.failures = [];
+  }
+  openProgress(total, title) {
+    this.total = total;
+    this.failures = [];
+    this.titleEl.setText(title);
+    this.contentEl.empty();
+    this.bar = this.contentEl.createEl("progress", {
+      cls: "sanity-progress"
+    });
+    this.bar.max = Math.max(total, 1);
+    this.bar.value = 0;
+    this.bar.style.cssText = "width:100%; height:8px; margin:6px 0; accent-color: var(--interactive-accent);";
+    this.statusEl = this.contentEl.createEl("p", {
+      cls: "sanity-progress-status",
+      text: "\u51C6\u5907\u4E2D\u2026"
+    });
+    this.statusEl.style.cssText = "margin:4px 0 0; color:var(--text-muted);";
+    this.open();
+  }
+  /** current 从 1 开始计；label 为当前项的可读名称（文件名 / 文章标题）。 */
+  update(current, label) {
+    this.bar.value = current;
+    const txt = `${current} / ${this.total}`;
+    this.statusEl.setText(label ? `${txt} \u2014 ${label}` : txt);
+  }
+  addFailure(name) {
+    this.failures.push(name);
+  }
+  finish(message, autoCloseMs = 1500) {
+    this.bar.value = this.total;
+    this.statusEl.setText(message);
+    if (this.failures.length) {
+      const failEl = this.contentEl.createEl("p", {
+        cls: "sanity-progress-fail",
+        text: `\u5931\u8D25 ${this.failures.length} \u9879\uFF1A${this.failures.join("\u3001")}`
+      });
+      failEl.style.cssText = "margin:4px 0 0; color:var(--text-error);";
+    }
+    if (autoCloseMs > 0)
+      window.setTimeout(() => this.close(), autoCloseMs);
+  }
+};
 var SanityPublishPlugin = class extends import_obsidian2.Plugin {
   async onload() {
     await this.loadSettings();
@@ -6607,9 +6429,9 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
           new import_obsidian2.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u4EF6\uFF0C\u518D\u6267\u884C\u53D1\u5E03\u3002");
           return;
         }
-        this.publishToSanity(activeFile).catch((e) => {
-          console.error("Publish crashed:", e);
-          new import_obsidian2.Notice("Publish \u51FA\u9519\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 1e4);
+        this.publishToSanity(activeFile).catch((e2) => {
+          console.error("Publish crashed:", e2);
+          new import_obsidian2.Notice("Publish \u51FA\u9519\uFF1A" + ((e2 == null ? void 0 : e2.message) || String(e2)), 1e4);
         });
       }
     });
@@ -6617,9 +6439,9 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       id: "sanity-pull-command",
       name: "Pull from Sanity (sync all posts)",
       callback: () => {
-        this.pullFromSanity().catch((e) => {
-          console.error("Pull crashed:", e);
-          new import_obsidian2.Notice("Pull \u51FA\u9519\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 1e4);
+        this.pullFromSanity().catch((e2) => {
+          console.error("Pull crashed:", e2);
+          new import_obsidian2.Notice("Pull \u51FA\u9519\uFF1A" + ((e2 == null ? void 0 : e2.message) || String(e2)), 1e4);
         });
       }
     });
@@ -6627,9 +6449,9 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       id: "sanity-publish-announcement-command",
       name: "Publish announcement to Sanity",
       callback: () => {
-        this.publishAnnouncementToSanity().catch((e) => {
-          console.error("Publish announcement crashed:", e);
-          new import_obsidian2.Notice("\u53D1\u5E03\u516C\u544A\u51FA\u9519\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 1e4);
+        this.publishAnnouncementToSanity().catch((e2) => {
+          console.error("Publish announcement crashed:", e2);
+          new import_obsidian2.Notice("\u53D1\u5E03\u516C\u544A\u51FA\u9519\uFF1A" + ((e2 == null ? void 0 : e2.message) || String(e2)), 1e4);
         });
       }
     });
@@ -6650,8 +6472,8 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
             this.uploadFileToSanity(fileMetaData).then((value) => {
               const assetText = `![${value.originalFilename}](${value.url})`;
               editor.setLine(lineNumber, assetText);
-            }).catch((r) => {
-              console.error("Upload to Sanity failed", r);
+            }).catch((r2) => {
+              console.error("Upload to Sanity failed", r2);
               const errorText = `![Couldn't upload file](${filePath})`;
               editor.setLine(lineNumber, errorText);
             });
@@ -6676,9 +6498,9 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     statusButton.setAttr("aria-label", "Publish to Sanity");
     statusButton.setAttr("data-tooltip-position", "top");
     statusButton.addEventListener("click", () => {
-      this.publishToSanity(file).catch((e) => {
-        console.error("Publish crashed:", e);
-        new import_obsidian2.Notice("Publish \u51FA\u9519\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 1e4);
+      this.publishToSanity(file).catch((e2) => {
+        console.error("Publish crashed:", e2);
+        new import_obsidian2.Notice("Publish \u51FA\u9519\uFF1A" + ((e2 == null ? void 0 : e2.message) || String(e2)), 1e4);
       });
     });
     this.statusBarButton = statusButton;
@@ -6722,19 +6544,25 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       lineNumber,
       filePath: this.getFilePathFromLine(line)
     })).filter(
-      (t) => Boolean(t.filePath)
+      (t2) => Boolean(t2.filePath)
     );
     if (targets.length === 0)
       return;
-    new import_obsidian2.Notice("Uploading files in document...");
+    const modal = new ProgressModal(this.app);
+    modal.openProgress(targets.length, "\u4E0A\u4F20\u56FE\u7247\u5230 Sanity");
+    let done = 0;
+    let okCount = 0;
     await Promise.all(
       targets.map(async ({ lineNumber, filePath }) => {
         const fileMetaData = this.app.metadataCache.getFirstLinkpathDest(
           filePath,
           file.path
         );
-        if (!fileMetaData)
+        if (!fileMetaData) {
+          done++;
+          modal.update(done);
           return;
+        }
         if (editor) {
           editor.setLine(
             lineNumber,
@@ -6744,16 +6572,24 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         try {
           const value = await this.uploadFileToSanity(fileMetaData);
           lines[lineNumber] = `![${value.originalFilename}](${value.url})`;
-        } catch (e) {
-          console.error("Upload to Sanity failed", e);
+          okCount++;
+        } catch (e2) {
+          console.error("Upload to Sanity failed", e2);
           lines[lineNumber] = `![Couldn't upload file](${filePath})`;
+          modal.addFailure(fileMetaData.name);
         }
         if (editor)
           editor.setLine(lineNumber, lines[lineNumber]);
+        done++;
+        modal.update(done, fileMetaData.name);
       })
     );
     if (!editor)
       await this.app.vault.modify(file, lines.join("\n"));
+    const failed = targets.length - okCount;
+    modal.finish(
+      `\u4E0A\u4F20\u5B8C\u6210\uFF1A${okCount}/${targets.length} \u6210\u529F` + (failed ? `\uFF0C${failed} \u5931\u8D25` : "")
+    );
   }
   async publishToSanity(activeFile) {
     await this.uploadAllImages(activeFile);
@@ -6765,15 +6601,15 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     const title = typeof fmTitle === "string" && fmTitle ? fmTitle : activeFile.basename;
     const extraAttrs = {};
     const extraFields = parseSyncFields(this.settings.syncFields);
-    for (const f2 of extraFields) {
-      const raw = data == null ? void 0 : data[f2.key];
+    for (const f3 of extraFields) {
+      const raw = data == null ? void 0 : data[f3.key];
       if (raw === void 0 || raw === null)
         continue;
-      if (f2.key === titleField || f2.key === bodyField)
+      if (f3.key === titleField || f3.key === bodyField)
         continue;
       let value = raw;
       if (this.looksLikeImage(raw)) {
-        const coverVal = await this.resolveCoverValue(raw, activeFile, f2.key);
+        const coverVal = await this.resolveCoverValue(raw, activeFile, f3.key);
         if (coverVal !== void 0)
           value = coverVal;
       } else if (typeof raw === "string" && raw.startsWith("https://cdn.sanity.io/images/")) {
@@ -6789,17 +6625,17 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
           };
         }
       }
-      setDeepPath(extraAttrs, f2.expr, value);
+      setDeepPath(extraAttrs, f3.expr, value);
     }
-    const r = await this.createorUpdateDocument({
+    const r2 = await this.createorUpdateDocument({
       content,
       title,
       sanityId: data == null ? void 0 : data.sanity_id,
       extra: extraAttrs
     });
-    if (r == null ? void 0 : r._id) {
+    if (r2 == null ? void 0 : r2._id) {
       await this.updateFrontmatter(
-        { sanity_id: r._id, sanity_draft: false },
+        { sanity_id: r2._id, sanity_draft: false },
         activeFile
       );
       new import_obsidian2.Notice("Successfully published content to Sanity!");
@@ -6840,8 +6676,8 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         return { _type: "image", asset: { _type: "reference", _ref: ref } };
       }
       return raw;
-    } catch (e) {
-      new import_obsidian2.Notice("\u5C01\u9762\u4E0A\u4F20\u5931\u8D25\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 8e3);
+    } catch (e2) {
+      new import_obsidian2.Notice("\u5C01\u9762\u4E0A\u4F20\u5931\u8D25\uFF1A" + ((e2 == null ? void 0 : e2.message) || String(e2)), 8e3);
       return void 0;
     }
   }
@@ -6851,14 +6687,14 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
   looksLikeImage(raw) {
     if (!raw || typeof raw !== "string")
       return false;
-    const s2 = raw.replace(/^\[\[|\]\]$/g, "").trim();
-    if (/^https?:\/\//i.test(s2))
+    const s4 = raw.replace(/^\[\[|\]\]$/g, "").trim();
+    if (/^https?:\/\//i.test(s4))
       return false;
-    return /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(s2);
+    return /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(s4);
   }
   /** 判断 Sanity 返回值是否为 image object（{_type:"image", asset:{_ref}}）。 */
-  isImageObject(v) {
-    return !!(v && v._type === "image" && v.asset && typeof v.asset._ref === "string");
+  isImageObject(v2) {
+    return !!(v2 && v2._type === "image" && v2.asset && typeof v2.asset._ref === "string");
   }
   async publishAnnouncementToSanity() {
     const { announcementText, announcementLink, announcementType } = this.settings;
@@ -6876,9 +6712,9 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     try {
       await sanityMutate([{ createOrReplace: doc }], this.settings);
       new import_obsidian2.Notice("\u516C\u544A\u5DF2\u53D1\u5E03\u5230 Sanity\uFF0C\u7F51\u7AD9\u7A0D\u540E\u81EA\u52A8\u66F4\u65B0\u3002");
-    } catch (e) {
-      console.error("Publish announcement failed:", e);
-      new import_obsidian2.Notice("\u53D1\u5E03\u516C\u544A\u5931\u8D25\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 1e4);
+    } catch (e2) {
+      console.error("Publish announcement failed:", e2);
+      new import_obsidian2.Notice("\u53D1\u5E03\u516C\u544A\u5931\u8D25\uFF1A" + ((e2 == null ? void 0 : e2.message) || String(e2)), 1e4);
     }
   }
   async pullFromSanity() {
@@ -6910,8 +6746,8 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     } else {
       parts.push(`"_syncFilename": slug.current`);
     }
-    for (const f2 of extraFields) {
-      parts.push(`"${f2.key}": ${f2.expr}`);
+    for (const f3 of extraFields) {
+      parts.push(`"${f3.key}": ${f3.expr}`);
     }
     const query = `*[_type == "${safeType}"]{ ${parts.join(", ")} }`;
     let docs = [];
@@ -6923,9 +6759,9 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         headers: { Authorization: `Bearer ${apiToken}` }
       });
       docs = ((_a = res.json) == null ? void 0 : _a.result) || [];
-    } catch (e) {
-      const status = e == null ? void 0 : e.status;
-      const detail = (e == null ? void 0 : e.message) || ((_b = e == null ? void 0 : e.response) == null ? void 0 : _b.text) || (e == null ? void 0 : e.text) || String(e);
+    } catch (e2) {
+      const status = e2 == null ? void 0 : e2.status;
+      const detail = (e2 == null ? void 0 : e2.message) || ((_b = e2 == null ? void 0 : e2.response) == null ? void 0 : _b.text) || (e2 == null ? void 0 : e2.text) || String(e2);
       console.error("Sanity pull failed:", status, detail, "project=", projectId2);
       let msg;
       if (!status) {
@@ -6941,15 +6777,18 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       new import_obsidian2.Notice("No documents found in Sanity.");
       return;
     }
+    const modal = new ProgressModal(this.app);
+    modal.openProgress(docs.length, "\u4ECE Sanity \u62C9\u53D6\u6587\u7AE0");
     const existingById = /* @__PURE__ */ new Map();
-    for (const f2 of this.app.vault.getMarkdownFiles()) {
-      const fm = (_c = this.app.metadataCache.getFileCache(f2)) == null ? void 0 : _c.frontmatter;
+    for (const f3 of this.app.vault.getMarkdownFiles()) {
+      const fm = (_c = this.app.metadataCache.getFileCache(f3)) == null ? void 0 : _c.frontmatter;
       if (fm && fm.sanity_id)
-        existingById.set(fm.sanity_id, f2);
+        existingById.set(fm.sanity_id, f3);
     }
     const folderPrefix = this.settings.pullFolder ? this.settings.pullFolder.replace(/\/+$/, "") + "/" : "";
     let created = 0;
     let updated = 0;
+    let i2 = 0;
     for (const doc of docs) {
       const isDraft = !!doc.isDraft;
       let baseName = this.sanitizeFilename(
@@ -6964,22 +6803,23 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       if (safeTitle && doc._syncTitle !== void 0 && doc._syncTitle !== null) {
         frontmatter[safeTitle] = doc._syncTitle;
       }
-      for (const f2 of extraFields) {
-        let v = doc[f2.key];
-        if (v === void 0 || v === null)
+      for (const f3 of extraFields) {
+        let v2 = doc[f3.key];
+        if (v2 === void 0 || v2 === null)
           continue;
-        if (this.isImageObject(v)) {
+        if (this.isImageObject(v2)) {
           const url = sanityAssetUrlFromRef(
-            v.asset._ref,
+            v2.asset._ref,
             projectId2,
             dataset2
           );
           if (url)
-            v = url;
+            v2 = url;
         }
-        frontmatter[f2.key] = v;
+        frontmatter[f3.key] = v2;
       }
       const body = doc._syncBody || "";
+      const label = String(doc._syncTitle || doc._syncFilename || doc._id || "untitled") + (isDraft ? " (\u8349\u7A3F)" : "");
       const existing = existingById.get(doc._id);
       if (existing) {
         const raw = await this.app.vault.read(existing);
@@ -6994,13 +6834,15 @@ ${(0, import_obsidian2.stringifyYaml)(mergedFm).trimEnd()}
 ${body}`
         );
         updated++;
+        i2++;
+        modal.update(i2, label);
         continue;
       }
       let finalPath = folderPrefix + baseName + ".md";
-      let n = 1;
+      let n4 = 1;
       while (await this.app.vault.adapter.exists(finalPath)) {
-        finalPath = folderPrefix + baseName + "-" + n + ".md";
-        n++;
+        finalPath = folderPrefix + baseName + "-" + n4 + ".md";
+        n4++;
       }
       await this.app.vault.create(
         finalPath,
@@ -7011,9 +6853,11 @@ ${(0, import_obsidian2.stringifyYaml)(frontmatter).trimEnd()}
 ${body}`
       );
       created++;
+      i2++;
+      modal.update(i2, label);
     }
-    new import_obsidian2.Notice(
-      `Pulled from Sanity: ${created} created, ${updated} updated (${docs.length} total; drafts flagged with sanity_draft: true).`
+    modal.finish(
+      `\u62C9\u53D6\u5B8C\u6210\uFF1A${created} \u65B0\u5EFA\uFF0C${updated} \u66F4\u65B0\uFF08\u5171 ${docs.length} \u7BC7\uFF09`
     );
   }
   sanitizeFilename(name) {
@@ -7098,9 +6942,9 @@ ${body}`
     return (doc == null ? void 0 : doc._id) ? doc : { _id: targetId };
   }
   getAbsolutePath(file) {
-    const adapter2 = this.app.vault.adapter;
-    if (adapter2 instanceof import_obsidian2.FileSystemAdapter) {
-      const basePath = adapter2.getBasePath();
+    const adapter = this.app.vault.adapter;
+    if (adapter instanceof import_obsidian2.FileSystemAdapter) {
+      const basePath = adapter.getBasePath();
       return basePath + "/" + file.path;
     }
   }
@@ -7145,14 +6989,6 @@ ${(0, import_obsidian2.stringifyYaml)({ ...data, ...updatedProperties }).trimEnd
   }
 };
 /*! Bundled license information:
-
-is-plain-object/dist/is-plain-object.mjs:
-  (*!
-   * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
-   *
-   * Copyright (c) 2014-2017, Jon Schlinkert.
-   * Released under the MIT License.
-   *)
 
 event-source-polyfill/src/eventsource.js:
   (** @license
