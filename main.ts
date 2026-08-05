@@ -491,36 +491,33 @@ export default class SanityPublishPlugin extends Plugin {
 				: activeFile.basename;
 
 		// 收集「额外字段」回写 Sanity（图片 URL 还原为 asset ref）。
-		// 使用 setDeepPath 把点号路径展开为嵌套对象，例如 slug.current -> { slug: { current: "x" } }。
+		// ① 先处理用户在设置里显式配置的字段映射（如 slug.current:slug）；
+		// ② 再兜底：把 frontmatter 中「未被任何规则覆盖」的属性字段也同步到 Sanity，
+		//    避免因漏配 syncFields（如 lang 等自定义属性）而静默丢失笔记属性。
+		// 标题/正文/sanity_id/sanity_draft 不在此处发送（标题与正文单独处理，后两者为内部字段）。
 		const extraAttrs: Record<string, any> = {};
 		const extraFields = parseSyncFields(this.settings.syncFields);
+		const syncedKeys = new Set<string>();
 		for (const f of extraFields) {
+			syncedKeys.add(f.key);
 			const raw = (data as any)?.[f.key];
 			if (raw === undefined || raw === null) continue;
 			// 标题、正文字段单独处理，避免重复/冲突
 			if (f.key === titleField || f.key === bodyField) continue;
-			let value: any = raw;
-			if (this.looksLikeImage(raw)) {
-				// 本地图片（含 [[ ]] 包裹）：上传到 Sanity assets 并写成 image asset ref
-				const coverVal = await this.resolveCoverValue(raw, activeFile, f.key);
-				if (coverVal !== undefined) value = coverVal;
-			} else if (
-				typeof raw === "string" &&
-				raw.startsWith("https://cdn.sanity.io/images/")
-			) {
-				const ref = sanityRefFromAssetUrl(
-					raw,
-					this.settings.projectId || "",
-					this.settings.dataset
-				);
-				if (ref) {
-					value = {
-						_type: "image",
-						asset: { _type: "reference", _ref: ref },
-					};
-				}
-			}
+			const value = await this.coerceSyncValue(raw, activeFile, f.key);
 			setDeepPath(extraAttrs, f.expr, value);
+		}
+		// 兜底自动同步：未显式登记、又非内部的 frontmatter 属性，全部按原名字段发往 Sanity
+		const skip = new Set<string>(syncedKeys);
+		if (titleField) skip.add(titleField);
+		if (bodyField) skip.add(bodyField);
+		skip.add("sanity_id");
+		skip.add("sanity_draft");
+		for (const [k, v] of Object.entries(data || {})) {
+			if (skip.has(k)) continue;
+			if (v === undefined || v === null) continue;
+			const value = await this.coerceSyncValue(v, activeFile, k);
+			setDeepPath(extraAttrs, k, value);
 		}
 
 		const r = await this.createorUpdateDocument({
@@ -603,6 +600,35 @@ export default class SanityPublishPlugin extends Plugin {
 			v.asset &&
 			typeof v.asset._ref === "string"
 		);
+	}
+
+	/** 把 frontmatter 值转换为写入 Sanity 的值：
+	 *  - 本地图片（含 [[ ]] 包裹）/cdn.sanity.io URL -> image object（asset ref）
+	 *  - 其它值原样返回。
+	 * 供 syncFields 显式映射与「兜底自动同步」两处复用，避免重复图片转换逻辑。 */
+	private async coerceSyncValue(raw: any, file: TFile, key: string): Promise<any> {
+		if (this.looksLikeImage(raw)) {
+			// 本地图片（含 [[ ]] 包裹）：上传到 Sanity assets 并写成 image asset ref
+			const coverVal = await this.resolveCoverValue(raw, file, key);
+			return coverVal !== undefined ? coverVal : raw;
+		}
+		if (
+			typeof raw === "string" &&
+			raw.startsWith("https://cdn.sanity.io/images/")
+		) {
+			const ref = sanityRefFromAssetUrl(
+				raw,
+				this.settings.projectId || "",
+				this.settings.dataset
+			);
+			if (ref) {
+				return {
+					_type: "image",
+					asset: { _type: "reference", _ref: ref },
+				};
+			}
+		}
+		return raw;
 	}
 
 	async publishAnnouncementToSanity() {

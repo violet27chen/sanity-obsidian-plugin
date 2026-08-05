@@ -6601,31 +6601,31 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     const title = typeof fmTitle === "string" && fmTitle ? fmTitle : activeFile.basename;
     const extraAttrs = {};
     const extraFields = parseSyncFields(this.settings.syncFields);
+    const syncedKeys = /* @__PURE__ */ new Set();
     for (const f3 of extraFields) {
+      syncedKeys.add(f3.key);
       const raw = data == null ? void 0 : data[f3.key];
       if (raw === void 0 || raw === null)
         continue;
       if (f3.key === titleField || f3.key === bodyField)
         continue;
-      let value = raw;
-      if (this.looksLikeImage(raw)) {
-        const coverVal = await this.resolveCoverValue(raw, activeFile, f3.key);
-        if (coverVal !== void 0)
-          value = coverVal;
-      } else if (typeof raw === "string" && raw.startsWith("https://cdn.sanity.io/images/")) {
-        const ref = sanityRefFromAssetUrl(
-          raw,
-          this.settings.projectId || "",
-          this.settings.dataset
-        );
-        if (ref) {
-          value = {
-            _type: "image",
-            asset: { _type: "reference", _ref: ref }
-          };
-        }
-      }
+      const value = await this.coerceSyncValue(raw, activeFile, f3.key);
       setDeepPath(extraAttrs, f3.expr, value);
+    }
+    const skip = new Set(syncedKeys);
+    if (titleField)
+      skip.add(titleField);
+    if (bodyField)
+      skip.add(bodyField);
+    skip.add("sanity_id");
+    skip.add("sanity_draft");
+    for (const [k, v2] of Object.entries(data || {})) {
+      if (skip.has(k))
+        continue;
+      if (v2 === void 0 || v2 === null)
+        continue;
+      const value = await this.coerceSyncValue(v2, activeFile, k);
+      setDeepPath(extraAttrs, k, value);
     }
     const r2 = await this.createorUpdateDocument({
       content,
@@ -6695,6 +6695,30 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
   /** 判断 Sanity 返回值是否为 image object（{_type:"image", asset:{_ref}}）。 */
   isImageObject(v2) {
     return !!(v2 && v2._type === "image" && v2.asset && typeof v2.asset._ref === "string");
+  }
+  /** 把 frontmatter 值转换为写入 Sanity 的值：
+   *  - 本地图片（含 [[ ]] 包裹）/cdn.sanity.io URL -> image object（asset ref）
+   *  - 其它值原样返回。
+   * 供 syncFields 显式映射与「兜底自动同步」两处复用，避免重复图片转换逻辑。 */
+  async coerceSyncValue(raw, file, key) {
+    if (this.looksLikeImage(raw)) {
+      const coverVal = await this.resolveCoverValue(raw, file, key);
+      return coverVal !== void 0 ? coverVal : raw;
+    }
+    if (typeof raw === "string" && raw.startsWith("https://cdn.sanity.io/images/")) {
+      const ref = sanityRefFromAssetUrl(
+        raw,
+        this.settings.projectId || "",
+        this.settings.dataset
+      );
+      if (ref) {
+        return {
+          _type: "image",
+          asset: { _type: "reference", _ref: ref }
+        };
+      }
+    }
+    return raw;
   }
   async publishAnnouncementToSanity() {
     const { announcementText, announcementLink, announcementType } = this.settings;
