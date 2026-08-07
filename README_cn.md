@@ -177,3 +177,7 @@ slug.current    →   slug
 ## 参与贡献
 
 欢迎提交 issue 与 pull request。
+
+## 致谢
+
+本插件基于 [drewlyton/sanity-obsidian-plugin](https://github.com/drewlyton/sanity-obsidian-plugin) 修改而来，感谢原作者 [@drewlyton](https://github.com/drewlyton) 打下的基础。

@@ -177,3 +177,7 @@ Open the command palette (Ctrl/Cmd + P) and search **Sanity**:
 ## Contributing
 
 Issues and pull requests are welcome.
+
+## Acknowledgements
+
+This plugin is a fork of [drewlyton/sanity-obsidian-plugin](https://github.com/drewlyton/sanity-obsidian-plugin). Many thanks to [@drewlyton](https://github.com/drewlyton) for the original work this plugin is built upon.

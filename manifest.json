@@ -1,7 +1,7 @@
 {
 	"id": "sanity-sync",
 	"name": "Sanity",
-	"version": "0.0.5",
+	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
 	"description": "Publish and pull Obsidian documents to/from your Sanity studio (bidirectional sync).",
 	"author": "violet27chen",
