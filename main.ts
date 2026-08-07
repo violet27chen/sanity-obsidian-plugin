@@ -1,14 +1,9 @@
 import {
-	SanityClient,
-	createClient as createSanityClient,
-} from "@sanity/client";
-import {
 	DEFAULT_SETTINGS,
 	SanityPluginSettings,
 	SanitySettingTab,
 } from "SanitySettingTab";
 import {
-	FileSystemAdapter,
 	MarkdownView,
 	Modal,
 	Notice,
@@ -212,13 +207,10 @@ class ProgressModal extends Modal {
 		});
 		this.bar.max = Math.max(total, 1);
 		this.bar.value = 0;
-		this.bar.style.cssText =
-			"width:100%; height:8px; margin:6px 0; accent-color: var(--interactive-accent);";
 		this.statusEl = this.contentEl.createEl("p", {
 			cls: "sanity-progress-status",
 			text: "准备中…",
 		});
-		this.statusEl.style.cssText = "margin:4px 0 0; color:var(--text-muted);";
 		this.open();
 	}
 
@@ -241,7 +233,6 @@ class ProgressModal extends Modal {
 				cls: "sanity-progress-fail",
 				text: `失败 ${this.failures.length} 项：${this.failures.join("、")}`,
 			});
-			failEl.style.cssText = "margin:4px 0 0; color:var(--text-error);";
 		}
 		if (autoCloseMs > 0) window.setTimeout(() => this.close(), autoCloseMs);
 	}
@@ -249,7 +240,6 @@ class ProgressModal extends Modal {
 
 export default class SanityPublishPlugin extends Plugin {
 	settings: SanityPluginSettings;
-	client: SanityClient;
 	statusBarButton: HTMLElement | undefined;
 
 	async onload() {
@@ -268,7 +258,7 @@ export default class SanityPublishPlugin extends Plugin {
 		);
 
 		this.addCommand({
-			id: "sanity-publish-command",
+			id: "publish",
 			name: "Publish to Sanity",
 			callback: () => {
 				const activeFile = this.app.workspace.getActiveFile();
@@ -284,7 +274,7 @@ export default class SanityPublishPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: "sanity-pull-command",
+			id: "pull",
 			name: "Pull from Sanity (sync all posts)",
 			callback: () => {
 				this.pullFromSanity().catch((e: any) => {
@@ -295,7 +285,7 @@ export default class SanityPublishPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: "sanity-publish-announcement-command",
+			id: "publish-announcement",
 			name: "Publish announcement to Sanity",
 			callback: () => {
 				this.publishAnnouncementToSanity().catch((e: any) => {
@@ -828,17 +818,6 @@ export default class SanityPublishPlugin extends Plugin {
 		return cleaned.slice(0, 80) || "untitled";
 	}
 
-	createClient() {
-		if (this.settings.projectId)
-			this.client = createSanityClient({
-				projectId: this.settings.projectId,
-				dataset: this.settings.dataset,
-				token: this.settings.apiToken,
-				apiVersion: "2023-05-03",
-				useCdn: true,
-			});
-	}
-
 	async uploadFileToSanity(file: TFile) {
 		const arrayBuffer = await this.app.vault.readBinary(file);
 		const fileType = guessMime(file.extension);
@@ -934,15 +913,6 @@ export default class SanityPublishPlugin extends Plugin {
 		}
 		return doc?._id ? doc : { _id: targetId };
 	}
-
-	getAbsolutePath(file: TFile) {
-		const adapter = this.app.vault.adapter;
-		if (adapter instanceof FileSystemAdapter) {
-			const basePath = adapter.getBasePath();
-			return basePath + "/" + file.path;
-		}
-	}
-
 	getFilePathFromLine(line: string) {
 		// See if it matches either an Obsidian embed or normal md embed
 		// Alt text can be any length, so use non-greedy match for brackets.
@@ -980,7 +950,7 @@ export default class SanityPublishPlugin extends Plugin {
 	}
 
 	async sleep(delay: number) {
-		return new Promise((resolve) => setTimeout(resolve, delay));
+		return new Promise((resolve) => window.setTimeout(resolve, delay));
 	}
 
 	async loadSettings() {
@@ -989,11 +959,9 @@ export default class SanityPublishPlugin extends Plugin {
 			DEFAULT_SETTINGS,
 			await this.loadData()
 		);
-		this.createClient();
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		this.createClient();
 	}
 }

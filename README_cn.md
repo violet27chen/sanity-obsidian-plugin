@@ -180,4 +180,4 @@ slug.current    →   slug
 
 ## 致谢
 
-本插件基于 [drewlyton/sanity-obsidian-plugin](https://github.com/drewlyton/sanity-obsidian-plugin) 修改而来，感谢原作者 [@drewlyton](https://github.com/drewlyton) 打下的基础。
+本插件基于 `drewlyton/sanity-obsidian-plugin` 修改而来，感谢原作者 [@drewlyton](https://github.com/drewlyton) 打下的基础。

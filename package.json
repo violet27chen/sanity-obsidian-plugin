@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-sanity-plugin",
 	"version": "0.0.1",
-	"description": "A plugin for Obsidian that allows you to publish and sync documents from your Obsidian vault to your Sanity Studio.",
+	"description": "Publish and synchronize documents between your vault and Sanity Studio.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
@@ -13,17 +13,9 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
-		"@typescript-eslint/eslint-plugin": "5.29.0",
-		"@typescript-eslint/parser": "5.29.0",
-		"builtin-modules": "3.3.0",
-		"esbuild": "0.17.3",
+		"esbuild": "^0.28.1",
 		"obsidian": "latest",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
-	},
-	"dependencies": {
-		"@sanity/client": "^6.12.3",
-		"gray-matter": "^4.0.3",
-		"mime": "^4.0.1"
 	}
 }

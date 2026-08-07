@@ -73,8 +73,7 @@ export class SanitySettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl("br");
-		containerEl.createEl("h3", { text: "Sanity configuration" });
+		new Setting(containerEl).setName("Sanity configuration").setHeading();
 
 		new Setting(containerEl)
 			.setName("Sanity API token")
@@ -119,8 +118,7 @@ export class SanitySettingTab extends PluginSettingTab {
 					})
 			);
 
-		containerEl.createEl("br");
-		containerEl.createEl("h3", { text: "Schema configuration" });
+		new Setting(containerEl).setName("Schema configuration").setHeading();
 
 		new Setting(containerEl)
 			.setName("Type name")
@@ -182,8 +180,7 @@ export class SanitySettingTab extends PluginSettingTab {
 					})
 			);
 
-		containerEl.createEl("br");
-		containerEl.createEl("h3", { text: "Advanced" });
+		new Setting(containerEl).setName("Advanced").setHeading();
 
 		new Setting(containerEl)
 			.setName("Content divider")
@@ -266,17 +263,8 @@ export class SanitySettingTab extends PluginSettingTab {
 				});
 			right.inputEl.addClass("sanity-sync-input");
 		}
-		containerEl.createEl("style", {
-			text:
-				".sanity-sync-box{display:flex;flex-direction:column;gap:6px;margin:6px 0 2px;}" +
-				".sanity-sync-row{display:flex;gap:8px;}" +
-				".sanity-sync-input{flex:1 1 0;min-width:0;background:var(--background-modifier-form-field);" +
-				"border:1px solid var(--background-modifier-border);border-radius:4px;" +
-				"padding:5px 8px;color:var(--text-normal);height:auto;}",
-		});
 
-		containerEl.createEl("br");
-		containerEl.createEl("h3", { text: "Site announcement (optional)" });
+		new Setting(containerEl).setName("Site announcement (optional)").setHeading();
 		containerEl.createEl("p", {
 			text: "填写后执行命令「Publish announcement to Sanity」，网站公告栏即显示；三项全空则不显示。",
 			cls: "setting-item-description",

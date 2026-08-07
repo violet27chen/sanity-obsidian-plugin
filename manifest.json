@@ -3,7 +3,7 @@
 	"name": "Sanity",
 	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Publish and pull Obsidian documents to/from your Sanity studio (bidirectional sync).",
+	"description": "Publish and pull documents to/from your Sanity studio (bidirectional sync).",
 	"author": "violet27chen",
 	"authorUrl": "https://github.com/violet27chen",
 	"isDesktopOnly": false

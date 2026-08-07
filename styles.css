@@ -1,8 +1,27 @@
-/*
+.sanity-progress {
+	width: 100%;
+	height: 8px;
+	margin: 6px 0;
+	accent-color: var(--interactive-accent);
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.sanity-progress-status,
+.sanity-progress-fail {
+	margin: 4px 0 0;
+}
 
-If your plugin does not need CSS, delete this file.
+.sanity-progress-status { color: var(--text-muted); }
+.sanity-progress-fail { color: var(--text-error); }
 
-*/
+.sanity-sync-box { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 2px; }
+.sanity-sync-row { display: flex; gap: 8px; }
+.sanity-sync-input {
+	flex: 1 1 0;
+	min-width: 0;
+	background: var(--background-modifier-form-field);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 5px 8px;
+	color: var(--text-normal);
+	height: auto;
+}
