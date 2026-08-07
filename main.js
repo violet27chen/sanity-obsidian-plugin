@@ -69,10 +69,29 @@ var SanitySettingTab = class extends import_obsidian.PluginSettingTab {
     super(app, plugin);
     this.plugin = plugin;
   }
+  /** Declarative definitions provide settings search on Obsidian 1.13+. */
+  getSettingDefinitions() {
+    return [
+      { name: "API token", desc: "Write-enabled token for the selected project.", control: { type: "text", key: "apiToken", placeholder: "Enter your token" } },
+      { name: "Project ID", desc: "Sanity project identifier.", control: { type: "text", key: "projectId", placeholder: "Enter your project ID" } },
+      { name: "Dataset name", desc: "Dataset to synchronize.", control: { type: "text", key: "dataset", defaultValue: "production" } },
+      { name: "Type name", desc: "Document type to synchronize.", control: { type: "text", key: "sanityTypeName", defaultValue: "post" } },
+      { name: "Title field", desc: "Optional title field name.", control: { type: "text", key: "sanityTitleField" } },
+      { name: "Body field", desc: "Document body field name.", control: { type: "text", key: "sanityBodyField", defaultValue: "body" } },
+      { name: "Filename field", desc: "Optional filename or slug field path.", control: { type: "text", key: "filenameField" } },
+      { name: "Content divider", desc: "Content after this string is not published.", control: { type: "text", key: "contentDivider" } },
+      { name: "Pull folder", desc: "Folder for documents pulled from Sanity.", control: { type: "text", key: "pullFolder" } },
+      { name: "Custom API base URL", desc: "Optional reverse-proxy URL for the Sanity API.", control: { type: "text", key: "sanityApiBaseUrl" } },
+      { name: "Additional fields to sync", desc: "One mapping per line: sanityField:frontmatterKey.", control: { type: "text", key: "syncFields" } },
+      { name: "Announcement text", control: { type: "text", key: "announcementText" } },
+      { name: "Announcement link", control: { type: "text", key: "announcementLink" } },
+      { name: "Announcement type", control: { type: "dropdown", key: "announcementType", defaultValue: "info", options: { info: "info", success: "success", warn: "warn" } } }
+    ];
+  }
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian.Setting(containerEl).setName("Sanity configuration").setHeading();
+    new import_obsidian.Setting(containerEl).setName("Configuration").setHeading();
     new import_obsidian.Setting(containerEl).setName("Sanity API token").setDesc(
       "Your token must have write-access for the project you wish to publish to."
     ).addText(
@@ -203,9 +222,12 @@ var SanitySettingTab = class extends import_obsidian.PluginSettingTab {
 
 // main.ts
 var import_obsidian2 = require("obsidian");
-var httpRegex = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+var httpRegex = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/;
 var API_VERSION = "2023-05-03";
 var QUERY_API_VERSION = "v2021-06-07";
+function formatError(error) {
+  return error instanceof Error ? error.message : String(error);
+}
 function apiBaseFor(settings) {
   var _a;
   const custom = (_a = settings.sanityApiBaseUrl) == null ? void 0 : _a.trim().replace(/\/+$/, "");
@@ -367,7 +389,12 @@ var ProgressModal = class extends import_obsidian2.Modal {
   }
 };
 var SanityPublishPlugin = class extends import_obsidian2.Plugin {
-  async onload() {
+  onload() {
+    void this.initialize().catch((error) => {
+      console.error("Failed to load plugin", error);
+    });
+  }
+  async initialize() {
     await this.loadSettings();
     this.registerEvent(
       this.app.workspace.on("file-open", (file) => {
@@ -380,7 +407,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
     );
     this.addCommand({
       id: "publish",
-      name: "Publish to Sanity",
+      name: "Publish",
       callback: () => {
         const activeFile = this.app.workspace.getActiveFile();
         if (!activeFile) {
@@ -389,27 +416,27 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
         }
         this.publishToSanity(activeFile).catch((e) => {
           console.error("Publish crashed:", e);
-          new import_obsidian2.Notice("Publish \u51FA\u9519\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 1e4);
+          new import_obsidian2.Notice("Publish \u51FA\u9519\uFF1A" + formatError(e), 1e4);
         });
       }
     });
     this.addCommand({
       id: "pull",
-      name: "Pull from Sanity (sync all posts)",
+      name: "Pull (sync all posts)",
       callback: () => {
         this.pullFromSanity().catch((e) => {
           console.error("Pull crashed:", e);
-          new import_obsidian2.Notice("Pull \u51FA\u9519\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 1e4);
+          new import_obsidian2.Notice("Pull \u51FA\u9519\uFF1A" + formatError(e), 1e4);
         });
       }
     });
     this.addCommand({
       id: "publish-announcement",
-      name: "Publish announcement to Sanity",
+      name: "Publish announcement",
       callback: () => {
         this.publishAnnouncementToSanity().catch((e) => {
           console.error("Publish announcement crashed:", e);
-          new import_obsidian2.Notice("\u53D1\u5E03\u516C\u544A\u51FA\u9519\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 1e4);
+          new import_obsidian2.Notice("\u53D1\u5E03\u516C\u544A\u51FA\u9519\uFF1A" + formatError(e), 1e4);
         });
       }
     });
@@ -444,18 +471,15 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
   addStatusBarButton(file) {
     if (this.statusBarButton) return;
     const statusButton = this.addStatusBarItem();
-    const iconSpan = statusButton.createEl("span");
-    (0, import_obsidian2.setIcon)(iconSpan, "file-up");
-    statusButton.createEl("span", {
-      text: "Publish"
-    });
+    (0, import_obsidian2.setIcon)(statusButton, "file-up");
+    statusButton.setText("Publish");
     statusButton.addClass("mod-clickable");
     statusButton.setAttr("aria-label", "Publish to Sanity");
     statusButton.setAttr("data-tooltip-position", "top");
     statusButton.addEventListener("click", () => {
       this.publishToSanity(file).catch((e) => {
         console.error("Publish crashed:", e);
-        new import_obsidian2.Notice("Publish \u51FA\u9519\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 1e4);
+        new import_obsidian2.Notice("Publish \u51FA\u9519\uFF1A" + formatError(e), 1e4);
       });
     });
     this.statusBarButton = statusButton;
@@ -618,7 +642,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       }
       return raw;
     } catch (e) {
-      new import_obsidian2.Notice("\u5C01\u9762\u4E0A\u4F20\u5931\u8D25\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 8e3);
+      new import_obsidian2.Notice("\u5C01\u9762\u4E0A\u4F20\u5931\u8D25\uFF1A" + formatError(e), 8e3);
       return void 0;
     }
   }
@@ -677,7 +701,7 @@ var SanityPublishPlugin = class extends import_obsidian2.Plugin {
       new import_obsidian2.Notice("\u516C\u544A\u5DF2\u53D1\u5E03\u5230 Sanity\uFF0C\u7F51\u7AD9\u7A0D\u540E\u81EA\u52A8\u66F4\u65B0\u3002");
     } catch (e) {
       console.error("Publish announcement failed:", e);
-      new import_obsidian2.Notice("\u53D1\u5E03\u516C\u544A\u5931\u8D25\uFF1A" + ((e == null ? void 0 : e.message) || String(e)), 1e4);
+      new import_obsidian2.Notice("\u53D1\u5E03\u516C\u544A\u5931\u8D25\uFF1A" + formatError(e), 1e4);
     }
   }
   async pullFromSanity() {

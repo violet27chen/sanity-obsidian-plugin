@@ -16,13 +16,18 @@ import {
 } from "obsidian";
 
 const httpRegex =
-	/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+	/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/;
 
 // Sanity API 版本，与原有 client 保持一致
 const API_VERSION = "2023-05-03";
 // 查询接口使用与 admin-worker 一致的版本（v2021-06-07），类型内联进 GROQ，
 // 不使用 $param —— 否则在部分环境下会触发 Sanity 返回 HTTP 400。
 const QUERY_API_VERSION = "v2021-06-07";
+type JsonRecord = Record<string, unknown>;
+
+function formatError(error: unknown): string {
+	return error instanceof Error ? error.message : String(error);
+}
 
 /**
  * 返回 Sanity API 的基础 URL。
@@ -242,7 +247,13 @@ export default class SanityPublishPlugin extends Plugin {
 	settings: SanityPluginSettings;
 	statusBarButton: HTMLElement | undefined;
 
-	async onload() {
+	onload(): void {
+		void this.initialize().catch((error: unknown) => {
+			console.error("Failed to load plugin", error);
+		});
+	}
+
+	private async initialize(): Promise<void> {
 		await this.loadSettings();
 
 		// Add status button to run publish function
@@ -259,38 +270,38 @@ export default class SanityPublishPlugin extends Plugin {
 
 		this.addCommand({
 			id: "publish",
-			name: "Publish to Sanity",
+			name: "Publish",
 			callback: () => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile) {
 					new Notice("请先打开一个 Markdown 文件，再执行发布。");
 					return;
 				}
-				this.publishToSanity(activeFile).catch((e: any) => {
+				this.publishToSanity(activeFile).catch((e: unknown) => {
 					console.error("Publish crashed:", e);
-					new Notice("Publish 出错：" + (e?.message || String(e)), 10000);
+					new Notice("Publish 出错：" + formatError(e), 10000);
 				});
 			},
 		});
 
 		this.addCommand({
 			id: "pull",
-			name: "Pull from Sanity (sync all posts)",
+			name: "Pull (sync all posts)",
 			callback: () => {
-				this.pullFromSanity().catch((e: any) => {
+				this.pullFromSanity().catch((e: unknown) => {
 					console.error("Pull crashed:", e);
-					new Notice("Pull 出错：" + (e?.message || String(e)), 10000);
+					new Notice("Pull 出错：" + formatError(e), 10000);
 				});
 			},
 		});
 
 		this.addCommand({
 			id: "publish-announcement",
-			name: "Publish announcement to Sanity",
+			name: "Publish announcement",
 			callback: () => {
-				this.publishAnnouncementToSanity().catch((e: any) => {
+				this.publishAnnouncementToSanity().catch((e: unknown) => {
 					console.error("Publish announcement crashed:", e);
-					new Notice("发布公告出错：" + (e?.message || String(e)), 10000);
+					new Notice("发布公告出错：" + formatError(e), 10000);
 				});
 			},
 		});
@@ -346,19 +357,16 @@ export default class SanityPublishPlugin extends Plugin {
 		// Add status bar button that runs publish
 		// function when clicked
 		const statusButton = this.addStatusBarItem();
-		const iconSpan = statusButton.createEl("span");
-		setIcon(iconSpan, "file-up");
-		statusButton.createEl("span", {
-			text: "Publish",
-		});
+		setIcon(statusButton, "file-up");
+		statusButton.setText("Publish");
 
 		statusButton.addClass("mod-clickable");
 		statusButton.setAttr("aria-label", "Publish to Sanity");
 		statusButton.setAttr("data-tooltip-position", "top");
 		statusButton.addEventListener("click", () => {
-			this.publishToSanity(file).catch((e: any) => {
+			this.publishToSanity(file).catch((e: unknown) => {
 				console.error("Publish crashed:", e);
-				new Notice("Publish 出错：" + (e?.message || String(e)), 10000);
+				new Notice("Publish 出错：" + formatError(e), 10000);
 			});
 		});
 		this.statusBarButton = statusButton;
@@ -567,7 +575,7 @@ export default class SanityPublishPlugin extends Plugin {
 			}
 			return raw;
 		} catch (e: any) {
-			new Notice("封面上传失败：" + (e?.message || String(e)), 8000);
+			new Notice("封面上传失败：" + formatError(e), 8000);
 			return undefined;
 		}
 	}
@@ -640,7 +648,7 @@ export default class SanityPublishPlugin extends Plugin {
 			new Notice("公告已发布到 Sanity，网站稍后自动更新。");
 		} catch (e: any) {
 			console.error("Publish announcement failed:", e);
-			new Notice("发布公告失败：" + (e?.message || String(e)), 10000);
+			new Notice("发布公告失败：" + formatError(e), 10000);
 		}
 	}
 

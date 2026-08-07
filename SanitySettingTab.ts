@@ -68,12 +68,32 @@ export class SanitySettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
+	/** Declarative definitions provide settings search on Obsidian 1.13+. */
+	getSettingDefinitions() {
+		return [
+			{ name: "API token", desc: "Write-enabled token for the selected project.", control: { type: "text", key: "apiToken", placeholder: "Enter your token" } },
+			{ name: "Project ID", desc: "Sanity project identifier.", control: { type: "text", key: "projectId", placeholder: "Enter your project ID" } },
+			{ name: "Dataset name", desc: "Dataset to synchronize.", control: { type: "text", key: "dataset", defaultValue: "production" } },
+			{ name: "Type name", desc: "Document type to synchronize.", control: { type: "text", key: "sanityTypeName", defaultValue: "post" } },
+			{ name: "Title field", desc: "Optional title field name.", control: { type: "text", key: "sanityTitleField" } },
+			{ name: "Body field", desc: "Document body field name.", control: { type: "text", key: "sanityBodyField", defaultValue: "body" } },
+			{ name: "Filename field", desc: "Optional filename or slug field path.", control: { type: "text", key: "filenameField" } },
+			{ name: "Content divider", desc: "Content after this string is not published.", control: { type: "text", key: "contentDivider" } },
+			{ name: "Pull folder", desc: "Folder for documents pulled from Sanity.", control: { type: "text", key: "pullFolder" } },
+			{ name: "Custom API base URL", desc: "Optional reverse-proxy URL for the Sanity API.", control: { type: "text", key: "sanityApiBaseUrl" } },
+			{ name: "Additional fields to sync", desc: "One mapping per line: sanityField:frontmatterKey.", control: { type: "text", key: "syncFields" } },
+			{ name: "Announcement text", control: { type: "text", key: "announcementText" } },
+			{ name: "Announcement link", control: { type: "text", key: "announcementLink" } },
+			{ name: "Announcement type", control: { type: "dropdown", key: "announcementType", defaultValue: "info", options: { info: "info", success: "success", warn: "warn" } } },
+		];
+	}
+
 	display(): void {
 		const { containerEl } = this;
 
 		containerEl.empty();
 
-		new Setting(containerEl).setName("Sanity configuration").setHeading();
+		new Setting(containerEl).setName("Configuration").setHeading();
 
 		new Setting(containerEl)
 			.setName("Sanity API token")
